@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ══════════════════════════════════════════
+       BLOG POST TEMPLATE — BECKY WEXLIN CREATIVE
+       Instructions:
+       1. Replace everything in [SQUARE BRACKETS]
+       2. Update the schema JSON below
+       3. Add the page to sitemap.xml
+       4. Save as a new .html file in /blog/
+  ══════════════════════════════════════════ -->
+
+  <title>[POST TITLE] — Becky Wexlin Creative</title>
+  <meta name="description" content="[150 character description of the post — make it compelling, include the main keyword]" />
+  <meta name="keywords" content="[keyword 1], [keyword 2], [keyword 3], graphic tees, Becky Wexlin Creative" />
+  <link rel="canonical" href="https://www.beckywexlincreative.com/blog/[post-slug].html" />
+
+  <meta property="og:type"        content="article" />
+  <meta property="og:url"         content="https://www.beckywexlincreative.com/blog/[post-slug].html" />
+  <meta property="og:title"       content="[POST TITLE] — Becky Wexlin Creative" />
+  <meta property="og:description" content="[Short description for social sharing]" />
+  <meta property="og:image"       content="https://www.beckywexlincreative.com/images/og-image.jpg" />
+  <meta property="article:published_time" content="[YYYY-MM-DD]" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "[POST TITLE]",
+    "description": "[Post description]",
+    "url": "https://www.beckywexlincreative.com/blog/[post-slug].html",
+    "datePublished": "[YYYY-MM-DD]",
+    "dateModified": "[YYYY-MM-DD]",
+    "author": {
+      "@type": "Organization",
+      "name": "Becky Wexlin Creative",
+      "url": "https://www.beckywexlincreative.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Becky Wexlin Creative",
+      "url": "https://www.beckywexlincreative.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.beckywexlincreative.com/images/logo-lime.png"
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://www.beckywexlincreative.com/blog/[post-slug].html"
+    }
+  }
+  </script>
+
+  <link rel="icon" type="image/png" href="../images/favicon.png" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/blog.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+
+<body>
+
+  <div class="announce-bar" role="banner">
+    Free shipping on orders over $50 — <a href="../shop.html">shop now</a>
+  </div>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <a href="../index.html" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
+      <img src="../images/logo-lime.png" alt="Becky Wexlin Creative" />
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="../shop.html">Shop</a></li>
+      <li><a href="index.html" class="active">Blog</a></li>
+      <li><a href="../about.html">About</a></li>
+      <li><a href="../contact.html">Contact</a></li>
+      <li><a href="../shop.html" class="nav-cta">Shop now</a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- POST HEADER -->
+  <header class="post-header">
+    <div class="post-header-inner">
+      <nav class="post-breadcrumb" aria-label="Breadcrumb">
+        <a href="../index.html">Home</a>
+        <span>/</span>
+        <a href="index.html">Blog</a>
+        <span>/</span>
+        <span>[Category]</span>
+      </nav>
+      <p class="post-category">[Category]</p>
+      <h1 class="post-title">[POST TITLE]</h1>
+      <div class="post-meta">
+        <span>[Month DD, YYYY]</span>
+        <span class="post-meta-dot">·</span>
+        <span>[X] min read</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- POST BODY -->
+  <main id="main-content">
+    <div class="post-layout">
+
+      <!-- ARTICLE CONTENT -->
+      <article class="post-content" itemscope itemtype="https://schema.org/BlogPosting">
+
+        <p class="post-intro">[Opening paragraph — 2-3 sentences that hook the reader and state clearly what this post answers. Include the main keyword naturally.]</p>
+
+        <h2>[First subheading — H2]</h2>
+        <p>[Body copy. Write in a direct, slightly irreverent tone that matches the Becky Wexlin brand. Short paragraphs. No fluff. Answer the question the heading promises.]</p>
+
+        <h2>[Second subheading]</h2>
+        <p>[Continue body copy]</p>
+
+        <h2>[Third subheading]</h2>
+        <p>[Continue body copy]</p>
+
+        <!-- INTERNAL CTA (place naturally mid-post) -->
+        <div class="post-cta-block">
+          <p>[Relevant shirt recommendation or shop callout]</p>
+          <a href="../shop.html" class="btn btn-primary">Shop the collection</a>
+        </div>
+
+        <h2>[Fourth subheading]</h2>
+        <p>[Continue body copy]</p>
+
+        <h2>[Fifth subheading]</h2>
+        <p>[Continue body copy]</p>
+
+        <!-- CLOSING PARAGRAPH -->
+        <p>[Wrap it up. One clear takeaway. Optional: soft CTA back to the shop.]</p>
+
+      </article>
+
+      <!-- SIDEBAR -->
+      <aside class="post-sidebar">
+
+        <div class="sidebar-card">
+          <p class="sidebar-label">From the shop</p>
+          <p style="font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 16px;">Graphic tees that are actually worth buying.</p>
+          <a href="../shop.html" class="btn btn-primary" style="width: 100%; text-align: center; display: block;">Shop now</a>
+        </div>
+
+        <div class="sidebar-card">
+          <p class="sidebar-label">More posts</p>
+          <ul class="sidebar-posts">
+            <li><a href="how-to-care-for-printed-graphic-tees.html">How to care for printed graphic tees</a></li>
+            <li><a href="what-makes-a-quality-graphic-tee.html">What makes a quality graphic tee?</a></li>
+            <li><a href="history-of-the-graphic-tee.html">The history of the graphic tee</a></li>
+            <li><a href="best-weird-shirts-to-give-as-gifts.html">Best weird shirts to give as gifts</a></li>
+            <li><a href="why-meme-shirts-are-having-a-moment.html">Why meme shirts are having a moment</a></li>
+            <li><a href="how-to-spot-a-well-made-graphic-tee.html">How to spot a well-made graphic tee</a></li>
+          </ul>
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-grid">
+      <div class="footer-logo">
+        <img src="../images/logo-lime.png" alt="Becky Wexlin Creative" />
+        <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="../shop.html">All products</a></li>
+          <li><a href="../shop.html#shirts">Shirts</a></li>
+          <li><a href="../shop.html#hoodies">Hoodies</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Info</h4>
+        <ul>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="index.html">Blog</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="../faq.html">FAQ</a></li>
+          <li><a href="../faq.html#shipping">Shipping</a></li>
+          <li><a href="../faq.html#returns">Returns</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative.</p>
+      <p class="footer-copy"><a href="../privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="../terms.html">Terms</a></p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+
+</body>
+</html>

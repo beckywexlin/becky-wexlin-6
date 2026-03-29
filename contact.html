@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ── PRIMARY SEO ── -->
+  <title>Contact — Becky Wexlin Creative | Get in Touch</title>
+  <meta name="description" content="Get in touch with Becky Wexlin Creative. Questions about orders, shipping, returns, or just want to say something weird? We're here." />
+  <link rel="canonical" href="https://www.beckywexlincreative.com/contact.html" />
+
+  <!-- ── OPEN GRAPH ── -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://www.beckywexlincreative.com/contact.html" />
+  <meta property="og:title"       content="Contact — Becky Wexlin Creative" />
+  <meta property="og:description" content="Questions, feedback, cursed design ideas — we read it all." />
+  <meta property="og:image"       content="https://www.beckywexlincreative.com/images/og-image.jpg" />
+
+  <!-- ── STRUCTURED DATA ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact Becky Wexlin Creative",
+    "url": "https://www.beckywexlincreative.com/contact.html",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "Becky Wexlin Creative",
+      "email": "hello@beckywexlincreative.com",
+      "url": "https://www.beckywexlincreative.com"
+    }
+  }
+  </script>
+
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <style>
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 80px;
+      align-items: start;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 80px 40px;
+    }
+
+    /* ── FORM ── */
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #888;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      background: var(--offblack);
+      border: 1px solid #2A2A2A;
+      border-radius: var(--radius);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      padding: 12px 16px;
+      width: 100%;
+      transition: border-color var(--transition);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--lime);
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: #444;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 140px;
+    }
+
+    .form-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      cursor: pointer;
+    }
+
+    .form-select option {
+      background: var(--offblack);
+      color: var(--white);
+    }
+
+    .form-submit {
+      align-self: flex-start;
+    }
+
+    /* ── SUCCESS STATE ── */
+    .form-success {
+      display: none;
+      background: #0A1F0A;
+      border: 1px solid #1D6B1D;
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      color: #4CAF50;
+      font-size: 15px;
+    }
+
+    /* ── CONTACT INFO ── */
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .contact-info-block h3 {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin-bottom: 12px;
+    }
+
+    .contact-info-block p {
+      font-size: 15px;
+      color: #888;
+      line-height: 1.7;
+    }
+
+    .contact-info-block a {
+      color: var(--white);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .contact-info-block a:hover {
+      color: var(--lime);
+    }
+
+    /* ── RESPONSE TIME CARD ── */
+    .response-card {
+      background: var(--offblack);
+      border: 1px solid #2A2A2A;
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .response-card-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-style: italic;
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+
+    .response-card-sub {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .contact-grid {
+        grid-template-columns: 1fr;
+        padding: 48px 24px;
+        gap: 48px;
+      }
+      .contact-info { order: -1; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="announce-bar" role="banner">
+    Free shipping on orders over $50 — <a href="shop.html">shop now</a>
+  </div>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <a href="index.html" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
+      <img src="images/logo-lime.png" alt="Becky Wexlin Creative" />
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="blog/index.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html" class="active">Contact</a></li>
+      <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ── PAGE HEADER ── -->
+  <header style="padding: 80px 40px 64px; background: var(--offblack); border-bottom: 1px solid #2A2A2A;">
+    <div style="max-width: var(--max-w); margin: 0 auto;">
+      <p class="section-eyebrow">Say hello</p>
+      <h1 style="font-family: var(--font-display); font-size: clamp(40px, 6vw, 72px); font-weight: 900; font-style: italic; color: var(--white); line-height: 1;">
+        We read<br><span style="color: var(--lime);">everything.</span>
+      </h1>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <div class="contact-grid">
+
+      <!-- ── CONTACT FORM ── -->
+      <section aria-labelledby="form-heading">
+        <h2 id="form-heading" style="font-family: var(--font-display); font-size: 28px; font-style: italic; font-weight: 900; color: var(--white); margin-bottom: 28px;">
+          Send a message
+        </h2>
+
+        <!-- NOTE: This is a static HTML form.
+             To make it actually send messages, connect it to a free service like
+             Formspree (formspree.io) — just replace the action URL below.
+             Instructions are in the README. -->
+        <form
+          class="contact-form"
+          id="contact-form"
+          action="https://formspree.io/f/YOUR_FORM_ID"
+          method="POST"
+        >
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label" for="first-name">First name</label>
+              <input class="form-input" type="text" id="first-name" name="first_name" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email</label>
+              <input class="form-input" type="email" id="email" name="email" placeholder="you@example.com" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="subject">What's this about?</label>
+            <select class="form-select" id="subject" name="subject">
+              <option value="">Pick one...</option>
+              <option value="order">My order</option>
+              <option value="shipping">Shipping question</option>
+              <option value="return">Return / exchange</option>
+              <option value="design">Design suggestion</option>
+              <option value="press">Press / collab</option>
+              <option value="other">Something weird</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="message">Your message</label>
+            <textarea class="form-textarea" id="message" name="message" placeholder="Tell us everything. We have time." required></textarea>
+          </div>
+
+          <div class="form-submit">
+            <button type="submit" class="btn btn-primary">Send it →</button>
+          </div>
+
+          <div class="form-success" id="form-success">
+            Message sent! We'll get back to you within 1–2 business days.
+          </div>
+
+        </form>
+      </section>
+
+      <!-- ── CONTACT INFO ── -->
+      <aside class="contact-info">
+
+        <div class="response-card">
+          <p class="response-card-title">We reply fast.</p>
+          <p class="response-card-sub">Usually within 1–2 business days. If your order is messed up, even faster.</p>
+        </div>
+
+        <div class="contact-info-block">
+          <h3>Email</h3>
+          <p><a href="mailto:hello@beckywexlincreative.com">hello@beckywexlincreative.com</a></p>
+        </div>
+
+        <div class="contact-info-block" id="shipping">
+          <h3>Shipping</h3>
+          <p>All orders are printed fresh and ship within 7 days of purchase. Your order is routed to the production facility closest to your address to keep transit time and shipping costs down. US orders typically arrive within 3–7 days of shipping. International orders may take 7–14 days. You'll receive a tracking number by email once your order is on its way.</p>
+        </div>
+
+        <div class="contact-info-block" id="returns">
+          <h3>Returns &amp; exchanges</h3>
+          <p>Because every piece is printed to order specifically for you, all sales are final and nonrefundable. Please check the size guide carefully before purchasing. If your order arrives damaged or there's a production error, we'll replace it at no cost — just contact us with a photo and your order number.</p>
+        </div>
+
+        <div class="contact-info-block" id="faq">
+          <h3>Quick answers</h3>
+          <p>For FAQs about the brand, printing, and sizing, head to the <a href="about.html">About page</a>. Most questions are answered there.</p>
+        </div>
+
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-grid">
+      <div class="footer-logo">
+        <img src="images/logo-lime.png" alt="Becky Wexlin Creative" />
+        <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All products</a></li>
+          <li><a href="shop.html#shirts">Shirts</a></li>
+          <li><a href="shop.html#hoodies">Hoodies</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Info</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="blog/index.html">Blog</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="faq.html#shipping">Shipping</a></li>
+          <li><a href="faq.html#returns">Returns</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative. Made with stubbornness and strong opinions.</p>
+      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a></p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* Basic form UX — works with Formspree or similar */
+    const form    = document.getElementById('contact-form');
+    const success = document.getElementById('form-success');
+
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        const btn = form.querySelector('button[type="submit"]');
+        btn.textContent = 'Sending...';
+        btn.disabled = true;
+      });
+    }
+  </script>
+
+</body>
+</html>

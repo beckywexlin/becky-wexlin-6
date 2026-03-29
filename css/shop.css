@@ -1,0 +1,253 @@
+/* ============================================
+   BECKY WEXLIN CREATIVE — shop.css
+   ============================================ */
+
+/* ── SHOP HEADER ── */
+.shop-header {
+  padding: 80px 40px 64px;
+  border-bottom: 1px solid #2A2A2A;
+  background: var(--offblack);
+}
+
+.shop-header-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+
+/* ── FILTER BAR ── */
+.filter-bar {
+  background: var(--black);
+  border-bottom: 1px solid #2A2A2A;
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 90;
+}
+
+.filter-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.filter-tab {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.filter-tab:hover {
+  color: var(--white);
+  background: #1E1E1E;
+}
+
+.filter-tab.active {
+  color: var(--black);
+  background: var(--lime);
+  font-weight: 500;
+}
+
+.filter-count {
+  font-size: 13px;
+  color: #555;
+}
+
+/* ── SHOP GRID WRAPPER ── */
+.shop-grid-wrapper {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 64px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+}
+
+/* ── SECTION HEADING ── */
+.shop-section-heading {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-style: italic;
+  font-weight: 900;
+  color: var(--white);
+  margin-bottom: 32px;
+  letter-spacing: -0.5px;
+}
+
+/* ── PRODUCT GRID ── */
+.shop-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+/* ── PRODUCT CARD ── */
+.shop-product-card {
+  background: var(--offblack);
+  border: 1px solid #2A2A2A;
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--transition), transform var(--transition);
+}
+
+.shop-product-card:hover {
+  border-color: var(--lime);
+  transform: translateY(-4px);
+}
+
+.shop-product-card a {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── CARD IMAGE ── */
+.shop-card-img {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #1E1E1E;
+  overflow: hidden;
+}
+
+.shop-card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.shop-product-card:hover .shop-card-img img {
+  transform: scale(1.05);
+}
+
+/* ── CARD OVERLAY ── */
+.shop-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.shop-product-card:hover .shop-card-overlay {
+  opacity: 1;
+}
+
+.shop-card-overlay span {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lime);
+  border: 1px solid var(--lime);
+  padding: 10px 20px;
+  border-radius: var(--radius);
+}
+
+/* ── BADGE ── */
+.shop-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  background: var(--lime);
+  color: var(--black);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+}
+
+.shop-card-badge--pink {
+  background: var(--pink);
+  color: var(--white);
+}
+
+/* ── CARD BODY ── */
+.shop-card-body {
+  padding: 20px;
+}
+
+.shop-card-name {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-style: italic;
+  font-weight: 900;
+  color: var(--white);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.shop-card-desc {
+  font-size: 13px;
+  color: #777;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.shop-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.shop-card-price {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--lime);
+}
+
+.shop-card-type {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #555;
+}
+
+/* ── EMPTY STATE ── */
+.shop-empty {
+  text-align: center;
+  padding: 80px 24px;
+  color: #555;
+}
+
+.shop-empty-emoji {
+  font-size: 32px;
+  margin-bottom: 16px;
+  font-family: var(--font-mono, monospace);
+}
+
+.shop-empty a {
+  color: var(--lime);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .shop-header  { padding: 48px 24px 40px; }
+  .filter-inner { padding: 0 20px; }
+  .shop-grid-wrapper { padding: 40px 20px; }
+  .filter-tab   { padding: 5px 10px; font-size: 12px; }
+}
