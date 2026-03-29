@@ -627,7 +627,24 @@ ul {
 
   .hero-actions { flex-direction: column; align-items: center; }
 }
+/* ── PRODUCT LOADING SKELETONS ── */
+.product-loading {
+  display: contents;
+}
 
+.loading-card {
+  background: var(--offblack);
+  border: 1px solid var(--gray);
+  border-radius: var(--radius);
+  aspect-ratio: 1 / 1;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0%   { opacity: 0.4; }
+  50%  { opacity: 0.8; }
+  100% { opacity: 0.4; }
+}
 @media (max-width: 480px) {
   .footer-grid { grid-template-columns: 1fr; }
 }

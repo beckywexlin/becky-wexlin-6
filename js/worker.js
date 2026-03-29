@@ -1,70 +1,319 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-export default {
-  async fetch(request, env) {
-    if (request.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
-    const url = new URL(request.url);
+  <!-- ── PRIMARY SEO ── -->
+  <title>Becky Wexlin Creative — Funky, Weird & Wonderful Apparel</title>
+  <meta name="description" content="Shirts, hoodies and gear for people who refuse to be boring. Becky Wexlin Creative makes funky, meme-forward, esoteric apparel that you won't find anywhere else." />
+  <meta name="keywords" content="funky shirts, weird graphic tees, meme clothing, esoteric apparel, indie streetwear, unique hoodies, cult clothing brand" />
+  <link rel="canonical" href="https://www.beckywexlincreative.com/" />
 
-    if (url.pathname === '/shops') {
-      const res = await fetch('https://api.printify.com/v1/shops.json', {
-        headers: { 'Authorization': 'Bearer ' + env.PRINTIFY_API_KEY }
-      });
-      const data = await res.json();
-      return new Response(JSON.stringify(data, null, 2), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+  <!-- ── OPEN GRAPH ── -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://www.beckywexlincreative.com/" />
+  <meta property="og:title"       content="Becky Wexlin Creative — Funky, Weird & Wonderful Apparel" />
+  <meta property="og:description" content="Shirts, hoodies and gear for people who refuse to be boring." />
+  <meta property="og:image"       content="https://www.beckywexlincreative.com/images/og-image.jpg" />
+  <meta property="og:site_name"   content="Becky Wexlin Creative" />
+
+  <!-- ── TWITTER CARD ── -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Becky Wexlin Creative" />
+  <meta name="twitter:description" content="Funky, weird & wonderful apparel for the rest of us." />
+  <meta name="twitter:image"       content="https://www.beckywexlincreative.com/images/og-image.jpg" />
+
+  <!-- ── STRUCTURED DATA ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ClothingStore",
+    "name": "Becky Wexlin Creative",
+    "url": "https://www.beckywexlincreative.com",
+    "logo": "https://www.beckywexlincreative.com/images/logo-lime.png",
+    "description": "Independent apparel brand making funky, meme-forward, esoteric shirts, hoodies and gear for people who refuse to be boring.",
+    "foundingDate": "2024",
+    "priceRange": "$20-$35",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer support",
+      "email": "hello@beckywexlincreative.com"
     }
-
-    if (url.pathname === '/debug') {
-      const res = await fetch(
-        'https://api.printify.com/v1/shops/26790889/products.json?limit=10',
-        { headers: { 'Authorization': 'Bearer ' + env.PRINTIFY_API_KEY } }
-      );
-      const data = await res.json();
-      return new Response(JSON.stringify(data, null, 2), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    if (url.pathname === '/api/products') {
-      const shopId = '26790889';
-      const res = await fetch(
-        'https://api.printify.com/v1/shops/' + shopId + '/products.json?limit=100',
-        { headers: { 'Authorization': 'Bearer ' + env.PRINTIFY_API_KEY } }
-      );
-      const data = await res.json();
-      const products = (data.data || []).map(function(p) {
-        const image = (p.images || []).find(function(i) { return i.src; }) || {};
-        const prices = (p.variants || []).map(function(v) { return v.price; }).filter(Boolean);
-        const minPrice = prices.length ? Math.min.apply(null, prices) / 100 : null;
-        const tags = (p.tags || []).map(function(t) { return t.toLowerCase(); });
-        const isHoodie = tags.includes('hoodie') || (p.title || '').toLowerCase().includes('hoodie');
-        let category = isHoodie ? 'hoodies' : 'shirts';
-        if (tags.includes('new')) category += ' new';
-        return {
-          id: p.id,
-          title: p.title,
-          description: (p.description || '').replace(/<[^>]+>/g, '').trim().substring(0, 90),
-          image: image.src || '',
-          price: minPrice ? '$' + minPrice.toFixed(0) : '',
-          type: isHoodie ? 'Pullover hoodie' : 'Unisex tee',
-          category: category,
-          url: 'https://beckywexlincreative.printify.me/products/' + p.id,
-          isNew: tags.includes('new'),
-        };
-      });
-      return new Response(JSON.stringify({ products: products }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    return new Response(JSON.stringify({ error: 'Not found' }), {
-      status: 404,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
   }
-};
+  </script>
+
+  <!-- ── FAVICON ── -->
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+
+  <!-- ── STYLES ── -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- ── PRECONNECT ── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+
+<body>
+
+  <!-- ── ANNOUNCEMENT BAR ── -->
+  <div class="announce-bar" role="banner">
+    <span class="announce-icon">🚚</span> <strong>Free shipping</strong> on all orders over $50 — no code needed &nbsp;·&nbsp; <a href="shop.html">Shop now →</a>
+  </div>
+
+  <!-- ── NAVIGATION ── -->
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <a href="/" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
+      <img src="images/logo-lime.png" alt="Becky Wexlin Creative" />
+    </a>
+
+    <ul class="nav-links" id="nav-links">
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="blog/index.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+    </ul>
+
+    <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero-content">
+      <p class="hero-eyebrow">Becky Wexlin Creative</p>
+      <div class="hero-shipping-badge">🚚 Free shipping over $50</div>
+      <h1 id="hero-heading">
+        Wear the
+        <em>weird.</em>
+      </h1>
+      <p class="hero-sub">
+        Funky shirts &amp; hoodies for people who are done pretending to be normal.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main id="main-content">
+
+    <!-- Featured Products -->
+    <div class="section">
+      <div class="section-header">
+        <p class="section-eyebrow">Fresh drops</p>
+        <h2 class="section-title">The latest &amp;<br>greatest weirdness</h2>
+        <p class="section-sub">Each shirt is a limited vibe. Once it's gone, it's gone.</p>
+      </div>
+
+      <!-- Product grid — populated by JS -->
+      <div class="product-grid" id="product-grid">
+        <!-- Loading state -->
+        <div class="product-loading" id="product-loading">
+          <div class="loading-card"></div>
+          <div class="loading-card"></div>
+          <div class="loading-card"></div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top: 48px;">
+        <a href="shop.html" class="btn btn-outline">See everything in the shop</a>
+      </div>
+    </div>
+
+    <!-- ── MARQUEE TICKER ── -->
+    <div class="marquee-strip" aria-hidden="true">
+      <div class="marquee-inner">
+        <span>Funky shirts</span>
+        <span>Weird hoodies</span>
+        <span>Meme energy</span>
+        <span>Esoteric fits</span>
+        <span>Printed on demand</span>
+        <span>Free shipping over $50</span>
+        <span>Funky shirts</span>
+        <span>Weird hoodies</span>
+        <span>Meme energy</span>
+        <span>Esoteric fits</span>
+        <span>Printed on demand</span>
+        <span>Free shipping over $50</span>
+      </div>
+    </div>
+
+    <!-- Brand Statement -->
+    <div class="section-full" style="background: var(--offblack); border-top: 1px solid #2A2A2A; border-bottom: 1px solid #2A2A2A;">
+      <div class="section" style="padding-top: 0; padding-bottom: 0;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;">
+          <div>
+            <p class="section-eyebrow">The Becky Wexlin ethos</p>
+            <h2 class="section-title">Made for the<br>chronically <span class="text-lime">different.</span></h2>
+            <p style="color: #888; font-size: 16px; margin-top: 24px; line-height: 1.8; max-width: 440px;">
+              Becky Wexlin Creative makes apparel for people who get the joke, feel the vibe, and wear
+              their weirdness like a badge of honour. Every piece is designed to spark a conversation,
+              a double-take, or at minimum an extremely good meme.
+            </p>
+            <a href="about.html" class="btn btn-outline" style="margin-top: 32px;">Read the story</a>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:center;">
+            <div style="width:100%; aspect-ratio:1; background:#222; border-radius:4px; border:1px solid #333; display:flex; align-items:center; justify-content:center;">
+              <span style="font-family:'Playfair Display',serif; font-size:80px; font-style:italic; font-weight:900; color:#AAEE00; letter-spacing:-2px;">bw</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blog Preview -->
+    <div class="section">
+      <div class="section-header">
+        <p class="section-eyebrow">From the blog</p>
+        <h2 class="section-title">Thoughts, rants<br>&amp; deep cuts</h2>
+      </div>
+
+      <div class="blog-grid">
+        <article class="blog-card">
+          <a href="blog/index.html">
+            <div class="blog-card-img"></div>
+            <div class="blog-card-body">
+              <p class="blog-tag">Style</p>
+              <h3 class="blog-card-title">How to build a wardrobe that makes strangers nervous</h3>
+              <p class="blog-card-excerpt">A practical guide to dressing in a way that sparks conversation, concern, and occasional applause.</p>
+            </div>
+          </a>
+        </article>
+
+        <article class="blog-card">
+          <a href="blog/index.html">
+            <div class="blog-card-img"></div>
+            <div class="blog-card-body">
+              <p class="blog-tag">Culture</p>
+              <h3 class="blog-card-title">The history of the weird shirt and why it matters</h3>
+              <p class="blog-card-excerpt">From punk zines to meme culture — how graphic tees became the most honest thing in your closet.</p>
+            </div>
+          </a>
+        </article>
+
+        <article class="blog-card">
+          <a href="blog/index.html">
+            <div class="blog-card-img"></div>
+            <div class="blog-card-body">
+              <p class="blog-tag">Behind the brand</p>
+              <h3 class="blog-card-title">Why every Becky Wexlin shirt has a story behind it</h3>
+              <p class="blog-card-excerpt">Nothing here is random. Here's what goes into designing something worth wearing.</p>
+            </div>
+          </a>
+        </article>
+      </div>
+
+      <div style="text-align:center; margin-top: 48px;">
+        <a href="blog/index.html" class="btn btn-outline">Read all posts</a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-grid">
+
+      <div class="footer-logo">
+        <img src="images/logo-lime.png" alt="Becky Wexlin Creative" />
+        <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All products</a></li>
+          <li><a href="shop.html#shirts">Shirts</a></li>
+          <li><a href="shop.html#hoodies">Hoodies</a></li>
+          <li><a href="shop.html#new">New arrivals</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Info</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="blog/index.html">Blog</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="contact.html#faq">FAQ</a></li>
+          <li><a href="contact.html#shipping">Shipping</a></li>
+          <li><a href="contact.html#returns">Returns</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <p class="footer-copy">
+        &copy; <span id="year"></span> Becky Wexlin Creative. Made with stubbornness and strong opinions.
+      </p>
+      <p class="footer-copy">
+        <a href="#">Privacy policy</a> &nbsp;·&nbsp; <a href="#">Terms</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+
+  <!-- ── PRODUCT LOADER ── -->
+  <script>
+    const WORKER_URL = 'https://becky-wexlin-api.beckywexlin.workers.dev/api/products';
+    const grid = document.getElementById('product-grid');
+    const loading = document.getElementById('product-loading');
+
+    async function loadFeaturedProducts() {
+      try {
+        const res = await fetch(WORKER_URL);
+        const data = await res.json();
+        const products = (data.products || []).slice(0, 3);
+
+        loading.remove();
+
+        if (products.length === 0) {
+          grid.innerHTML = '<p style="color:#888;">No products found.</p>';
+          return;
+        }
+
+        products.forEach(function(p) {
+          const card = document.createElement('article');
+          card.className = 'product-card';
+          card.innerHTML = `
+            <a href="${p.url}" target="_blank" rel="noopener">
+              <div class="product-card-img">
+                ${p.image
+                  ? `<img src="${p.image}" alt="${p.title} — by Becky Wexlin Creative" loading="lazy" />`
+                  : '<div style="width:100%;height:100%;background:#2A2A2A;"></div>'
+                }
+              </div>
+              <div class="product-card-body">
+                <h3 class="product-card-name">${p.title}</h3>
+                <p class="product-card-desc">${p.description}</p>
+                <div class="product-card-footer">
+                  <span class="product-price">${p.price}</span>
+                  <span class="product-link">Shop →</span>
+                </div>
+              </div>
+            </a>
+          `;
+          grid.appendChild(card);
+        });
+
+      } catch (err) {
+        loading.remove();
+        grid.innerHTML = '<p style="color:#888;">Could not load products right now. <a href="shop.html" style="color:var(--lime)">Browse the shop →</a></p>';
+      }
+    }
+
+    loadFeaturedProducts();
+  </script>
+
+</body>
+</html>
