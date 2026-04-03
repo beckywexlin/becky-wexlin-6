@@ -164,6 +164,11 @@
   text-underline-offset: 3px;
 }
 
+.post-content .btn-primary {
+  color: var(--black);
+  text-decoration: none;
+}
+
 .post-content blockquote {
   border-left: 3px solid var(--lime);
   margin: 32px 0;

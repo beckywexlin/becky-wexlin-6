@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product — Becky Wexlin Creative</title>
+  <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <style>
+    .img-wrap { position: relative; width: 100%; }
+    .arrow-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      background: #1a1a1a; color: #c8f135; border: 2px solid #c8f135;
+      font-size: 20px; width: 44px; height: 44px; cursor: pointer;
+      border-radius: 4px; display: flex; align-items: center;
+      justify-content: center; transition: background 0.2s, color 0.2s; z-index: 10;
+    }
+    .arrow-btn:hover { background: #c8f135; color: #1a1a1a; }
+    .arrow-prev { left: 12px; }
+    .arrow-next { right: 12px; }
+    .product-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 40px;
+  align-items: start;
+}
+
+.product-main-img {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #1a1a1a;
+}
+
+.product-main-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.product-thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.product-thumb {
+  width: 72px;
+  height: 72px;
+  border: 2px solid #2a2a2a;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.product-thumb.active {
+  border-color: #c8f135;
+}
+
+.product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.variant-btn {
+  padding: 10px 16px;
+  background: #1a1a1a;
+  color: #fff;
+  border: 2px solid #2a2a2a;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.variant-btn:hover {
+  border-color: #c8f135;
+  color: #c8f135;
+}
+
+.variant-btn.selected {
+  background: #c8f135;
+  color: #000;
+  border-color: #c8f135;
+  font-weight: 600;
+}
+
+.variant-btn.unavailable {
+  opacity: 0.3;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.variant-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+  </style>
+</head>
+<body>
+
+  <div id="cart-overlay" class="cart-overlay"></div>
+  <div id="cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h3>Your cart</h3>
+      <button class="cart-close" onclick="closeCart()">×</button>
+    </div>
+    <div class="cart-drawer-body"><div id="cart-items"></div></div>
+    <div class="cart-drawer-footer" id="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cart-total">$0.00</span>
+      </div>
+      <p class="cart-shipping-note">Free shipping on all orders</p>
+      <a href="checkout.html" class="btn btn-primary" style="width:100%;text-align:center;display:block;">Checkout</a>
+      <button class="btn btn-outline" onclick="closeCart()" style="width:100%;margin-top:12px;">Continue shopping</button>
+    </div>
+  </div>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <a href="/" class="nav-logo"><img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" /></a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="blog/index.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+      <li>
+        <button class="cart-icon-btn" onclick="openCart()">
+          Cart <span class="cart-count" style="display:none;">0</span>
+        </button>
+      </li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <main class="product-page" id="product-page">
+    <div class="product-page-loading">Loading...</div>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-grid">
+      <div class="footer-logo">
+        <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" />
+        <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All products</a></li>
+          <li><a href="shop.html#shirts">Shirts</a></li>
+          <li><a href="shop.html#hoodies">Hoodies</a></li>
+          <li><a href="shop.html#new">New arrivals</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Info</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="blog/index.html">Blog</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="faq.html#shipping">Shipping</a></li>
+          <li><a href="faq.html#returns">Returns</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative. Made with stubbornness and strong opinions.</p>
+      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a></p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/cart.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const WORKER_URL = 'https://becky-wexlin-api.beckywexlin.workers.dev';
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get('id');
+    const page = document.getElementById('product-page');
+
+    if (!productId) window.location.href = 'shop.html';
+
+    let currentProduct = null;
+    let selectedVariant = null;
+    let currentImageIndex = 0;
+
+    const SIZE_ORDER = ['XS','S','M','L','XL','2XL','3XL','4XL','5XL'];
+
+    function sortedVariants(variants, colorFilter) {
+      const filtered = colorFilter
+        ? variants.filter(v => v.title.startsWith(colorFilter + ' / '))
+        : variants;
+      return [...filtered].sort((a, b) => {
+        const aSize = a.title.includes(' / ') ? a.title.split(' / ').pop() : a.title;
+        const bSize = b.title.includes(' / ') ? b.title.split(' / ').pop() : b.title;
+        return (SIZE_ORDER.indexOf(aSize) === -1 ? 99 : SIZE_ORDER.indexOf(aSize))
+             - (SIZE_ORDER.indexOf(bSize) === -1 ? 99 : SIZE_ORDER.indexOf(bSize));
+      });
+    }
+
+    function renderSizeButtons(variants, colorFilter) {
+      return sortedVariants(variants, colorFilter).map((v, i) => {
+        const label = v.title.includes(' / ') ? v.title.split(' / ').pop() : v.title;
+        return `<button
+          class="variant-btn ${i === 0 ? 'selected' : ''} ${!v.available ? 'unavailable' : ''}"
+          onclick="selectVariant(${v.id}, '${v.title}', '${v.price}', ${v.available}, this)"
+          ${!v.available ? 'disabled' : ''}
+        >${label}</button>`;
+      }).join('');
+    }
+
+    function buildVariantSelectors(p) {
+      const colors = [...new Set(p.variants
+        .map(v => v.title.includes(' / ') ? v.title.split(' / ')[0] : null)
+        .filter(Boolean))];
+      const multiColor = colors.length > 1;
+      let html = '';
+      if (multiColor) {
+        html += `<p class="variant-label">Color: <span id="selected-color-label">${colors[0]}</span></p>
+        <div class="variant-options" id="color-options">
+          ${colors.map((c, i) => `<button class="variant-btn ${i === 0 ? 'selected' : ''}" onclick="selectColor('${c}', this)">${c}</button>`).join('')}
+        </div>`;
+      }
+      html += `<p class="variant-label" style="margin-top:16px;">Size</p>
+      <div class="variant-options" id="size-options">
+        ${renderSizeButtons(p.variants, multiColor ? colors[0] : null)}
+      </div>`;
+      return html;
+    }
+
+    function selectColor(color, btn) {
+      document.querySelectorAll('#color-options .variant-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('selected-color-label').textContent = color;
+      document.getElementById('size-options').innerHTML = renderSizeButtons(currentProduct.variants, color);
+      const first = document.querySelector('#size-options .variant-btn:not([disabled])');
+      if (first) first.click();
+    }
+
+    function selectVariant(id, title, price, available, btn) {
+      if (!available) return;
+      selectedVariant = { id, title, price };
+      document.getElementById('product-price').textContent = '$' + price;
+      document.querySelectorAll('#size-options .variant-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('variant-error').style.display = 'none';
+    }
+
+    function handleAddToCart() {
+      if (!selectedVariant) {
+        document.getElementById('variant-error').style.display = 'block';
+        return;
+      }
+      addToCart({
+        id: currentProduct.id,
+        variantId: selectedVariant.id,
+        title: currentProduct.title,
+        size: selectedVariant.title,
+        price: selectedVariant.price,
+        image: currentProduct.images[0] || ''
+      });
+    }
+
+    function setMainImage(index, thumb) {
+      currentImageIndex = index;
+      document.getElementById('main-img-el').src = currentProduct.images[index];
+      document.querySelectorAll('.product-thumb').forEach(t => t.classList.remove('active'));
+      if (thumb) thumb.classList.add('active');
+    }
+
+    function prevImage() {
+      const len = currentProduct.images.length;
+      currentImageIndex = (currentImageIndex - 1 + len) % len;
+      document.getElementById('main-img-el').src = currentProduct.images[currentImageIndex];
+      document.querySelectorAll('.product-thumb').forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
+    }
+
+    function nextImage() {
+      const len = currentProduct.images.length;
+      currentImageIndex = (currentImageIndex + 1) % len;
+      document.getElementById('main-img-el').src = currentProduct.images[currentImageIndex];
+      document.querySelectorAll('.product-thumb').forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
+    }
+
+    async function loadProduct() {
+      try {
+        const res = await fetch(WORKER_URL + '/api/products/' + productId);
+        const p = await res.json();
+        currentProduct = p;
+        currentImageIndex = 0;
+        document.title = p.title + ' — Becky Wexlin Creative';
+
+        const firstSorted = sortedVariants(p.variants, null)[0];
+
+        page.innerHTML = `
+          <div class="product-layout">
+            <div class="product-images">
+              <div class="img-wrap product-main-img" id="main-img">
+                ${p.images[0] ? `<img src="${p.images[0]}" alt="${p.title}" id="main-img-el" />` : ''}
+                <button class="arrow-btn arrow-prev" onclick="prevImage()">&#8592;</button>
+                <button class="arrow-btn arrow-next" onclick="nextImage()">&#8594;</button>
+              </div>
+              <div class="product-thumbs">
+                ${p.images.slice(0, 6).map((img, i) => `
+                  <div class="product-thumb ${i === 0 ? 'active' : ''}" onclick="setMainImage(${i}, this)">
+                    <img src="${img}" alt="${p.title} view ${i + 1}" />
+                  </div>`).join('')}
+              </div>
+            </div>
+            <div class="product-info">
+              <a href="shop.html" class="product-back">Back to shop</a>
+              <h1 class="product-title">${p.title}</h1>
+              <p class="product-price-large" id="product-price">$${firstSorted ? firstSorted.price : ''}</p>
+              <p class="product-description">${p.description}</p>
+              <div class="product-variants" id="variant-selectors">
+                ${buildVariantSelectors(p)}
+              </div>
+              <div id="variant-error" style="display:none;color:var(--pink);font-size:13px;margin-bottom:12px;">
+                Please select a size
+              </div>
+              <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="handleAddToCart()">
+                Add to cart
+              </button>
+              <div class="product-meta">
+                <p>Free shipping on all orders</p>
+                <p>Printed on demand — ships in 3-7 days</p>
+              </div>
+            </div>
+          </div>`;
+
+        selectedVariant = firstSorted || null;
+
+      } catch (err) {
+        page.innerHTML = '<p style="color:#888;text-align:center;padding:80px;">Could not load product. <a href="shop.html" style="color:var(--lime)">Back to shop</a></p>';
+      }
+    }
+
+    loadProduct();
+  </script>
+
+</body>
+</html>

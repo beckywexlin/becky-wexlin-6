@@ -4,7 +4,7 @@
 
 /* ── SHOP HEADER ── */
 .shop-header {
-  padding: 80px 40px 64px;
+  padding: 32px 40px 10px;
   border-bottom: 1px solid #2A2A2A;
   background: var(--offblack);
 }
@@ -95,6 +95,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 24px;
+  align-items: stretch;
 }
 
 /* ── PRODUCT CARD ── */
@@ -104,6 +105,8 @@
   border-radius: var(--radius);
   overflow: hidden;
   transition: border-color var(--transition), transform var(--transition);
+  display: flex;
+  flex-direction: column;
 }
 
 .shop-product-card:hover {
@@ -112,7 +115,9 @@
 }
 
 .shop-product-card a {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   text-decoration: none;
   color: inherit;
 }
@@ -120,9 +125,11 @@
 /* ── CARD IMAGE ── */
 .shop-card-img {
   position: relative;
-  aspect-ratio: 1 / 1;
+  width: 100%;
+  height: 280px;
   background: #1E1E1E;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .shop-card-img img {
@@ -187,6 +194,11 @@
 /* ── CARD BODY ── */
 .shop-card-body {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 160px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .shop-card-name {
@@ -197,6 +209,10 @@
   color: var(--white);
   margin-bottom: 6px;
   line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .shop-card-desc {
@@ -204,12 +220,18 @@
   color: #777;
   line-height: 1.5;
   margin-bottom: 16px;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .shop-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: auto;
 }
 
 .shop-card-price {
@@ -222,6 +244,35 @@
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: #555;
+}
+
+/* ── LOADING / ERROR ── */
+.shop-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 24px;
+  color: #555;
+}
+
+.shop-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #2A2A2A;
+  border-top-color: var(--lime);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.shop-error {
+  text-align: center;
+  padding: 80px 24px;
   color: #555;
 }
 
@@ -250,4 +301,5 @@
   .filter-inner { padding: 0 20px; }
   .shop-grid-wrapper { padding: 40px 20px; }
   .filter-tab   { padding: 5px 10px; font-size: 12px; }
+  .shop-card-img { height: 220px; }
 }

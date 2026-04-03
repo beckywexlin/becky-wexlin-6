@@ -29,8 +29,8 @@ becky-wexlin/
 Place your logo files in `/images/`:
 - `logo-lime.png`           — neon logo, for dark backgrounds (nav, footer)
 - `logo-black.png`          — black version, for light backgrounds
-- `logo-bw-monogram.png`    — bw retro monogram, use as favicon source
-- `favicon.png`             — 32x32 or 64x64 favicon (export from bw monogram)
+- `logo-bw-monogram.png`    — bw retro monogram, use as logo-lime source
+- `logo-lime.png`             — 32x32 or 64x64 logo-lime (export from bw monogram)
 - `og-image.jpg`            — 1200x630px social share image
 
 ## Deploying to GitHub Pages + Cloudflare

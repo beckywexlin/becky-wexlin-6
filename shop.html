@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shop — Becky Wexlin Creative | Funky Graphic Tees &amp; Weird Hoodies</title>
-  <meta name="description" content="Shop all Becky Wexlin Creative apparel — funky graphic tees, weird hoodies, meme shirts and esoteric gear. Printed on demand. Ships worldwide. $20–$35." />
+  <meta name="description" content="Shop all Becky Wexlin Creative apparel — funky graphic tees, weird hoodies, meme shirts and esoteric gear. Printed on demand. Ships worldwide." />
   <meta name="keywords" content="buy funky shirts, weird graphic tees shop, meme hoodies, esoteric clothing, indie graphic tees, unique shirts online" />
   <link rel="canonical" href="https://www.beckywexlincreative.com/shop.html" />
-  <meta property="og:type"        content="website" />
-  <meta property="og:url"         content="https://www.beckywexlincreative.com/shop.html" />
-  <meta property="og:title"       content="Shop — Becky Wexlin Creative" />
-  <meta property="og:description" content="Funky graphic tees, weird hoodies and meme shirts. $20–$35. Ships worldwide." />
-  <meta property="og:image"       content="https://www.beckywexlincreative.com/images/og-image.jpg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.beckywexlincreative.com/shop.html" />
+  <meta property="og:title" content="Shop — Becky Wexlin Creative" />
+  <meta property="og:description" content="Funky graphic tees, weird hoodies and meme shirts. Ships worldwide." />
+  <meta property="og:image" content="https://www.beckywexlincreative.com/images/og-image.jpg" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -26,7 +26,7 @@
     }
   }
   </script>
-  <link rel="icon" type="image/png" href="images/favicon.png" />
+  <link rel="icon" type="image/png" href="images/logo-lime.png" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/shop.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -36,12 +36,21 @@
 <body>
 
   <div class="announce-bar" role="banner">
-    Free shipping on orders over $50 — you're already here, might as well
+  <div class="announce-inner">
+    <span>Free shipping on all orders &nbsp;·&nbsp;</span>
+    <span>Free shipping on all orders &nbsp;·&nbsp;</span>
+    <span>Free shipping on all orders &nbsp;·&nbsp;</span>
+    <span>Free shipping on all orders &nbsp;·&nbsp;</span>
+    <span>Free shipping on all orders &nbsp;·&nbsp;</span>
+    <span>Free shipping on all orders &nbsp;·&nbsp;</span>
+    <span>Free shipping on all orders &nbsp;·&nbsp;</span>
+    <span>Free shipping on all orders &nbsp;·&nbsp;</span>
   </div>
+</div>
 
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
     <a href="index.html" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
-      <img src="images/logo-lime.png" alt="Becky Wexlin Creative" />
+      <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" />
     </a>
     <ul class="nav-links" id="nav-links">
       <li><a href="shop.html" class="active">Shop</a></li>
@@ -57,9 +66,8 @@
 
   <header class="shop-header" aria-labelledby="shop-heading">
     <div class="shop-header-inner">
-      <p class="section-eyebrow">The full collection</p>
       <h1 id="shop-heading" class="section-title">Everything weird,<br>wonderful &amp; <span class="text-lime">wearable.</span></h1>
-      <p class="section-sub">All shirts $20–$35. Printed fresh to order, ships within 7 days.</p>
+      <p class="section-sub">Printed fresh to order, ships within 7 days.</p>
     </div>
   </header>
 
@@ -113,7 +121,7 @@
   <footer class="site-footer" role="contentinfo">
     <div class="footer-grid">
       <div class="footer-logo">
-        <img src="images/logo-lime.png" alt="Becky Wexlin Creative" />
+        <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" />
         <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
       </div>
       <div class="footer-col">
@@ -168,11 +176,12 @@
 
     function buildCard(product) {
       var badge = product.isNew
-        ? '<div class="shop-card-badge' + (product.category.indexOf('hoodie') > -1 ? ' shop-card-badge--pink' : '') + '">New</div>'
+        ? '<div class="shop-card-badge' + ((product.category || '').indexOf('hoodie') > -1 ? ' shop-card-badge--pink' : '') + '">New</div>'
         : '';
-      var desc = product.description.length > 90 ? product.description.substring(0, 87) + '...' : product.description;
-      return '<article class="shop-product-card" data-category="' + product.category + '">'
-        + '<a href="' + product.url + '" target="_blank" rel="noopener" aria-label="Shop ' + product.title + '">'
+      var rawDesc = (product.description || '').replace(/<[^>]+>/g, '').trim();
+var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
+      return '<article class="shop-product-card" data-category="' + (product.category || '') + '">'
+        + '<a href="product.html?id=' + product.id + '" aria-label="Shop ' + product.title + '">'
         + '<div class="shop-card-img">'
         + badge
         + '<img src="' + product.image + '" alt="' + product.title + '" loading="lazy" onerror="this.src=\'images/product-placeholder.jpg\'" />'
@@ -182,8 +191,8 @@
         + '<h3 class="shop-card-name">' + product.title + '</h3>'
         + '<p class="shop-card-desc">' + (desc || 'Fresh from the weird side of the closet.') + '</p>'
         + '<div class="shop-card-footer">'
-        + '<span class="shop-card-price">' + product.price + '</span>'
-        + '<span class="shop-card-type">' + product.type + '</span>'
+        + '<span class="shop-card-price">$' + product.price + '</span>'
+        + '<span class="shop-card-type">' + (product.type || '') + '</span>'
         + '</div></div></a></article>';
     }
 
@@ -218,8 +227,8 @@
       .then(function(res) { return res.json(); })
       .then(function(data) {
         loading.style.display = 'none';
-        var shirts  = data.products.filter(function(p) { return p.category.indexOf('hoodie') === -1; });
-        var hoodies = data.products.filter(function(p) { return p.category.indexOf('hoodie') > -1; });
+        var shirts  = data.products.filter(function(p) { var c = p.category || ''; return c.indexOf('hoodie') === -1; });
+        var hoodies = data.products.filter(function(p) { var c = p.category || ''; return c.indexOf('hoodie') > -1; });
         if (shirts.length) {
           shirtsGrid.innerHTML = shirts.map(buildCard).join('');
           shirtsSection.style.display = '';

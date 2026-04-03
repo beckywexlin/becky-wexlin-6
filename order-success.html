@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Confirmed — Becky Wexlin Creative</title>
+  <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <style>
+    .success-page {
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+    .success-inner {
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+    }
+    .success-icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+    }
+    .success-title {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 900;
+      font-style: italic;
+      color: var(--white);
+      line-height: 1.05;
+      margin-bottom: 16px;
+    }
+    .success-title span { color: var(--lime); }
+    .success-sub {
+      font-size: 16px;
+      color: #777;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+    .success-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <a href="/" class="nav-logo"><img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" /></a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="blog/index.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <main class="success-page">
+    <div class="success-inner">
+      <img src="images/bubblegum_skelly.png" alt="Becky Wexlin" style="width:120px; height:auto; display:block; margin:0 auto 24px;" />
+      <h1 class="success-title">Order <span>confirmed.</span></h1>
+      <p class="success-sub">
+        Your weird is on its way. You'll get a shipping confirmation email once your order is printed and dispatched — usually within 3–7 days.
+      </p>
+      <div class="success-actions">
+        <a href="shop.html" class="btn btn-primary">Keep shopping</a>
+        <a href="index.html" class="btn btn-outline">Back to home</a>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-grid">
+      <div class="footer-logo">
+        <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" />
+        <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="shop.html">All products</a></li>
+          <li><a href="shop.html#shirts">Shirts</a></li>
+          <li><a href="shop.html#hoodies">Hoodies</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Info</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="blog/index.html">Blog</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Help</h4>
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="faq.html#shipping">Shipping</a></li>
+          <li><a href="faq.html#returns">Returns</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative. Made with stubbornness and strong opinions.</p>
+      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a></p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+<script src="js/checkout.js"></script>
+<script>
+  // Handle redirect from Stripe
+  const params = new URLSearchParams(window.location.search);
+  const paymentIntentId = params.get('payment_intent');
+  
+  if (paymentIntentId) {
+    const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+    const shipping = JSON.parse(localStorage.getItem('bw-shipping') || '{}');
+    
+    if (cart.length > 0) {
+      fetch('https://checkout.beckywexlin.workers.dev/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: cart, shipping, paymentIntentId })
+      }).then(() => {
+        localStorage.removeItem('bw-cart');
+        localStorage.removeItem('bw-shipping');
+      });
+    }
+  }
+</script>
+</body>
+</html>

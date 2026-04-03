@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — Becky Wexlin Creative</title>
+  <link rel="icon" type="image/png" href="images/favicon.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/checkout.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+
+<body>
+
+  <!-- NAVIGATION -->
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <a href="/" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
+      <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" />
+    </a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="blog/index.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <main class="checkout-page">
+
+    <div class="checkout-grid">
+
+      <!-- LEFT: Shipping form -->
+      <div class="checkout-left">
+        <h1 class="checkout-heading">Checkout</h1>
+
+        <form id="checkout-form">
+
+          <fieldset class="checkout-fieldset">
+            <legend>Contact</legend>
+            <div class="field-row">
+              <div class="field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="you@example.com" />
+              </div>
+              <div class="field">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" placeholder="Optional" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="checkout-fieldset">
+            <legend>Shipping address</legend>
+            <div class="field-row">
+              <div class="field">
+                <label for="first-name">First name</label>
+                <input type="text" id="first-name" name="first-name" required placeholder="Jane" />
+              </div>
+              <div class="field">
+                <label for="last-name">Last name</label>
+                <input type="text" id="last-name" name="last-name" required placeholder="Smith" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="address1">Address</label>
+              <input type="text" id="address1" name="address1" required placeholder="123 Main St" />
+            </div>
+            <div class="field">
+              <label for="address2">Apartment, suite, etc.</label>
+              <input type="text" id="address2" name="address2" placeholder="Optional" />
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="city">City</label>
+                <input type="text" id="city" name="city" required placeholder="Los Angeles" />
+              </div>
+              <div class="field">
+                <label for="state">State</label>
+                <input type="text" id="state" name="state" required placeholder="CA" />
+              </div>
+              <div class="field">
+                <label for="zip">ZIP</label>
+                <input type="text" id="zip" name="zip" required placeholder="90210" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="country">Country</label>
+              <select id="country" name="country">
+                <option value="US" selected>United States</option>
+                <option value="CA">Canada</option>
+                <option value="GB">United Kingdom</option>
+                <option value="AU">Australia</option>
+              </select>
+            </div>
+          </fieldset>
+
+          <fieldset class="checkout-fieldset">
+            <legend>Payment</legend>
+            <div id="payment-element"></div>
+            <div id="checkout-error" style="display:none; color: var(--pink); font-size:14px; margin-top:12px;"></div>
+          </fieldset>
+
+          <button type="submit" id="checkout-submit" class="btn btn-primary" style="width:100%; margin-top:24px;">
+            Place order
+          </button>
+
+        </form>
+      </div>
+
+      <!-- RIGHT: Order summary -->
+      <div class="checkout-right">
+        <h2 class="checkout-summary-heading">Order summary</h2>
+        <div id="checkout-summary"></div>
+        <div class="checkout-summary-total">
+          <span>Total</span>
+          <span id="checkout-total">$0.00</span>
+        </div>
+        <p class="checkout-summary-note">Free shipping on all orders</p>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="js/main.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/checkout.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,350 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — Becky Wexlin Creative</title>
+  <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    .checkout-page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 40px;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 48px;
+      align-items: start;
+    }
+
+    .checkout-section-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-style: italic;
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 24px;
+    }
+
+    .checkout-form-group {
+      margin-bottom: 16px;
+    }
+
+    .checkout-form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .checkout-form-group input,
+    .checkout-form-group select {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: var(--radius);
+      color: var(--white);
+      font-family: var(--font-body);
+      font-size: 15px;
+      padding: 12px 16px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+
+    .checkout-form-group input:focus,
+    .checkout-form-group select:focus {
+      outline: none;
+      border-color: var(--lime);
+    }
+
+    .checkout-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .checkout-divider {
+      border: none;
+      border-top: 1px solid #2a2a2a;
+      margin: 32px 0;
+    }
+
+    #payment-element {
+      margin-bottom: 24px;
+    }
+
+    #checkout-error {
+      display: none;
+      color: var(--pink);
+      font-size: 14px;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      background: rgba(255, 0, 204, 0.1);
+      border: 1px solid var(--pink);
+      border-radius: var(--radius);
+    }
+    
+
+    /* Order summary */
+    .order-summary {
+      background: var(--offblack);
+      border: 1px solid #2a2a2a;
+      border-radius: var(--radius);
+      padding: 28px;
+      position: sticky;
+      top: calc(var(--nav-h) + 24px);
+    }
+
+    .checkout-item {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .checkout-item:last-of-type { border-bottom: none; }
+
+    .checkout-item-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #1a1a1a;
+      flex-shrink: 0;
+    }
+
+    .checkout-item-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .checkout-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .checkout-item-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--white);
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+
+    .checkout-item-variant {
+      font-size: 12px;
+      color: #555;
+    }
+
+    .checkout-item-qty {
+      font-size: 12px;
+      color: #555;
+    }
+
+    .checkout-item-price {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--lime);
+      flex-shrink: 0;
+    }
+
+    .checkout-totals {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #2a2a2a;
+    }
+
+    .checkout-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #777;
+      margin-bottom: 8px;
+    }
+
+    .checkout-total-row.total {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--white);
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #2a2a2a;
+    }
+
+    @media (max-width: 900px) {
+      .checkout-page {
+        grid-template-columns: 1fr;
+        padding: 32px 20px;
+      }
+      .order-summary { position: static; }
+      .checkout-form-row { grid-template-columns: 1fr; }
+    }
+    .checkout-form-group input:invalid:not(:placeholder-shown),
+.checkout-form-group input.error,
+.checkout-form-group select.error {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px rgba(255, 0, 204, 0.1);
+}
+
+.field-error {
+  font-size: 12px;
+  color: var(--pink);
+  margin-top: 4px;
+  display: none;
+}
+
+.checkout-form-group.has-error .field-error {
+  display: block;
+}
+
+.checkout-form-group.has-error input,
+.checkout-form-group.has-error select {
+  border-color: var(--pink);
+  box-shadow: 0 0 0 3px rgba(255, 0, 204, 0.1);
+}
+  </style>
+</head>
+<body>
+
+  <nav class="site-nav" role="navigation" aria-label="Main navigation">
+    <a href="/" class="nav-logo"><img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" /></a>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="blog/index.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+    </ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <main class="checkout-page">
+
+    <!-- LEFT: Form -->
+    <div>
+      <form id="checkout-form" autocomplete="on">
+
+        <p class="checkout-section-title">Shipping info</p>
+
+        <div class="checkout-form-row">
+          <div class="checkout-form-group">
+            <label for="first-name">First name</label>
+            <input type="text" id="first-name" name="given-name" required placeholder="Jane" autocomplete="given-name" />
+          </div>
+          <div class="checkout-form-group">
+            <label for="last-name">Last name</label>
+            <input type="text" id="last-name" name="family-name" required placeholder="Weirdo" autocomplete="family-name" />
+          </div>
+        </div>
+
+        <div class="checkout-form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required placeholder="jane@weirdo.com" autocomplete="email" />
+        </div>
+
+        <div class="checkout-form-group">
+          <label for="phone">Phone (optional)</label>
+          <input type="tel" id="phone" name="tel" placeholder="Phone Number" autocomplete="tel" />
+        </div>
+
+        <div class="checkout-form-group">
+          <label for="address1">Address</label>
+          <input type="text" id="address1" name="address-line1" required placeholder="Address" autocomplete="address-line1" />
+        </div>
+
+        <div class="checkout-form-group">
+          <label for="address2">Apt, suite, etc. (optional)</label>
+          <input type="text" id="address2" name="address-line2" placeholder="Apartment, Suite, etc " autocomplete="address-line2" />
+        </div>
+
+        <div class="checkout-form-row">
+          <div class="checkout-form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" name="address-level2" required placeholder="City" autocomplete="address-level2" />
+          </div>
+          <div class="checkout-form-group">
+            <label for="state">State</label>
+            <input type="text" id="state" name="address-level1" required placeholder="State" autocomplete="address-level1" />
+          </div>
+        </div>
+
+        <div class="checkout-form-row">
+          <div class="checkout-form-group">
+            <label for="zip">ZIP code</label>
+            <input type="text" id="zip" name="postal-code" required placeholder="ZIP code" autocomplete="postal-code" />
+          </div>
+          <div class="checkout-form-group">
+            <label for="country">Country</label>
+            <select id="country" name="country" autocomplete="country">
+              <option value="US">United States</option>
+              <option value="CA">Canada</option>
+              <option value="GB">United Kingdom</option>
+              <option value="AU">Australia</option>
+              <option value="DE">Germany</option>
+              <option value="FR">France</option>
+              <option value="NL">Netherlands</option>
+              <option value="SE">Sweden</option>
+              <option value="NO">Norway</option>
+              <option value="DK">Denmark</option>
+            </select>
+          
+          </div>
+        </div>
+
+        <hr class="checkout-divider" />
+
+        <p class="checkout-section-title">Payment</p>
+
+        <div id="payment-element"></div>
+        <div id="checkout-error"></div>
+
+        <button type="submit" id="checkout-submit" class="btn btn-primary" style="width:100%; font-size:16px; padding:16px;">
+          Place order
+        </button>
+
+        <p style="font-size:12px; color:#555; text-align:center; margin-top:16px;">
+          Secured by Stripe. We never store your card details.
+        </p>
+
+      </form>
+    </div>
+
+    <!-- RIGHT: Order summary -->
+    <div class="order-summary">
+      <p class="checkout-section-title">Your order</p>
+      <div id="checkout-summary"></div>
+      <div class="checkout-totals">
+        <div class="checkout-total-row">
+          <span>Subtotal</span>
+          <span id="checkout-subtotal">$0.00</span>
+        </div>
+        <div class="checkout-total-row">
+          <span>Shipping</span>
+          <span style="color: var(--lime);">Free</span>
+        </div>
+        <div class="checkout-total-row total">
+          <span>Total</span>
+          <span id="checkout-total">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/cart.js"></script>
+  <script src="js/checkout.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+</html>
