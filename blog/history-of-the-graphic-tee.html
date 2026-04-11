@@ -32,6 +32,39 @@
   <link rel="stylesheet" href="../css/blog.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <style>
+    .sidebar-product-card {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #2a2a2a;
+      text-decoration: none;
+      color: inherit;
+      transition: opacity 0.2s;
+    }
+    .sidebar-product-card:last-child { border-bottom: none; }
+    .sidebar-product-card:hover { opacity: 0.8; }
+    .sidebar-product-thumb {
+      width: 60px; height: 60px;
+      border-radius: 4px; overflow: hidden;
+      background: #1a1a1a; flex-shrink: 0;
+    }
+    .sidebar-product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .sidebar-product-info { flex: 1; min-width: 0; }
+    .sidebar-product-name {
+      font-size: 13px; font-weight: 500;
+      color: #fff; line-height: 1.3;
+      margin-bottom: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sidebar-product-price { font-size: 13px; color: #c8f135; }
+    .sidebar-shop-btn {
+      display: block; width: 100%;
+      text-align: center; margin-top: 14px;
+      font-size: 13px;
+    }
+  </style>
 </head>
 <body>
 
@@ -114,11 +147,16 @@
       </article>
 
       <aside class="post-sidebar">
+
+        <!-- LIVE PRODUCT CARDS -->
         <div class="sidebar-card">
           <p class="sidebar-label">From the shop</p>
-          <p style="font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 16px;">Part of the tradition.</p>
-          <a href="../shop.html" class="btn btn-primary" style="width: 100%; text-align: center; display: block;">Shop now</a>
+          <div id="sidebar-products">
+            <p style="font-size:13px;color:#555;">Loading...</p>
+          </div>
+          <a href="../shop.html" class="btn btn-primary sidebar-shop-btn">See all shirts</a>
         </div>
+
         <div class="sidebar-card">
           <p class="sidebar-label">More posts</p>
           <ul class="sidebar-posts">
@@ -129,6 +167,7 @@
             <li><a href="why-meme-shirts-are-having-a-moment.html">Why meme shirts are having a moment</a></li>
           </ul>
         </div>
+
       </aside>
     </div>
   </main>
@@ -145,7 +184,32 @@
       <p class="footer-copy"><a href="../privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="../terms.html">Terms</a></p>
     </div>
   </footer>
+
   <script src="../js/main.js"></script>
-  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    (async () => {
+      try {
+        const res = await fetch('https://becky-wexlin-api.beckywexlin.workers.dev/api/products');
+        const data = await res.json();
+        const products = (data.products || data).sort(() => Math.random() - 0.5).slice(0, 3);
+        document.getElementById('sidebar-products').innerHTML = products.map(p => `
+          <a class="sidebar-product-card" href="../product.html?id=${p.id}">
+            <div class="sidebar-product-thumb">
+              ${p.images?.[0] ? `<img src="${p.images[0]}" alt="${p.title}" loading="lazy" />` : ''}
+            </div>
+            <div class="sidebar-product-info">
+              <p class="sidebar-product-name">${p.title}</p>
+              <p class="sidebar-product-price">$${p.variants?.[0]?.price || ''}</p>
+            </div>
+          </a>`).join('');
+      } catch {
+        document.getElementById('sidebar-products').innerHTML =
+          '<p style="font-size:13px;color:#555;">Check out the shop →</p>';
+      }
+    })();
+  </script>
+
 </body>
 </html>

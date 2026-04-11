@@ -58,8 +58,9 @@ async function submitOrder(shipping) {
   });
 
   if (error) {
-    document.getElementById('checkout-error').textContent = error.message;
-    document.getElementById('checkout-error').style.display = 'block';
+    const subtotalEl = document.getElementById('checkout-subtotal');
+if (subtotalEl) subtotalEl.textContent = '$' + total;
+document.getElementById('checkout-total').textContent = '$' + total;
     return false;
   }
 
@@ -139,35 +140,39 @@ async function initCheckout() {
       // Validate fields
 let valid = true;
 document.querySelectorAll('#checkout-form [required]').forEach(field => {
-  const group = field.closest('.checkout-form-group');
+  const group = field.closest('.checkout-form-group') || field.closest('.field');
   if (!field.value.trim() || !field.checkValidity()) {
-    group.classList.add('has-error');
+    if (group) group.classList.add('has-error');
+    field.style.borderColor = 'var(--pink)';
     valid = false;
   } else {
-    group.classList.remove('has-error');
+    if (group) group.classList.remove('has-error');
+    field.style.borderColor = '';
   }
 });
 
-// Validate zip code format
 const zip = document.getElementById('zip');
 const zipVal = zip.value.trim();
-const zipGroup = zip.closest('.checkout-form-group');
+const zipGroup = zip.closest('.checkout-form-group') || zip.closest('.field');
 if (!/^\d{5}(-\d{4})?$/.test(zipVal)) {
-  zipGroup.classList.add('has-error');
+  if (zipGroup) zipGroup.classList.add('has-error');
+  zip.style.borderColor = 'var(--pink)';
   valid = false;
 } else {
-  zipGroup.classList.remove('has-error');
+  if (zipGroup) zipGroup.classList.remove('has-error');
+  zip.style.borderColor = '';
 }
 
-// Validate state is 2 letters
 const state = document.getElementById('state');
 const stateVal = state.value.trim();
-const stateGroup = state.closest('.checkout-form-group');
+const stateGroup = state.closest('.checkout-form-group') || state.closest('.field');
 if (!/^[A-Za-z]{2}$/.test(stateVal)) {
-  stateGroup.classList.add('has-error');
+  if (stateGroup) stateGroup.classList.add('has-error');
+  state.style.borderColor = 'var(--pink)';
   valid = false;
 } else {
-  stateGroup.classList.remove('has-error');
+  if (stateGroup) stateGroup.classList.remove('has-error');
+  state.style.borderColor = '';
 }
 
       if (!valid) return;

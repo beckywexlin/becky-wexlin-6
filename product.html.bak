@@ -338,6 +338,7 @@
       document.getElementById('main-img-el').src = currentProduct.images[index];
       document.querySelectorAll('.product-thumb').forEach(t => t.classList.remove('active'));
       if (thumb) thumb.classList.add('active');
+      // scroll thumb into view
       if (thumb) thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
@@ -361,17 +362,12 @@
 
     /* ── RELATED PRODUCTS ───────────────────────────── */
     async function loadRelated() {
-      console.log('loadRelated called');
       try {
         const res = await fetch(WORKER_URL + '/api/products');
-        console.log('products status:', res.status);
-        const data = await res.json();
-        console.log('products data:', data);
-        const all = data.products || data;
-        console.log('all products:', all.length);
+        const all = await res.json();
+        // exclude current product, shuffle, take up to 4
         const others = all.filter(p => String(p.id) !== String(productId));
         const shuffled = others.sort(() => Math.random() - 0.5).slice(0, 4);
-        console.log('shuffled:', shuffled.length);
         if (!shuffled.length) return;
 
         const grid = document.getElementById('related-grid');
@@ -391,9 +387,8 @@
         }).join('');
 
         document.getElementById('related-section').style.display = 'block';
-        console.log('related section shown');
       } catch (e) {
-        console.error('Related products error:', e);
+        // silently fail — related products are a bonus, not critical
       }
     }
 
@@ -457,6 +452,8 @@
           </div>`;
 
         selectedVariant = firstSorted || null;
+
+        // Load related products after main content is ready
         loadRelated();
 
       } catch (err) {

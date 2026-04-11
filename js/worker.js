@@ -41,17 +41,16 @@ export default {
       const keyPresent = !!env.PRINTIFY_API_KEY;
       const keyLen = env.PRINTIFY_API_KEY?.length ?? 0;
       const shopsRes = await printify("/shops.json", env);
-      const prodsRes = await printify(`/shops/${SHOP_ID}/products.json?limit=3`, env);
+      const prodsRes = await printify(`/shops/${SHOP_ID}/products.json?limit=5`, env);
       return json({
         apiKeyPresent: keyPresent,
         apiKeyLength: keyLen,
         shopsStatus: shopsRes.status,
-        shops: shopsRes.body,
         productsStatus: prodsRes.status,
         productsRawKeys: prodsRes.ok ? Object.keys(prodsRes.body) : null,
         productsError: prodsRes.ok ? null : prodsRes.body,
-        firstProduct: prodsRes.ok
-          ? (prodsRes.body.data?.[0] ?? prodsRes.body.products?.[0] ?? null)
+        visibleValues: prodsRes.ok
+          ? (prodsRes.body.data || []).map(p => ({ title: p.title, visible: p.visible }))
           : null,
       });
     }
@@ -67,7 +66,7 @@ export default {
       const products = (body.data || body.products || []).filter(p => {
   const hasImage = !!(p.images && p.images.length > 0);
   const hasVariants = (p.variants || []).some(v => v.is_enabled);
-  return hasImage && hasVariants;
+  return p.visible && hasImage && hasVariants;
 }).map(normalizeProduct);
       return json({ products, total: body.total ?? products.length });
     }
@@ -125,3 +124,4 @@ function normalizeProduct(p) {
     options:     p.options ?? [],
     tags:        p.tags ?? [],
   };
+}
