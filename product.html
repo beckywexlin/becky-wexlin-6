@@ -635,6 +635,7 @@
       host.innerHTML = tags.map(t =>
         `<a class="tag-chip" href="shop.html?tag=${encodeURIComponent(t)}">${t}</a>`
       ).join('');
+      host.style.display = 'flex';
     }
 
     async function injectSeoTags(p, firstSorted) {
