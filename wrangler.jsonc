@@ -2,13 +2,19 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "becky-wexlin-6",
   "compatibility_date": "2025-09-27",
+  "main": "worker.js",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS"
   },
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  "routes": [
+    { "pattern": "beckywexlin.com", "custom_domain": true },
+    { "pattern": "www.beckywexlin.com", "custom_domain": true }
   ]
 }
