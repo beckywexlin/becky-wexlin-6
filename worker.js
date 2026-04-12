@@ -10,7 +10,7 @@ export default {
       return new Response('Not found', { status: 404 });
     }
 
-    if (url.pathname === '/product.html' && url.searchParams.get('id')) {
+    if ((url.pathname === '/product.html' || url.pathname === '/product') && url.searchParams.get('id')) {
       return await renderProductPage(request, env, url);
     }
 
