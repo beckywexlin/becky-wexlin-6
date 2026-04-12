@@ -105,18 +105,45 @@
       top: calc(var(--nav-h) + 24px);
     }
     .product-description {
-      max-height: 180px;
+      max-height: 240px;
       overflow-y: auto;
       font-size: 14px;
-      color: #888;
+      color: #aaa;
       line-height: 1.7;
       margin-bottom: 16px;
       scrollbar-width: thin;
       scrollbar-color: #333 transparent;
+      padding-right: 6px;
     }
     .product-description::-webkit-scrollbar { width: 4px; }
     .product-description::-webkit-scrollbar-track { background: transparent; }
     .product-description::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+    .product-description p { margin: 0 0 10px; }
+    .product-description p:last-child { margin-bottom: 0; }
+    .product-description .desc-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 14px 0 6px;
+    }
+    .product-description .desc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 10px;
+    }
+    .product-description .desc-list li {
+      position: relative;
+      padding-left: 14px;
+      margin-bottom: 4px;
+    }
+    .product-description .desc-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #c8f135;
+    }
 
     /* ── SIZE / VARIANT BUTTONS ────────────────────────────── */
     .variant-btn {
@@ -553,6 +580,41 @@
       }
     }
 
+    /* ── DESCRIPTION FORMATTER ──────────────────────── */
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function formatDescription(raw) {
+      if (!raw) return '';
+      let s = String(raw).trim();
+      // Split glued sentences: lowercase.Uppercase or ).Uppercase → add break
+      s = s.replace(/([a-z0-9)\]”"'])\.([A-Z])/g, '$1.\n\n$2');
+      // Named section headings get their own line
+      s = s.replace(/\s*(Product features|Care instructions|Features|Materials|Size & Fit|Size and Fit|Shipping)\b/g, '\n\n$1\n');
+      // Dash bullets ("- item") → newline + bullet
+      s = s.replace(/(^|\s)-\s+/g, '\n• ');
+      // ✔ / ✓ checkmarks → own line
+      s = s.replace(/\s*[✔✓]\s*/g, '\n✔ ');
+      // Collapse extra blank lines
+      s = s.replace(/\n{3,}/g, '\n\n').trim();
+
+      const esc = escapeHtml(s);
+      return esc.split(/\n\n+/).map(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+        const allBullets = lines.length > 1 && lines.every(l => /^[•✔]\s/.test(l));
+        if (allBullets) {
+          return '<ul class="desc-list">' +
+            lines.map(l => `<li>${l.replace(/^[•✔]\s*/, '')}</li>`).join('') +
+            '</ul>';
+        }
+        // Standalone section-heading line (short, no terminal punctuation)
+        if (lines.length === 1 && lines[0].length < 32 && !/[.!?]$/.test(lines[0])) {
+          return `<h4 class="desc-heading">${lines[0]}</h4>`;
+        }
+        return '<p>' + lines.join('<br>') + '</p>';
+      }).join('');
+    }
+
     /* ── SEO / STRUCTURED DATA ──────────────────────── */
     let tagsMap = null;
     async function getProductTags(id) {
@@ -732,7 +794,7 @@
               <a href="shop.html" class="product-back">Back to shop</a>
               <h1 class="product-title">${p.title}</h1>
               <p class="product-price-large" id="product-price">$${firstSorted ? firstSorted.price : ''}</p>
-              <p class="product-description">${p.description}</p>
+              <div class="product-description">${formatDescription(p.description)}</div>
               <div class="product-variants" id="variant-selectors">
                 ${buildVariantSelectors(p)}
               </div>
