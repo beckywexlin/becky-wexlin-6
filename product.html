@@ -2,9 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WYJNL0114K');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Product — Becky Wexlin Creative</title>
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -39,6 +48,9 @@
     .product-main-img {
       flex: 1;
       aspect-ratio: 1 / 1;
+      max-height: 480px;
+      max-width: 480px;
+      margin: 0 auto;
       overflow: hidden;
       border-radius: 4px;
       background: #1a1a1a;
@@ -86,6 +98,25 @@
       padding: 0 40px;
       align-items: start;
     }
+    .product-layout > * { min-width: 0; }
+    .product-images { min-width: 0; max-width: 100%; }
+    .product-info {
+      position: sticky;
+      top: calc(var(--nav-h) + 24px);
+    }
+    .product-description {
+      max-height: 180px;
+      overflow-y: auto;
+      font-size: 14px;
+      color: #888;
+      line-height: 1.7;
+      margin-bottom: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: #333 transparent;
+    }
+    .product-description::-webkit-scrollbar { width: 4px; }
+    .product-description::-webkit-scrollbar-track { background: transparent; }
+    .product-description::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
 
     /* ── SIZE / VARIANT BUTTONS ────────────────────────────── */
     .variant-btn {
@@ -141,14 +172,112 @@
     .related-card-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px; }
     .related-card-price { font-size: 14px; color: #c8f135; }
 
+    /* ── QUANTITY SELECTOR ─────────────────────────────────── */
+    .qty-wrap {
+      display: flex;
+      align-items: center;
+      border: 1px solid #2a2a2a;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .qty-btn {
+      background: #1a1a1a;
+      color: var(--white);
+      border: none;
+      width: 36px;
+      height: 42px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .qty-btn:hover { background: #2a2a2a; }
+    .qty-input {
+      width: 40px;
+      text-align: center;
+      background: #111;
+      color: var(--white);
+      border: none;
+      border-left: 1px solid #2a2a2a;
+      border-right: 1px solid #2a2a2a;
+      font-size: 15px;
+      font-family: var(--font-body);
+      height: 42px;
+      -moz-appearance: textfield;
+    }
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
     /* ── RESPONSIVE ────────────────────────────────────────── */
     @media (max-width: 768px) {
-      .product-layout { grid-template-columns: 1fr; padding: 0 20px; gap: 32px; }
-      .related-grid { grid-template-columns: repeat(2, 1fr); }
-      .related-section { padding: 0 20px; }
+      .product-layout {
+        grid-template-columns: 1fr;
+        padding: 0 16px;
+        gap: 24px;
+        margin: 16px auto;
+      }
+      .product-info { position: static; }
+      .product-main-img { max-height: 420px; max-width: 100%; }
+      .product-description { max-height: 120px; }
+      .arrow-btn { width: 38px; height: 38px; font-size: 16px; }
+      .product-thumb { width: 56px; height: 56px; }
+      .variant-btn { padding: 12px 16px; font-size: 15px; min-width: 52px; }
+      .qty-btn { width: 44px; height: 48px; font-size: 22px; }
+      .qty-input { width: 44px; height: 48px; font-size: 16px; }
+      .related-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .related-section { padding: 0 16px; margin: 40px auto 60px; }
+      .related-section h2 { font-size: 18px; }
     }
     @media (max-width: 480px) {
-      .related-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .related-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .product-main-img { max-height: 360px; }
+    }
+    /* Product tag chips — subtle */
+    .product-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid #1f1f1f;
+    }
+    .tag-chip {
+      display: inline-block;
+      color: #666;
+      font-size: 11px;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      transition: color 0.2s;
+    }
+    .tag-chip::before { content: "#"; opacity: 0.5; margin-right: 1px; }
+    .tag-chip:hover { color: #c8f135; }
+
+    /* Mobile sticky add-to-cart bar */
+    .mobile-buy-bar {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(17,17,17,0.97);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid #2a2a2a;
+      padding: 12px 16px;
+      z-index: 100;
+      gap: 12px;
+      align-items: center;
+    }
+    .mobile-buy-bar .mobile-price {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--lime);
+      flex-shrink: 0;
+    }
+    .mobile-buy-bar button {
+      flex: 1;
+      padding: 14px;
+      font-size: 15px;
+    }
+    @media (max-width: 768px) {
+      .mobile-buy-bar { display: flex; }
+      main { padding-bottom: 80px; }
     }
   </style>
 </head>
@@ -201,11 +330,24 @@
     <div class="related-grid" id="related-grid"></div>
   </section>
 
+  <!-- ── MOBILE STICKY BUY BAR ─────────────────────────────── -->
+  <div class="mobile-buy-bar" id="mobile-buy-bar" style="display:none;">
+    <span class="mobile-price" id="mobile-buy-price">$0.00</span>
+    <button class="btn btn-primary" onclick="document.querySelector('.product-info button.btn-primary').click()">Add to cart</button>
+  </div>
+
   <footer class="site-footer" role="contentinfo">
     <div class="footer-grid">
       <div class="footer-logo">
         <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" />
         <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+              <div class="footer-social">
+                <a href="https://instagram.com/beckywexlin" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+                <a href="https://tiktok.com/@beckywexlin" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48v-7.15a8.16 8.16 0 005.58 2.17v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/></svg></a>
+                <a href="https://facebook.com/beckywexlin" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                <a href="https://pinterest.com/beckywexlin" target="_blank" rel="noopener" aria-label="Pinterest"><svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg></a>
+                <a href="https://x.com/beckywexlin" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+              </div>
       </div>
       <div class="footer-col">
         <h4>Shop</h4>
@@ -214,6 +356,8 @@
           <li><a href="shop.html#shirts">Shirts</a></li>
           <li><a href="shop.html#hoodies">Hoodies</a></li>
           <li><a href="shop.html#new">New arrivals</a></li>
+          <li><a href="collections/graphic-tees.html">Graphic Tees</a></li>
+          <li><a href="shirts.html">Shirt Guide</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -228,14 +372,14 @@
         <h4>Help</h4>
         <ul>
           <li><a href="faq.html">FAQ</a></li>
-          <li><a href="faq.html#shipping">Shipping</a></li>
-          <li><a href="faq.html#returns">Returns</a></li>
+          <li><a href="shipping.html">Shipping</a></li>
+          <li><a href="refunds.html">Returns</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
       <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative. Made with stubbornness and strong opinions.</p>
-      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a></p>
+      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a> &nbsp;·&nbsp; <a href="shipping.html">Shipping</a> &nbsp;·&nbsp; <a href="refunds.html">Refunds</a></p>
     </div>
   </footer>
 
@@ -312,9 +456,19 @@
       if (!available) return;
       selectedVariant = { id, title, price };
       document.getElementById('product-price').textContent = '$' + price;
+      var mbp = document.getElementById('mobile-buy-price');
+      if (mbp) { mbp.textContent = '$' + price; document.getElementById('mobile-buy-bar').style.display = ''; }
       document.querySelectorAll('#size-options .variant-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       document.getElementById('variant-error').style.display = 'none';
+    }
+
+    function changeQty(delta) {
+      var input = document.getElementById('product-qty');
+      var val = parseInt(input.value) + delta;
+      if (val < 1) val = 1;
+      if (val > 20) val = 20;
+      input.value = val;
     }
 
     function handleAddToCart() {
@@ -322,13 +476,15 @@
         document.getElementById('variant-error').style.display = 'block';
         return;
       }
+      var qty = parseInt(document.getElementById('product-qty').value) || 1;
       addToCart({
         id: currentProduct.id,
         variantId: selectedVariant.id,
         title: currentProduct.title,
         size: selectedVariant.title,
         price: selectedVariant.price,
-        image: currentProduct.images[0] || ''
+        image: currentProduct.images[0] || '',
+        quantity: qty
       });
     }
 
@@ -397,6 +553,143 @@
       }
     }
 
+    /* ── SEO / STRUCTURED DATA ──────────────────────── */
+    let tagsMap = null;
+    async function getProductTags(id) {
+      if (!tagsMap) {
+        try {
+          const r = await fetch('/product-tags.json', { cache: 'no-cache' });
+          tagsMap = r.ok ? await r.json() : {};
+        } catch { tagsMap = {}; }
+      }
+      const t = tagsMap[String(id)];
+      return Array.isArray(t) ? t : [];
+    }
+
+    function renderTagChips(tags) {
+      const host = document.getElementById('product-tags');
+      if (!host) return;
+      if (!tags.length) { host.style.display = 'none'; return; }
+      host.innerHTML = tags.map(t =>
+        `<a class="tag-chip" href="shop.html?tag=${encodeURIComponent(t)}">${t}</a>`
+      ).join('');
+    }
+
+    async function injectSeoTags(p, firstSorted) {
+      const tags = await getProductTags(p.id);
+      renderTagChips(tags);
+      const url = 'https://beckywexlin.com/product.html?id=' + p.id;
+      const plainDesc = (p.description || '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const shortDesc = plainDesc.length > 155 ? plainDesc.slice(0, 152) + '...' : plainDesc;
+      const image = p.images?.[0] || '';
+      const price = firstSorted ? String(firstSorted.price) : '';
+      const anyAvailable = (p.variants || []).some(v => v.available);
+
+      const setMeta = (selector, attrs) => {
+        let el = document.head.querySelector(selector);
+        if (!el) {
+          el = document.createElement(attrs.tag || 'meta');
+          Object.entries(attrs.create || {}).forEach(([k, v]) => el.setAttribute(k, v));
+          document.head.appendChild(el);
+        }
+        Object.entries(attrs.set || {}).forEach(([k, v]) => el.setAttribute(k, v));
+      };
+
+      setMeta('meta[name="description"]', {
+        create: { name: 'description' },
+        set: { content: shortDesc }
+      });
+      if (tags.length) {
+        setMeta('meta[name="keywords"]', {
+          create: { name: 'keywords' },
+          set: { content: tags.join(', ') }
+        });
+      }
+      setMeta('link[rel="canonical"]', {
+        tag: 'link',
+        create: { rel: 'canonical' },
+        set: { href: url }
+      });
+
+      const og = [
+        ['og:type', 'product'],
+        ['og:title', p.title],
+        ['og:description', shortDesc],
+        ['og:url', url],
+        ['og:image', image],
+        ['og:site_name', 'Becky Wexlin Creative'],
+        ['product:price:amount', price],
+        ['product:price:currency', 'USD']
+      ];
+      og.forEach(([prop, val]) => {
+        if (!val) return;
+        setMeta(`meta[property="${prop}"]`, {
+          create: { property: prop },
+          set: { content: val }
+        });
+      });
+
+      const tw = [
+        ['twitter:card', 'summary_large_image'],
+        ['twitter:title', p.title],
+        ['twitter:description', shortDesc],
+        ['twitter:image', image]
+      ];
+      tw.forEach(([name, val]) => {
+        if (!val) return;
+        setMeta(`meta[name="${name}"]`, {
+          create: { name },
+          set: { content: val }
+        });
+      });
+
+      const offers = (p.variants || []).map(v => ({
+        '@type': 'Offer',
+        sku: String(v.id),
+        name: v.title,
+        price: String(v.price),
+        priceCurrency: 'USD',
+        availability: v.available
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+        url
+      }));
+
+      const ld = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: p.title,
+        description: plainDesc,
+        image: p.images || [],
+        sku: String(p.id),
+        brand: { '@type': 'Brand', name: 'Becky Wexlin Creative' },
+        ...(tags.length ? { keywords: tags.join(', ') } : {}),
+        offers: {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'USD',
+          lowPrice: price,
+          highPrice: price,
+          offerCount: offers.length,
+          availability: anyAvailable
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+          offers
+        }
+      };
+
+      let ldEl = document.getElementById('product-jsonld');
+      if (!ldEl) {
+        ldEl = document.createElement('script');
+        ldEl.type = 'application/ld+json';
+        ldEl.id = 'product-jsonld';
+        document.head.appendChild(ldEl);
+      }
+      ldEl.textContent = JSON.stringify(ld);
+    }
+
     /* ── MAIN LOAD ──────────────────────────────────── */
     async function loadProduct() {
       try {
@@ -407,6 +700,7 @@
         document.title = p.title + ' — Becky Wexlin Creative';
 
         const firstSorted = sortedVariants(p.variants, null)[0];
+        injectSeoTags(p, firstSorted);
 
         page.innerHTML = `
           <div class="product-layout">
@@ -445,18 +739,42 @@
               <div id="variant-error" style="display:none;color:var(--pink);font-size:13px;margin-bottom:12px;">
                 Please select a size
               </div>
-              <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="handleAddToCart()">
-                Add to cart
-              </button>
+              <div style="display:flex;gap:12px;align-items:center;margin-top:8px;">
+                <div class="qty-wrap">
+                  <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+                  <input type="number" id="product-qty" value="1" min="1" max="20" readonly class="qty-input" />
+                  <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+                </div>
+                <button class="btn btn-primary" style="flex:1;" onclick="handleAddToCart()">
+                  Add to cart
+                </button>
+              </div>
               <div class="product-meta">
                 <p>Free shipping on all orders</p>
-                <p>Printed on demand — ships in 3-7 days</p>
+                <p>Printed on demand — made just for you</p>
               </div>
+              <div class="product-tags" id="product-tags" style="display:none;"></div>
             </div>
 
           </div>`;
 
         selectedVariant = firstSorted || null;
+        if (firstSorted) {
+          var mbp = document.getElementById('mobile-buy-price');
+          if (mbp) { mbp.textContent = '$' + firstSorted.price; document.getElementById('mobile-buy-bar').style.display = ''; }
+        }
+        // GA4 view_item event
+        if (typeof gtag === 'function') {
+          gtag('event', 'view_item', {
+            currency: 'USD',
+            value: firstSorted ? parseFloat(firstSorted.price) : 0,
+            items: [{
+              item_id: p.id,
+              item_name: p.title,
+              price: firstSorted ? parseFloat(firstSorted.price) : 0
+            }]
+          });
+        }
         loadRelated();
 
       } catch (err) {
