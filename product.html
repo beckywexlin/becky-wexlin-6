@@ -639,7 +639,15 @@
 
     async function injectSeoTags(p, firstSorted) {
       const tags = await getProductTags(p.id);
-      renderTagChips(tags);
+      // Chip container is rendered after this runs — retry until it exists.
+      const paintChips = (attempt = 0) => {
+        if (document.getElementById('product-tags')) {
+          renderTagChips(tags);
+        } else if (attempt < 20) {
+          setTimeout(() => paintChips(attempt + 1), 50);
+        }
+      };
+      paintChips();
       const url = 'https://beckywexlin.com/product.html?id=' + p.id;
       const plainDesc = (p.description || '')
         .replace(/<[^>]+>/g, ' ')
