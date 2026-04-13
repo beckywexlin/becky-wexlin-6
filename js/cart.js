@@ -21,11 +21,27 @@ function updateCartCount() {
 
 // ── ADD TO CART ──
 function addToCart(product) {
+  const qty = product.quantity || 1;
   const existing = cart.find(i => i.id === product.id && i.variantId === product.variantId);
   if (existing) {
-    existing.quantity += 1;
+    existing.quantity += qty;
   } else {
-    cart.push({ ...product, quantity: 1 });
+    cart.push({ ...product, quantity: qty });
+  }
+  // GA4 add_to_cart event
+  if (typeof gtag === 'function') {
+    const price = parseFloat((product.price || '0').toString().replace('$', '')) || 0;
+    gtag('event', 'add_to_cart', {
+      currency: 'USD',
+      value: price * qty,
+      items: [{
+        item_id: product.id,
+        item_name: product.title,
+        item_variant: product.size || '',
+        price: price,
+        quantity: qty
+      }]
+    });
   }
   saveCart();
   openCart();
@@ -69,7 +85,7 @@ function renderCartItems() {
   if (!container) return;
 
   if (cart.length === 0) {
-    container.innerHTML = '<p class="cart-empty">Your cart is empty.</p>';
+    container.innerHTML = '<p class="cart-empty">Your cart is empty.<br><a href="shop.html" style="color:var(--lime);font-size:14px;text-decoration:underline;text-underline-offset:3px;">Add something weird →</a></p>';
     footer.style.display = 'none';
     return;
   }

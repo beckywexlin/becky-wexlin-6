@@ -39,7 +39,7 @@ Place your logo files in `/images/`:
 2. Go to repo Settings → Pages → set source to `main` branch, `/ (root)`
 3. GitHub gives you a URL like `yourusername.github.io/becky-wexlin`
 4. In Cloudflare DNS, add a CNAME record pointing your domain to that URL
-5. Add a `CNAME` file in this folder with just your domain name: `beckywexlincreative.com`
+5. Add a `CNAME` file in this folder with just your domain name: `beckywexlin.com`
 
 ## Adding products
 

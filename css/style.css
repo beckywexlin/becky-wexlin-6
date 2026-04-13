@@ -1,6 +1,6 @@
 /* ============================================
    BECKY WEXLIN CREATIVE — Global Styles
-   beckywexlincreative.com
+   beckywexlin.com
    ============================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap');
@@ -77,7 +77,7 @@ ul {
 
 .announce-inner {
   display: inline-flex;
-  animation: announce-scroll 20s linear infinite;
+  animation: announce-scroll 68s linear infinite;
 }
 
 .announce-inner span {
@@ -619,6 +619,32 @@ ul {
   color: var(--lime);
 }
 
+.footer-social {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+}
+.footer-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  color: #666;
+  transition: all var(--transition);
+}
+.footer-social a:hover {
+  color: var(--lime);
+  border-color: var(--lime);
+}
+.footer-social svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
 /* ── UTILITY ── */
 .text-lime  { color: var(--lime); }
 .text-pink  { color: var(--pink); }
@@ -638,6 +664,22 @@ ul {
 @media (max-width: 768px) {
   .site-nav { padding: 0 20px; }
   .nav-links { display: none; }
+  .nav-links.nav-open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: var(--nav-h);
+    left: 0; right: 0;
+    background: var(--offblack);
+    border-bottom: 1px solid var(--gray);
+    padding: 20px 24px;
+    gap: 18px;
+    z-index: 99;
+  }
+  .nav-links.nav-open a {
+    font-size: 16px;
+    padding: 6px 0;
+  }
   .nav-hamburger { display: flex; }
 
   .hero { padding: 32px 24px 24px; }
@@ -889,4 +931,16 @@ ul {
 
 @media (max-width: 480px) {
   .footer-grid { grid-template-columns: 1fr; }
+}
+
+/* ── MOBILE GLOBAL TWEAKS ── */
+@media (max-width: 768px) {
+  .site-footer { padding: 40px 20px 24px; }
+  .footer-grid { gap: 24px; }
+  .announce-bar { padding: 8px 0; }
+  .announce-inner span { font-size: 12px; }
+  .cart-drawer { width: 100% !important; max-width: 100%; }
+  /* Bigger touch targets */
+  .nav-cta { padding: 10px 18px; }
+  .btn { min-height: 44px; }
 }

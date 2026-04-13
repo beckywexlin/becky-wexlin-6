@@ -86,6 +86,19 @@ export default {
   },
 };
 
+function stripHtml(html) {
+  if (!html) return '';
+  // Remove size guide tables entirely
+  let clean = html.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, '');
+  // Strip all HTML tags
+  clean = clean.replace(/<[^>]+>/g, '');
+  // Decode common entities
+  clean = clean.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+  // Collapse whitespace
+  clean = clean.replace(/\s+/g, ' ').trim();
+  return clean;
+}
+
 function normalizeProduct(p) {
   const enabledVariants = (p.variants || []).filter(v => v.is_enabled);
   const minCents = enabledVariants.length
@@ -109,7 +122,7 @@ function normalizeProduct(p) {
   return {
     id:          p.id,
     title:       p.title,
-    description: p.description,
+    description: stripHtml(p.description),
     image,
     images:      (p.images || []).map(i => i.src),
     price:       (minCents / 100).toFixed(2),

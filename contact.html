@@ -2,19 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WYJNL0114K');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- ── PRIMARY SEO ── -->
   <title>Contact — Becky Wexlin Creative | Get in Touch</title>
   <meta name="description" content="Get in touch with Becky Wexlin Creative. Questions about orders, shipping, returns, or just want to say something weird? We're here." />
-  <link rel="canonical" href="https://www.beckywexlincreative.com/contact.html" />
+  <link rel="canonical" href="https://www.beckywexlin.com/contact.html" />
 
   <!-- ── OPEN GRAPH ── -->
   <meta property="og:type"        content="website" />
-  <meta property="og:url"         content="https://www.beckywexlincreative.com/contact.html" />
+  <meta property="og:url"         content="https://www.beckywexlin.com/contact.html" />
   <meta property="og:title"       content="Contact — Becky Wexlin Creative" />
   <meta property="og:description" content="Questions, feedback, cursed design ideas — we read it all." />
-  <meta property="og:image"       content="https://www.beckywexlincreative.com/images/og-image.jpg" />
+  <meta property="og:image"       content="https://www.beckywexlin.com/images/og-image.jpg" />
 
   <!-- ── STRUCTURED DATA ── -->
   <script type="application/ld+json">
@@ -22,17 +30,18 @@
     "@context": "https://schema.org",
     "@type": "ContactPage",
     "name": "Contact Becky Wexlin Creative",
-    "url": "https://www.beckywexlincreative.com/contact.html",
+    "url": "https://www.beckywexlin.com/contact.html",
     "mainEntity": {
       "@type": "Organization",
       "name": "Becky Wexlin Creative",
       "email": "hello@beckywexlin.com",
-      "url": "https://www.beckywexlincreative.com"
+      "url": "https://www.beckywexlin.com"
     }
   }
   </script>
 
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -197,6 +206,30 @@
 
 <body>
 
+  <!-- CART OVERLAY -->
+  <div id="cart-overlay" class="cart-overlay"></div>
+
+  <!-- CART DRAWER -->
+  <div id="cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h3>Your cart</h3>
+      <button class="cart-close" onclick="closeCart()">×</button>
+    </div>
+    <div class="cart-drawer-body">
+      <div id="cart-items"></div>
+    </div>
+    <div class="cart-drawer-footer" id="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cart-total">$0.00</span>
+      </div>
+      <p class="cart-shipping-note">Free shipping on all orders</p>
+      <a href="checkout.html" class="btn btn-primary" style="width:100%; text-align:center; display:block;">Checkout</a>
+      <button class="btn btn-outline" onclick="closeCart()" style="width:100%; margin-top:12px;">Continue shopping</button>
+    </div>
+  </div>
+
+
   <div class="announce-bar" role="banner">
     Free shipping on orders over $50 — <a href="shop.html">shop now</a>
   </div>
@@ -211,6 +244,12 @@
       <li><a href="about.html">About</a></li>
       <li><a href="contact.html" class="active">Contact</a></li>
       <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+      <li>
+        <button class="cart-icon-btn" onclick="openCart()">
+          Cart
+          <span class="cart-count" style="display:none;">0</span>
+        </button>
+      </li>
     </ul>
     <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -237,15 +276,17 @@
         </h2>
 
         <!-- NOTE: This is a static HTML form.
-             To make it actually send messages, connect it to a free service like
-             Formspree (formspree.io) — just replace the action URL below.
-             Instructions are in the README. -->
+             Connected to Web3Forms for delivery. -->
         <form
           class="contact-form"
           id="contact-form"
-          action="https://formspree.io/f/YOUR_FORM_ID"
+          action="https://api.web3forms.com/submit"
           method="POST"
         >
+          <input type="hidden" name="access_key" value="be6a6a64-bf9e-491d-aeab-7189ce346512" />
+          <input type="hidden" name="subject" value="New contact form submission — Becky Wexlin" />
+          <input type="hidden" name="from_name" value="Becky Wexlin Website" />
+          <input type="checkbox" name="botcheck" style="display: none;" />
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div class="form-group">
               <label class="form-label" for="first-name">First name</label>
@@ -259,7 +300,7 @@
 
           <div class="form-group">
             <label class="form-label" for="subject">What's this about?</label>
-            <select class="form-select" id="subject" name="subject">
+            <select class="form-select" id="subject" name="topic">
               <option value="">Pick one...</option>
               <option value="order">My order</option>
               <option value="shipping">Shipping question</option>
@@ -289,6 +330,25 @@
       <!-- ── CONTACT INFO ── -->
       <aside class="contact-info">
 
+        <div style="background: var(--offblack); border: 1px solid #2a2a2a; border-top: 3px solid var(--pink); border-radius: var(--radius); padding: 32px;">
+          <p style="font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase; color: var(--pink); margin-bottom: 8px;">Custom shirt request</p>
+          <h3 style="font-family: var(--font-display); font-size: 22px; font-style: italic; font-weight: 900; color: var(--white); margin-bottom: 8px;">Be my muse.</h3>
+          <p style="font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 20px;">Got a design idea, a phrase that needs to exist on a shirt, or a custom request? Drop it here. No promises, but the best ideas have a funny way of becoming real products.</p>
+          <form id="muse-form" action="https://api.web3forms.com/submit" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
+            <input type="hidden" name="access_key" value="be6a6a64-bf9e-491d-aeab-7189ce346512" />
+            <input type="hidden" name="subject" value="New shirt idea submission — Be My Muse" />
+            <input type="hidden" name="from_name" value="Becky Wexlin Website — Muse" />
+            <input type="checkbox" name="botcheck" style="display: none;" />
+            <input class="form-input" type="text" name="name" placeholder="Your name" required />
+            <input class="form-input" type="email" name="email" placeholder="Your email" required />
+            <textarea class="form-textarea" name="shirt_idea" placeholder="Describe your design idea, custom shirt request, or the phrase you need on a tee. The weirder the better." required style="min-height: 100px;"></textarea>
+            <button type="submit" class="btn btn-primary" style="align-self: flex-start;">Submit your weird →</button>
+            <div id="muse-success" style="display:none; background: #0A1F0A; border: 1px solid #1D6B1D; border-radius: var(--radius); padding: 16px; color: #4CAF50; font-size: 14px;">
+              Idea received. If it ends up on a shirt, you'll be the first to know.
+            </div>
+          </form>
+        </div>
+
         <div class="response-card">
           <p class="response-card-title">We reply fast.</p>
           <p class="response-card-sub">Usually within 1–2 business days. We're weird, not slow.</p>
@@ -301,7 +361,7 @@
 
         <div class="contact-info-block" id="shipping">
           <h3>Shipping</h3>
-          <p>All orders are printed fresh and ship within 7 days of purchase. Your order is routed to the production facility closest to your address to keep transit time and shipping costs down. US orders typically arrive within 3–7 days of shipping. International orders may take 7–14 days. You'll receive a tracking number by email once your order is on its way.</p>
+          <p>All orders are printed fresh and made to order. Your order is routed to the production facility closest to your address to keep transit time and shipping costs down. You'll receive a tracking number by email once your order is on its way. For full details, see our <a href="shipping.html">shipping policy</a>.</p>
         </div>
 
         <div class="contact-info-block" id="returns">
@@ -325,6 +385,13 @@
       <div class="footer-logo">
         <img src="images/logo-lime.png" alt="Becky Wexlin Creative" />
         <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+              <div class="footer-social">
+                <a href="https://instagram.com/beckywexlin" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+                <a href="https://tiktok.com/@beckywexlin" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48v-7.15a8.16 8.16 0 005.58 2.17v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/></svg></a>
+                <a href="https://facebook.com/beckywexlin" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                <a href="https://pinterest.com/beckywexlin" target="_blank" rel="noopener" aria-label="Pinterest"><svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg></a>
+                <a href="https://x.com/beckywexlin" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+              </div>
       </div>
       <div class="footer-col">
         <h4>Shop</h4>
@@ -332,6 +399,8 @@
           <li><a href="shop.html">All products</a></li>
           <li><a href="shop.html#shirts">Shirts</a></li>
           <li><a href="shop.html#hoodies">Hoodies</a></li>
+          <li><a href="collections/graphic-tees.html">Graphic Tees</a></li>
+          <li><a href="shirts.html">Shirt Guide</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -346,30 +415,105 @@
         <h4>Help</h4>
         <ul>
           <li><a href="faq.html">FAQ</a></li>
-          <li><a href="faq.html#shipping">Shipping</a></li>
-          <li><a href="faq.html#returns">Returns</a></li>
+          <li><a href="shipping.html">Shipping</a></li>
+          <li><a href="refunds.html">Returns</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
       <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative. Made with stubbornness and strong opinions.</p>
-      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a></p>
+      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a> &nbsp;·&nbsp; <a href="shipping.html">Shipping</a> &nbsp;·&nbsp; <a href="refunds.html">Refunds</a></p>
     </div>
   </footer>
 
+  <script src="js/cart.js"></script>
   <script src="js/main.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    /* Basic form UX — works with Formspree or similar */
+    // ── Klaviyo profile capture ──
+    function pushToKlaviyo(email, name, source) {
+      fetch('https://a.klaviyo.com/client/profiles/?company_id=SSfm5P', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'revision': '2024-10-15' },
+        body: JSON.stringify({
+          data: {
+            type: 'profile',
+            attributes: {
+              email: email,
+              first_name: name || '',
+              properties: { source: source }
+            }
+          }
+        })
+      }).catch(() => {});
+    }
+
     const form    = document.getElementById('contact-form');
     const success = document.getElementById('form-success');
 
     if (form) {
-      form.addEventListener('submit', function (e) {
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
         const btn = form.querySelector('button[type="submit"]');
         btn.textContent = 'Sending...';
         btn.disabled = true;
+
+        try {
+          const res = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(Object.fromEntries(new FormData(form)))
+          });
+          const data = await res.json();
+          const fd = Object.fromEntries(new FormData(form));
+          if (data.success) {
+            pushToKlaviyo(fd.email, fd.first_name, 'Contact Form');
+            form.reset();
+            success.style.display = 'block';
+            btn.textContent = 'Sent!';
+          } else {
+            btn.textContent = 'Something went wrong — try again';
+            btn.disabled = false;
+          }
+        } catch (err) {
+          btn.textContent = 'Something went wrong — try again';
+          btn.disabled = false;
+        }
+      });
+    }
+
+    const museForm = document.getElementById('muse-form');
+    const museSuccess = document.getElementById('muse-success');
+
+    if (museForm) {
+      museForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = museForm.querySelector('button[type="submit"]');
+        btn.textContent = 'Sending...';
+        btn.disabled = true;
+
+        try {
+          const res = await fetch(museForm.action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(Object.fromEntries(new FormData(museForm)))
+          });
+          const data = await res.json();
+          const mfd = Object.fromEntries(new FormData(museForm));
+          if (data.success) {
+            pushToKlaviyo(mfd.email, mfd.name, 'Custom Shirt Request');
+            museForm.reset();
+            museSuccess.style.display = 'block';
+            btn.textContent = 'Submitted!';
+          } else {
+            btn.textContent = 'Something went wrong — try again';
+            btn.disabled = false;
+          }
+        } catch (err) {
+          btn.textContent = 'Something went wrong — try again';
+          btn.disabled = false;
+        }
       });
     }
   </script>

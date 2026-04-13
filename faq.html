@@ -2,20 +2,28 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WYJNL0114K');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- ── PRIMARY SEO ── -->
   <title>FAQ — Becky Wexlin Creative | Shipping, Returns, Sizing & More</title>
   <meta name="description" content="Everything you need to know about Becky Wexlin Creative — shipping times, sizing, returns policy, how our shirts are made, and what makes a good graphic tee. All your questions answered." />
   <meta name="keywords" content="Becky Wexlin Creative FAQ, graphic tee shipping, shirt sizing guide, print on demand returns policy, how are graphic tees made, graphic tee care, funky shirt questions" />
-  <link rel="canonical" href="https://www.beckywexlincreative.com/faq.html" />
+  <link rel="canonical" href="https://www.beckywexlin.com/faq.html" />
 
   <!-- ── OPEN GRAPH ── -->
   <meta property="og:type"        content="website" />
-  <meta property="og:url"         content="https://www.beckywexlincreative.com/faq.html" />
+  <meta property="og:url"         content="https://www.beckywexlin.com/faq.html" />
   <meta property="og:title"       content="FAQ — Becky Wexlin Creative" />
   <meta property="og:description" content="Shipping, sizing, returns, and everything else you wanted to know." />
-  <meta property="og:image"       content="https://www.beckywexlincreative.com/images/og-image.jpg" />
+  <meta property="og:image"       content="https://www.beckywexlin.com/images/og-image.jpg" />
 
   <!-- ══════════════════════════════════════════════════════
        FAQ SCHEMA — this is the AEO goldmine.
@@ -33,7 +41,7 @@
         "name": "How long does shipping take?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "All Becky Wexlin Creative orders ship within 7 days of purchase. US orders typically arrive within 3–7 days after shipping. International orders may take 7–14 days depending on destination. You will receive a tracking number by email as soon as your order is on its way."
+          "text": "All Becky Wexlin Creative orders are made to order and shipped as soon as production is complete. You will receive a tracking number by email as soon as your order is on its way."
         }
       },
       {
@@ -41,7 +49,7 @@
         "name": "Do you ship internationally?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes. Becky Wexlin Creative ships worldwide. International orders typically arrive within 7–14 days of shipping. Shipping costs and delivery windows vary by destination and are calculated at checkout."
+          "text": "Yes. Becky Wexlin Creative ships worldwide. Shipping costs and delivery windows vary by destination and are calculated at checkout."
         }
       },
       {
@@ -113,7 +121,7 @@
         "name": "How do I track my order?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "You will receive a tracking number by email as soon as your order ships. If you have not received a tracking email within 7 days of your purchase, please check your spam folder or contact us at hello@beckywexlincreative.com."
+          "text": "You will receive a tracking number by email as soon as your order ships. If you have not received a tracking email, please check your spam folder or contact us at hello@beckywexlin.com."
         }
       },
       {
@@ -137,7 +145,7 @@
         "name": "Do you offer custom or personalised shirts?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "We do not currently offer custom or personalised shirts. All designs are created by Becky Wexlin Creative and available through the shop. If you have a design idea you'd love to see made, send it to hello@beckywexlincreative.com — we read everything."
+          "text": "We do not currently offer custom or personalised shirts. All designs are created by Becky Wexlin Creative and available through the shop. If you have a design idea you'd love to see made, send it to hello@beckywexlin.com — we read everything."
         }
       },
       {
@@ -145,7 +153,7 @@
         "name": "How do I contact Becky Wexlin Creative?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "The best way to reach us is through the contact form at beckywexlincreative.com/contact.html or by emailing hello@beckywexlincreative.com. We respond within 1–2 business days."
+          "text": "The best way to reach us is through the contact form at beckywexlin.com/contact.html or by emailing hello@beckywexlin.com. We respond within 1–2 business days."
         }
       }
     ]
@@ -158,13 +166,14 @@
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.beckywexlincreative.com/" },
-      { "@type": "ListItem", "position": 2, "name": "FAQ", "item": "https://www.beckywexlincreative.com/faq.html" }
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.beckywexlin.com/" },
+      { "@type": "ListItem", "position": 2, "name": "FAQ", "item": "https://www.beckywexlin.com/faq.html" }
     ]
   }
   </script>
 
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -375,6 +384,30 @@
 
 <body>
 
+  <!-- CART OVERLAY -->
+  <div id="cart-overlay" class="cart-overlay"></div>
+
+  <!-- CART DRAWER -->
+  <div id="cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h3>Your cart</h3>
+      <button class="cart-close" onclick="closeCart()">×</button>
+    </div>
+    <div class="cart-drawer-body">
+      <div id="cart-items"></div>
+    </div>
+    <div class="cart-drawer-footer" id="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cart-total">$0.00</span>
+      </div>
+      <p class="cart-shipping-note">Free shipping on all orders</p>
+      <a href="checkout.html" class="btn btn-primary" style="width:100%; text-align:center; display:block;">Checkout</a>
+      <button class="btn btn-outline" onclick="closeCart()" style="width:100%; margin-top:12px;">Continue shopping</button>
+    </div>
+  </div>
+
+
   <div class="announce-bar" role="banner">
     Free shipping on orders over $50 — <a href="shop.html">shop now</a>
   </div>
@@ -389,6 +422,12 @@
       <li><a href="about.html">About</a></li>
       <li><a href="contact.html">Contact</a></li>
       <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+      <li>
+        <button class="cart-icon-btn" onclick="openCart()">
+          Cart
+          <span class="cart-count" style="display:none;">0</span>
+        </button>
+      </li>
     </ul>
     <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -455,14 +494,14 @@
           <details class="faq-item" id="faq-order-confirmation">
             <summary>I placed an order — what happens next?<span class="faq-icon">+</span></summary>
             <div class="faq-answer">
-              <p>You'll receive an order confirmation email immediately after purchase. Your shirt is then sent to production — printed fresh to order at the facility closest to your address. Once it ships, you'll receive a second email with your tracking number. Total time from order to delivery is typically within 7 days.</p>
+              <p>You'll receive an order confirmation email immediately after purchase. Your shirt is then sent to production — printed fresh to order at the facility closest to your address. Once it ships, you'll receive a second email with your tracking number.</p>
             </div>
           </details>
 
           <details class="faq-item" id="faq-cancel-order">
             <summary>Can I cancel or change my order after placing it?<span class="faq-icon">+</span></summary>
             <div class="faq-answer">
-              <p>Because production begins quickly after an order is placed, we have a very short window for cancellations or changes — typically within 2 hours of purchase. If you need to cancel or make a change, <a href="contact.html">contact us</a> immediately with your order number and we'll do our best to help. After production has started, changes are no longer possible.</p>
+              <p>Because production begins quickly after an order is placed, we have a very short window for cancellations or changes. If you need to cancel or make a change, <a href="contact.html">contact us</a> immediately with your order number and we'll do our best to help. After production has started, changes are no longer possible.</p>
             </div>
           </details>
 
@@ -481,12 +520,7 @@
           <details class="faq-item" id="faq-shipping-time">
             <summary>How long does shipping take?<span class="faq-icon">+</span></summary>
             <div class="faq-answer">
-              <p>All orders ship within 7 days of purchase. Once shipped:</p>
-              <ul style="margin-top: 12px; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px;">
-                <li style="padding-left: 20px; position: relative; color: #888; font-size: 15px;"><span style="position: absolute; left: 0; color: var(--lime);">—</span> <strong>US orders</strong>: typically 3–7 days after shipping</li>
-                <li style="padding-left: 20px; position: relative; color: #888; font-size: 15px;"><span style="position: absolute; left: 0; color: var(--lime);">—</span> <strong>International orders</strong>: typically 7–14 days after shipping</li>
-              </ul>
-              <p style="margin-top: 12px;">You'll receive a tracking number by email as soon as your order is on its way.</p>
+              <p>All orders are made to order and shipped as soon as production is complete. Delivery times vary by destination. You'll receive a tracking number by email as soon as your order is on its way. For full details, see our <a href="shipping.html">shipping policy</a>.</p>
             </div>
           </details>
 
@@ -507,7 +541,7 @@
           <details class="faq-item" id="faq-tracking">
             <summary>How do I track my order?<span class="faq-icon">+</span></summary>
             <div class="faq-answer">
-              <p>You'll receive a tracking number by email as soon as your order ships. If you haven't received a tracking email within 7 days of purchase, check your spam folder first, then <a href="contact.html">contact us</a> with your order number and we'll look into it.</p>
+              <p>You'll receive a tracking number by email as soon as your order ships. If you haven't received a tracking email, check your spam folder first, then <a href="contact.html">contact us</a> with your order number and we'll look into it.</p>
             </div>
           </details>
 
@@ -622,7 +656,7 @@
           <details class="faq-item" id="faq-custom">
             <summary>Do you offer custom or personalised shirts?<span class="faq-icon">+</span></summary>
             <div class="faq-answer">
-              <p>We don't currently offer custom or personalised shirts. All designs are created by Becky Wexlin Creative. If you have a design concept you'd love to see made, send it to <a href="mailto:hello@beckywexlincreative.com">hello@beckywexlincreative.com</a> — we read everything, and good ideas occasionally become real products.</p>
+              <p>We don't currently offer custom or personalised shirts. All designs are created by Becky Wexlin Creative. If you have a design concept you'd love to see made, send it to <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a> — we read everything, and good ideas occasionally become real products.</p>
             </div>
           </details>
 
@@ -695,14 +729,14 @@
           <details class="faq-item" id="faq-press-collab">
             <summary>I'm interested in a collaboration or press enquiry — who do I contact?<span class="faq-icon">+</span></summary>
             <div class="faq-answer">
-              <p>Send us an email at <a href="mailto:hello@beckywexlincreative.com">hello@beckywexlincreative.com</a> with the subject line "Collab" or "Press" and we'll get back to you. We're open to the right kind of weird.</p>
+              <p>Send us an email at <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a> with the subject line "Collab" or "Press" and we'll get back to you. We're open to the right kind of weird.</p>
             </div>
           </details>
 
           <details class="faq-item" id="faq-suggest-design">
             <summary>Can I suggest a design idea?<span class="faq-icon">+</span></summary>
             <div class="faq-answer">
-              <p>Yes, and we love it when people do. Send your idea to <a href="mailto:hello@beckywexlincreative.com">hello@beckywexlincreative.com</a> or use the <a href="contact.html">contact form</a>. No guarantees, but genuinely good ideas occasionally make it into the shop — and we'll always let you know if yours did.</p>
+              <p>Yes, and we love it when people do. Send your idea to <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a> or use the <a href="contact.html">contact form</a>. No guarantees, but genuinely good ideas occasionally make it into the shop — and we'll always let you know if yours did.</p>
             </div>
           </details>
 
@@ -712,7 +746,7 @@
               <p>The best ways to reach us:</p>
               <ul style="margin-top: 12px; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px;">
                 <li style="padding-left: 20px; position: relative; color: #888; font-size: 15px;"><span style="position: absolute; left: 0; color: var(--lime);">—</span> <a href="contact.html">Contact form</a> on this site</li>
-                <li style="padding-left: 20px; position: relative; color: #888; font-size: 15px;"><span style="position: absolute; left: 0; color: var(--lime);">—</span> Email: <a href="mailto:hello@beckywexlincreative.com">hello@beckywexlincreative.com</a></li>
+                <li style="padding-left: 20px; position: relative; color: #888; font-size: 15px;"><span style="position: absolute; left: 0; color: var(--lime);">—</span> Email: <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a></li>
               </ul>
               <p style="margin-top: 12px;">We respond within 1–2 business days. Usually faster.</p>
             </div>
@@ -739,6 +773,13 @@
       <div class="footer-logo">
         <img src="images/logo-lime.png" alt="Becky Wexlin Creative" />
         <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+              <div class="footer-social">
+                <a href="https://instagram.com/beckywexlin" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+                <a href="https://tiktok.com/@beckywexlin" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48v-7.15a8.16 8.16 0 005.58 2.17v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/></svg></a>
+                <a href="https://facebook.com/beckywexlin" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                <a href="https://pinterest.com/beckywexlin" target="_blank" rel="noopener" aria-label="Pinterest"><svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg></a>
+                <a href="https://x.com/beckywexlin" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+              </div>
       </div>
       <div class="footer-col">
         <h4>Shop</h4>
@@ -746,6 +787,8 @@
           <li><a href="shop.html">All products</a></li>
           <li><a href="shop.html#shirts">Shirts</a></li>
           <li><a href="shop.html#hoodies">Hoodies</a></li>
+          <li><a href="collections/graphic-tees.html">Graphic Tees</a></li>
+          <li><a href="shirts.html">Shirt Guide</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -760,17 +803,18 @@
         <h4>Help</h4>
         <ul>
           <li><a href="faq.html">FAQ</a></li>
-          <li><a href="faq.html#shipping">Shipping</a></li>
-          <li><a href="faq.html#returns">Returns</a></li>
+          <li><a href="shipping.html">Shipping</a></li>
+          <li><a href="refunds.html">Returns</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
       <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative. Made with stubbornness and strong opinions.</p>
-      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a></p>
+      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a> &nbsp;·&nbsp; <a href="shipping.html">Shipping</a> &nbsp;·&nbsp; <a href="refunds.html">Refunds</a></p>
     </div>
   </footer>
 
+  <script src="js/cart.js"></script>
   <script src="js/main.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();

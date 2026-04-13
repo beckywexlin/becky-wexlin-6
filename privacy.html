@@ -2,12 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WYJNL0114K');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy — Becky Wexlin Creative</title>
   <meta name="description" content="Privacy policy for Becky Wexlin Creative. How we collect, use and protect your personal information." />
-  <link rel="canonical" href="https://www.beckywexlincreative.com/privacy.html" />
+  <link rel="canonical" href="https://www.beckywexlin.com/privacy.html" />
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -38,6 +47,12 @@
       margin: 40px 0 12px;
       letter-spacing: -0.1px;
     }
+    .legal-layout h3 {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--white);
+      margin: 24px 0 8px;
+    }
     .legal-layout p, .legal-layout li {
       font-size: 15px;
       color: #888;
@@ -55,6 +70,30 @@
 </head>
 <body>
 
+  <!-- CART OVERLAY -->
+  <div id="cart-overlay" class="cart-overlay"></div>
+
+  <!-- CART DRAWER -->
+  <div id="cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h3>Your cart</h3>
+      <button class="cart-close" onclick="closeCart()">×</button>
+    </div>
+    <div class="cart-drawer-body">
+      <div id="cart-items"></div>
+    </div>
+    <div class="cart-drawer-footer" id="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cart-total">$0.00</span>
+      </div>
+      <p class="cart-shipping-note">Free shipping on all orders</p>
+      <a href="checkout.html" class="btn btn-primary" style="width:100%; text-align:center; display:block;">Checkout</a>
+      <button class="btn btn-outline" onclick="closeCart()" style="width:100%; margin-top:12px;">Continue shopping</button>
+    </div>
+  </div>
+
+
   <div class="announce-bar" role="banner">Free shipping on orders over $50 — <a href="shop.html">shop now</a></div>
 
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
@@ -65,6 +104,12 @@
       <li><a href="about.html">About</a></li>
       <li><a href="contact.html">Contact</a></li>
       <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+      <li>
+        <button class="cart-icon-btn" onclick="openCart()">
+          Cart
+          <span class="cart-count" style="display:none;">0</span>
+        </button>
+      </li>
     </ul>
     <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
   </nav>
@@ -77,79 +122,199 @@
       </nav>
 
       <h1>Privacy policy</h1>
-      <p class="legal-date">Last updated: March 2025</p>
+      <p class="legal-date">Last updated: April 10, 2026</p>
 
-      <p>Becky Wexlin Creative ("we", "us", or "our") is committed to protecting your personal information. This policy explains what data we collect, how we use it, and your rights regarding it. If you have questions, <a href="contact.html">contact us</a> at hello@beckywexlincreative.com.</p>
+      <p>Welcome to Becky Wexlin LLC. We make shirts, run an online store, and try not to be weird about your personal information unless the vibe absolutely requires it. This Privacy Policy explains how Becky Wexlin LLC ("Becky Wexlin," "Company," "we," "us," or "our") collects, uses, shares, and protects personal information when you visit <a href="https://beckywexlin.com">https://beckywexlin.com</a>, place an order, sign up for emails or texts, contact us, or otherwise interact with our website, products, and services.</p>
 
-      <h2>What information we collect</h2>
-      <p>We collect information you provide directly when you:</p>
+      <p>This Privacy Policy is meant to be clear, readable, and actually useful. It covers our ecommerce website, print-on-demand apparel business, targeted marketing activities, customer support, social media campaigns, and email communications.</p>
+
+      <h2>1. Scope of This Privacy Policy</h2>
+      <p>This Privacy Policy applies to personal information we collect through:</p>
       <ul>
-        <li>Place an order (name, email address, shipping address, payment information)</li>
-        <li>Contact us through the contact form or by email</li>
-        <li>Sign up for communications from us</li>
+        <li>our website, <a href="https://beckywexlin.com">https://beckywexlin.com</a>;</li>
+        <li>checkout, purchases, and order fulfillment;</li>
+        <li>email, SMS, and social media marketing;</li>
+        <li>customer service and support;</li>
+        <li>advertising, analytics, and retargeting tools; and</li>
+        <li>third-party vendors that help us run our online apparel store.</li>
       </ul>
-      <p>We may also collect limited technical information automatically, such as your IP address, browser type, and pages visited, through standard web analytics tools.</p>
+      <p>This Privacy Policy does not apply to third-party websites, marketplaces, apps, or services that have their own privacy policies.</p>
 
-      <h2>How we use your information</h2>
-      <p>We use the information we collect to:</p>
+      <h2>2. The Personal Information We Collect</h2>
+      <p>Depending on how you interact with us, we may collect the following categories of personal information.</p>
+
+      <h3>A. Contact and Identifier Information</h3>
+      <p>This may include: your name, email address, phone number, billing address, shipping address, account username or login details.</p>
+
+      <h3>B. Order and Transaction Information</h3>
+      <p>This may include: products viewed, selected, or purchased; cart contents; order history; shipping and delivery details; receipts and confirmations; customer service records; defect claims, refund or replacement requests, and related communications.</p>
+
+      <h3>C. Payment Information</h3>
+      <p>When you make a purchase, payment information is usually processed by third-party payment providers. We may receive limited payment-related details such as: billing name, billing address, transaction status, partial card details or card type, payment confirmation information. We do not store full payment card numbers unless specifically stated otherwise.</p>
+
+      <h3>D. Device, Internet, and Usage Information</h3>
+      <p>When you browse our website, we and our service providers may automatically collect information such as: IP address, browser type, operating system, device identifiers, approximate location based on IP, pages viewed, products clicked, session behavior, referral source, ad interactions, cookie and pixel data.</p>
+
+      <h3>E. Communications and User Content</h3>
+      <p>If you contact us or interact with us, we may collect: emails, support messages, contact form submissions, reviews, survey responses, messages sent through social media, photos or information you provide in connection with product issues.</p>
+
+      <h3>F. Marketing and Preference Information</h3>
+      <p>We may collect: subscription preferences, email engagement data, SMS engagement data, wish list or saved-item activity, product interests, information about how you respond to ads, promotions, and campaigns.</p>
+
+      <h3>G. Security and Fraud Prevention Information</h3>
+      <p>We may collect personal information used to protect our business, customers, and website, including information related to fraud prevention, suspicious activity, abuse, or chargebacks.</p>
+
+      <h2>3. How We Collect Personal Information</h2>
+      <p>We collect personal information in a few different ways.</p>
+
+      <h3>A. Directly From You</h3>
+      <p>You may provide personal information when you: place an order, sign up for marketing emails or texts, create an account, contact us, submit a review, respond to a survey, enter a giveaway or promotion, send a message through our site or social channels.</p>
+
+      <h3>B. Automatically Through Cookies and Similar Tools</h3>
+      <p>We and our partners may collect information automatically using cookies, pixels, tags, SDKs, analytics tools, and similar technologies when you browse our website, interact with our emails, or engage with our ads.</p>
+
+      <h3>C. From Third Parties</h3>
+      <p>We may receive personal information from third parties such as: ecommerce platform providers, payment processors, analytics vendors, advertising and social media platforms, email and SMS providers, fraud prevention services, shipping carriers, print-on-demand fulfillment providers.</p>
+
+      <h2>4. Why We Collect and Use Personal Information</h2>
+      <p>We may use personal information for the following business and commercial purposes:</p>
       <ul>
-        <li>Process and fulfil your orders</li>
-        <li>Send order confirmations and shipping updates</li>
-        <li>Respond to your questions and support requests</li>
-        <li>Improve the website and customer experience</li>
-        <li>Comply with legal obligations</li>
+        <li>to operate, maintain, and improve our website and online store;</li>
+        <li>to process and fulfill orders for shirts, apparel, and related products;</li>
+        <li>to personalize products, shopping experiences, and site content;</li>
+        <li>to send order confirmations, shipping updates, and service messages;</li>
+        <li>to provide customer support and respond to requests;</li>
+        <li>to detect, investigate, and prevent fraud, abuse, and security incidents;</li>
+        <li>to manage billing, payments, and records;</li>
+        <li>to run marketing campaigns and measure their performance;</li>
+        <li>to deliver promotional content, including email and social media advertising;</li>
+        <li>to build and use advertising audiences and retargeting campaigns;</li>
+        <li>to comply with legal obligations and enforce our policies; and</li>
+        <li>to protect our rights, property, customers, and business operations.</li>
       </ul>
-      <p>We do not sell, rent, or trade your personal information to third parties for marketing purposes.</p>
+      <p>In plain English: we use personal information to run the store, ship the shirts, keep the lights on, and avoid internet chaos.</p>
 
-      <h2>Order fulfilment and third parties</h2>
-      <p>To fulfil your orders, your name and shipping address are shared with our production and fulfilment partners. These partners are contractually required to use your information only for the purpose of producing and shipping your order and are not permitted to use it for any other purpose.</p>
-      <p>Payment information is processed securely by our payment processor and is not stored by Becky Wexlin Creative.</p>
+      <h2>5. Print-on-Demand Fulfillment and Order Processing</h2>
+      <p>We use a print-on-demand business model. That means products may be made, packed, and shipped after you place an order.</p>
+      <p>To fulfill orders, we may share personal information such as your name, shipping address, email address, phone number, and order details with third-party fulfillment providers, including Printify, print providers, manufacturers, and shipping carriers.</p>
+      <p>These providers use personal information to help us produce, process, pack, ship, track, and support your order.</p>
 
-      <h2>Cookies and analytics</h2>
-      <p>Our website may use cookies and analytics tools (such as Google Analytics) to understand how visitors use the site. This information is aggregated and anonymous. You can disable cookies in your browser settings at any time. If you prefer to opt out of Google Analytics tracking, Google provides a browser add-on for this purpose.</p>
+      <h2>6. How We Share Personal Information</h2>
+      <p>We may share personal information with the following categories of recipients.</p>
 
-      <h2>Data retention</h2>
-      <p>We retain your personal information for as long as is necessary to fulfil the purposes outlined in this policy, including for legal, accounting, or reporting requirements. Order records are typically retained for up to 7 years for accounting purposes.</p>
+      <h3>A. Service Providers and Contractors</h3>
+      <p>We may share information with vendors that help us operate our business, including providers of: website hosting, ecommerce infrastructure, payment processing, customer service, analytics, fraud prevention, cloud storage, tax and accounting support, email and SMS delivery, security tools.</p>
 
-      <h2>Your rights</h2>
-      <p>Depending on your location, you may have rights regarding your personal data, including the right to:</p>
+      <h3>B. Fulfillment, Manufacturing, and Shipping Partners</h3>
+      <p>We may share information with partners that help us make and deliver products, including: Printify, print providers, shipping carriers, logistics and delivery vendors.</p>
+
+      <h3>C. Advertising, Analytics, and Social Media Partners</h3>
+      <p>We may share information with analytics, advertising, and social media partners to help us: understand how visitors use our site; measure campaign performance; create custom audiences; retarget visitors; improve marketing results; and show more relevant ads for our products and brand. This may include sharing identifiers, device information, cookie data, browsing activity, and purchase-related information with advertising or analytics providers.</p>
+
+      <h3>D. Legal, Compliance, and Protection Purposes</h3>
+      <p>We may share personal information when reasonably necessary to: comply with law or legal process; respond to lawful requests from regulators or law enforcement; investigate fraud, abuse, chargebacks, or security incidents; enforce our Terms, policies, and agreements; or protect the rights, safety, and property of our business, customers, or others.</p>
+
+      <h3>E. Business Transfers</h3>
+      <p>We may share personal information in connection with an actual or proposed merger, acquisition, financing, restructuring, sale of assets, or similar business transaction.</p>
+
+      <h2>7. Cookies, Pixels, and Other Tiny Internet Crumbs</h2>
+      <p>Our website may use cookies, pixels, tags, and similar technologies to: keep the site functioning properly; remember your preferences; analyze traffic and site behavior; measure performance; improve content and product pages; support advertising and retargeting; and help us understand what is working and what is just floating in the void. Some cookies are necessary for the site to function. Others help with analytics, personalization, and marketing. You can usually control cookies through your browser settings. If and when cookie consent tools or a "Your Privacy Choices" feature are available on our site, you may also use those tools to manage certain preferences.</p>
+
+      <h2>8. Targeted Advertising, Retargeting, and Social Media Marketing</h2>
+      <p>We may use third-party advertising and social media tools to promote our products, grow our audience, measure campaign performance, and show ads to people who may be interested in our brand.</p>
+      <p>These activities may include: social media advertising, email campaign audience matching, retargeting or remarketing, custom audience creation, lookalike or similar audience campaigns, conversion tracking, campaign analytics.</p>
+      <p>Depending on the law that applies, some of these disclosures may be considered a "sale," "sharing," or "targeted advertising" of personal information, even if no money changes hands. We do not sell personal information for money. If you are entitled to opt out of sale, sharing, or targeted advertising under applicable law, you may do so by using any privacy choice tools we make available, submitting a request using the contact information below, or using a recognized opt-out preference signal, where applicable.</p>
+
+      <h2>9. Email and SMS Marketing</h2>
+      <p>If you sign up for email or SMS marketing, we may send you promotional messages about new drops, products, updates, campaigns, and occasional internet nonsense in moderation. You can opt out of promotional emails at any time by clicking the unsubscribe link in the email. You can opt out of promotional SMS messages by following the instructions in the message, such as replying STOP where applicable. Even if you opt out of marketing, we may still send you non-promotional messages related to your orders, customer service, transactions, or important account or policy updates.</p>
+
+      <h2>10. User-Generated Content and Reviews</h2>
+      <p>If you submit a review, testimonial, comment, or other content to us, we may use and display that content in connection with our website, social media, advertising, and promotional materials, subject to applicable law and our other policies. Please do not submit sensitive personal information in reviews or public-facing content.</p>
+
+      <h2>11. How Long We Keep Personal Information</h2>
+      <p>We retain personal information for as long as reasonably necessary for the purposes described in this Privacy Policy, including to: fulfill orders and provide support; maintain business, tax, and accounting records; comply with legal obligations; investigate disputes, fraud, or abuse; and enforce our agreements and policies. When personal information is no longer reasonably necessary, we may delete, anonymize, or de-identify it, unless a longer retention period is required or permitted by law.</p>
+
+      <h2>12. How We Protect Personal Information</h2>
+      <p>We use reasonable administrative, technical, and physical safeguards designed to help protect personal information from unauthorized access, loss, misuse, alteration, or disclosure. That said, no system is perfectly secure, no matter how many passwords, firewalls, or stressed-out tabs are involved. For that reason, we cannot guarantee absolute security.</p>
+
+      <h2>13. Your Privacy Rights and Choices</h2>
+      <p>Depending on where you live, you may have rights regarding your personal information, which may include the right to:</p>
       <ul>
-        <li>Access the personal data we hold about you</li>
-        <li>Request correction of inaccurate data</li>
-        <li>Request deletion of your data (subject to legal obligations)</li>
-        <li>Object to or restrict certain processing of your data</li>
-        <li>Data portability in some circumstances</li>
+        <li>know what personal information we collect;</li>
+        <li>access the personal information we hold about you;</li>
+        <li>correct inaccurate personal information;</li>
+        <li>request deletion of personal information;</li>
+        <li>receive a portable copy of certain personal information;</li>
+        <li>opt out of sale, sharing, or targeted advertising;</li>
+        <li>limit certain uses of sensitive personal information where applicable; and</li>
+        <li>not be discriminated against for exercising applicable privacy rights.</li>
       </ul>
-      <p>To exercise any of these rights, <a href="contact.html">contact us</a> at hello@beckywexlincreative.com.</p>
+      <p>We may need to verify your identity before processing certain requests. If we deny your request, you may appeal by contacting us using the information below and writing "Privacy Rights Appeal" in the subject line of your email.</p>
 
-      <h2>Security</h2>
-      <p>We take reasonable technical and organisational measures to protect your personal information from unauthorised access, loss, or misuse. However, no method of transmission over the internet is 100% secure and we cannot guarantee absolute security.</p>
+      <h2>14. California Privacy Notice</h2>
+      <p>This section applies to California residents and is intended to supplement the rest of this Privacy Policy. In the preceding 12 months, we may have collected the categories of personal information described in this Privacy Policy and may have disclosed those categories to the categories of recipients described above for business or commercial purposes.</p>
 
-      <h2>Children's privacy</h2>
-      <p>Our website is not directed at children under 13 and we do not knowingly collect personal information from children. If you believe we have inadvertently collected information from a child, please contact us immediately.</p>
+      <h3>Notice of Sale / Sharing / Targeted Advertising</h3>
+      <p>We do not sell personal information for money. However, if we use third-party cookies, pixels, SDKs, or related advertising tools to support cross-context behavioral advertising, retargeting, campaign measurement, audience matching, or similar activities, those practices may be considered "sharing" or "sale" under California law. California residents may request to opt out of sale or sharing of personal information, including through a recognized opt-out preference signal where required by law.</p>
 
-      <h2>Changes to this policy</h2>
-      <p>We may update this privacy policy from time to time. When we do, we will update the "last updated" date at the top of this page. Continued use of the website after any changes constitutes acceptance of the updated policy.</p>
+      <h3>Sensitive Personal Information</h3>
+      <p>We do not use or disclose sensitive personal information to infer characteristics about individuals. To the extent we collect sensitive personal information, we use it only as reasonably necessary for permitted business purposes.</p>
 
-      <h2>Contact</h2>
-      <p>For any privacy-related questions or requests, contact us at <a href="mailto:hello@beckywexlincreative.com">hello@beckywexlincreative.com</a> or through the <a href="contact.html">contact form</a>.</p>
+      <h3>Non-Discrimination</h3>
+      <p>We will not discriminate against you for exercising any privacy rights available to you under applicable law.</p>
+
+      <h2>15. Other U.S. State Privacy Rights</h2>
+      <p>If you live in a state that grants privacy rights, including rights related to access, deletion, correction, portability, or opting out of targeted advertising or profiling, you may submit a request using the contact information in this Privacy Policy. Your rights will be handled in accordance with applicable law.</p>
+
+      <h2>16. Global Privacy Control</h2>
+      <p>Where required by applicable law, we process recognized opt-out preference signals, such as Global Privacy Control, as requests to opt out of sale or sharing for the browser or device associated with the signal. If you use a browser or extension that sends a recognized opt-out preference signal, we will handle that signal in accordance with applicable law.</p>
+
+      <h2>17. Children's Privacy</h2>
+      <p>Our website is not directed to children under 13, and we do not knowingly collect personal information directly from children under 13. If you believe a child has provided personal information to us, please <a href="contact.html">contact us</a> so we can review the situation and take appropriate action.</p>
+
+      <h2>18. Third-Party Websites and Services</h2>
+      <p>Our website may contain links to third-party websites, services, apps, or social platforms. We are not responsible for the privacy, security, or data practices of those third parties. Their own terms and privacy policies will apply.</p>
+
+      <h2>19. International Visitors</h2>
+      <p>Our website is operated from the United States and is intended for customers in the United States. If you visit our site from outside the United States, your information may be transferred to, stored in, and processed in the United States or other countries where we or our service providers operate.</p>
+
+      <h2>20. Changes to This Privacy Policy</h2>
+      <p>We may update this Privacy Policy from time to time. When we do, we will change the "Last Updated" date at the top of this page. If required by law, we will provide additional notice of material changes.</p>
+
+      <h2>21. Contact Us</h2>
+      <p>If you have questions about this Privacy Policy, your personal information, or your privacy rights, you can contact us here:</p>
+      <p>Becky Wexlin LLC, 5142 Hollister Ave #509, Santa Barbara, CA 93111, United States</p>
+      <p>Email: <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a></p>
+      <p>Phone: <a href="tel:+18056995697">(805) 699-5697</a></p>
+      <p>Website: <a href="https://beckywexlin.com">https://beckywexlin.com</a></p>
+
+      <h2>22. How to Submit a Privacy Request</h2>
+      <p>To submit a privacy request, please email <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a> with one of these subject lines: Privacy Request, Request to Know, Request to Delete, Request to Correct, Opt-Out Request, Privacy Rights Appeal. Please include enough information for us to understand and respond to your request, and we may ask for additional information to verify your identity when required by law.</p>
 
     </div>
   </main>
 
   <footer class="site-footer" role="contentinfo">
     <div class="footer-grid">
-      <div class="footer-logo"><img src="images/logo-lime.png" alt="Becky Wexlin Creative" /><p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p></div>
-      <div class="footer-col"><h4>Shop</h4><ul><li><a href="shop.html">All products</a></li><li><a href="shop.html#shirts">Shirts</a></li><li><a href="shop.html#hoodies">Hoodies</a></li></ul></div>
+      <div class="footer-logo"><img src="images/logo-lime.png" alt="Becky Wexlin Creative" /><p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+              <div class="footer-social">
+                <a href="https://instagram.com/beckywexlin" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+                <a href="https://tiktok.com/@beckywexlin" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48v-7.15a8.16 8.16 0 005.58 2.17v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/></svg></a>
+                <a href="https://facebook.com/beckywexlin" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                <a href="https://pinterest.com/beckywexlin" target="_blank" rel="noopener" aria-label="Pinterest"><svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg></a>
+                <a href="https://x.com/beckywexlin" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+              </div></div>
+      <div class="footer-col"><h4>Shop</h4><ul><li><a href="shop.html">All products</a></li><li><a href="shop.html#shirts">Shirts</a></li><li><a href="shop.html#hoodies">Hoodies</a></li><li><a href="collections/graphic-tees.html">Graphic Tees</a></li><li><a href="shirts.html">Shirt Guide</a></li></ul></div>
       <div class="footer-col"><h4>Info</h4><ul><li><a href="about.html">About</a></li><li><a href="blog/index.html">Blog</a></li><li><a href="contact.html">Contact</a></li></ul></div>
       <div class="footer-col"><h4>Help</h4><ul><li><a href="faq.html">FAQ</a></li><li><a href="size-guide.html">Size guide</a></li><li><a href="care-guide.html">Care guide</a></li></ul></div>
     </div>
     <div class="footer-bottom">
       <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative.</p>
-      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a></p>
+      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;&middot;&nbsp; <a href="terms.html">Terms</a> &nbsp;&middot;&nbsp; <a href="shipping.html">Shipping</a> &nbsp;&middot;&nbsp; <a href="refunds.html">Refunds</a></p>
     </div>
   </footer>
 
+  <script src="js/cart.js"></script>
   <script src="js/main.js"></script>
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>

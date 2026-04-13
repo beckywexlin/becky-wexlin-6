@@ -297,9 +297,17 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  .shop-header  { padding: 48px 24px 40px; }
-  .filter-inner { padding: 0 20px; }
-  .shop-grid-wrapper { padding: 40px 20px; }
-  .filter-tab   { padding: 5px 10px; font-size: 12px; }
-  .shop-card-img { height: 220px; }
+  .shop-header  { padding: 32px 16px 24px; }
+  .filter-inner { padding: 0 16px; flex-wrap: wrap; gap: 12px; }
+  .shop-grid-wrapper { padding: 24px 16px; }
+  .filter-tabs { flex-wrap: wrap; gap: 6px; }
+  .filter-tab   { padding: 8px 14px; font-size: 13px; min-height: 36px; }
+  .shop-product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .shop-card-img { height: 180px; }
+  .shop-card-body { padding: 12px; height: auto; min-height: 120px; }
+  .shop-card-name { font-size: 13px; }
+  .shop-card-price { font-size: 14px; }
+}
+@media (max-width: 480px) {
+  .shop-card-img { height: 160px; }
 }

@@ -2,9 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WYJNL0114K');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Checkout — Becky Wexlin Creative</title>
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -284,6 +293,11 @@
         <div id="payment-element"></div>
         <div id="checkout-error"></div>
 
+        <label style="display:flex; align-items:flex-start; gap:10px; margin-bottom:20px; cursor:pointer; font-size:13px; color:#888; line-height:1.5;">
+          <input type="checkbox" id="accept-terms" required style="margin-top:2px; accent-color:var(--lime); flex-shrink:0; width:20px; height:20px; cursor:pointer;" />
+          <span>I agree to the <a href="terms.html" target="_blank" style="color:var(--lime);">Terms of Service</a>, <a href="refunds.html" target="_blank" style="color:var(--lime);">Refund Policy</a>, and <a href="privacy.html" target="_blank" style="color:var(--lime);">Privacy Policy</a>. I understand all sales are final.</span>
+        </label>
+
         <button type="submit" id="checkout-submit" class="btn btn-primary" style="width:100%; font-size:16px; padding:16px;">
           Place order
         </button>
@@ -307,6 +321,10 @@
         <div class="checkout-total-row">
           <span>Shipping</span>
           <span style="color: var(--lime);">Free</span>
+        </div>
+        <div class="checkout-total-row">
+          <span>Tax</span>
+          <span id="checkout-tax" style="color: #777;">Enter address</span>
         </div>
         <div class="checkout-total-row total">
           <span>Total</span>
@@ -395,6 +413,8 @@
       if (COUNTRY_CODES[cc]) document.getElementById('country').value = cc;
       hideSuggestions();
       document.getElementById('address2').focus();
+      // Trigger tax calculation after address autofill
+      if (typeof debounceTax === 'function') debounceTax();
     }
 
     function hideSuggestions() {

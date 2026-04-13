@@ -2,12 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WYJNL0114K');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Terms of Service — Becky Wexlin Creative</title>
-  <meta name="description" content="Terms of service for Becky Wexlin Creative. By using our website or placing an order, you agree to these terms." />
-  <link rel="canonical" href="https://www.beckywexlincreative.com/terms.html" />
+  <title>Terms of Service — Becky Wexlin</title>
+  <meta name="description" content="Terms of service for Becky Wexlin LLC. By using our website or placing an order, you agree to these terms." />
+  <link rel="canonical" href="https://www.beckywexlin.com/terms.html" />
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -28,6 +37,7 @@
     }
     .legal-date { font-size: 13px; color: #555; margin-bottom: 48px; }
     .legal-layout h2 { font-size: 16px; font-weight: 500; color: var(--white); margin: 40px 0 12px; }
+    .legal-layout h3 { font-size: 15px; font-weight: 500; color: var(--white); margin: 24px 0 8px; }
     .legal-layout p, .legal-layout li { font-size: 15px; color: #888; line-height: 1.8; margin-bottom: 16px; }
     .legal-layout ul { padding-left: 20px; margin-bottom: 16px; }
     .legal-layout li { margin-bottom: 8px; }
@@ -37,16 +47,46 @@
 </head>
 <body>
 
+  <!-- CART OVERLAY -->
+  <div id="cart-overlay" class="cart-overlay"></div>
+
+  <!-- CART DRAWER -->
+  <div id="cart-drawer" class="cart-drawer">
+    <div class="cart-drawer-header">
+      <h3>Your cart</h3>
+      <button class="cart-close" onclick="closeCart()">×</button>
+    </div>
+    <div class="cart-drawer-body">
+      <div id="cart-items"></div>
+    </div>
+    <div class="cart-drawer-footer" id="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cart-total">$0.00</span>
+      </div>
+      <p class="cart-shipping-note">Free shipping on all orders</p>
+      <a href="checkout.html" class="btn btn-primary" style="width:100%; text-align:center; display:block;">Checkout</a>
+      <button class="btn btn-outline" onclick="closeCart()" style="width:100%; margin-top:12px;">Continue shopping</button>
+    </div>
+  </div>
+
+
   <div class="announce-bar" role="banner">Free shipping on orders over $50 — <a href="shop.html">shop now</a></div>
 
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
-    <a href="index.html" class="nav-logo"><img src="images/logo-lime.png" alt="Becky Wexlin Creative" /></a>
+    <a href="index.html" class="nav-logo"><img src="images/logo-lime.png" alt="Becky Wexlin" /></a>
     <ul class="nav-links" id="nav-links">
       <li><a href="shop.html">Shop</a></li>
       <li><a href="blog/index.html">Blog</a></li>
       <li><a href="about.html">About</a></li>
       <li><a href="contact.html">Contact</a></li>
       <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+      <li>
+        <button class="cart-icon-btn" onclick="openCart()">
+          Cart
+          <span class="cart-count" style="display:none;">0</span>
+        </button>
+      </li>
     </ul>
     <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
   </nav>
@@ -58,63 +98,268 @@
         <a href="index.html" style="color: #666;">Home</a><span>/</span><span>Terms of service</span>
       </nav>
 
-      <h1>Terms of service</h1>
-      <p class="legal-date">Last updated: March 2025</p>
+      <h1>Terms of Service</h1>
+      <p class="legal-date">Last Updated: April 10, 2026</p>
 
-      <p>By using the Becky Wexlin Creative website (beckywexlincreative.com) or placing an order with us, you agree to these terms. Please read them carefully. If you have any questions, <a href="contact.html">contact us</a>.</p>
+      <p>Welcome to beckywexlin.com, the online home of Becky Wexlin LLC. These Terms of Service ("Terms") govern your access to and use of our website, products, services, content, and any purchases made through our store.</p>
+      <p>By visiting our website, using our services, or placing an order, you agree to these Terms. If you do not agree, please do not use the site.</p>
 
-      <h2>About Becky Wexlin Creative</h2>
-      <p>Becky Wexlin Creative is an independent apparel brand selling graphic tees, hoodies and related apparel. All products are printed to order and fulfilled by third-party production partners.</p>
+      <h2>1. Who We Are</h2>
+      <p>This website is owned and operated by:</p>
+      <p>Becky Wexlin LLC, 5142 Hollister Ave #509, Santa Barbara, CA 93111, United States</p>
+      <p>Email: <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a><br />Phone: (805) 699-5697<br />Website: <a href="https://beckywexlin.com">https://beckywexlin.com</a></p>
+      <p>Throughout these Terms, "Company," "we," "us," and "our" refer to Becky Wexlin LLC.</p>
 
-      <h2>Orders and payment</h2>
-      <p>By placing an order, you confirm that the information you provide is accurate and complete. We reserve the right to cancel or refuse any order at our discretion, including in cases of suspected fraud, pricing errors, or product unavailability.</p>
-      <p>Prices are listed in US dollars unless otherwise stated and are subject to change without notice. The price displayed at the time of your order is the price you will be charged.</p>
+      <h2>2. What We Sell</h2>
+      <p>We sell apparel and related products, including made-to-order shirts and other print-on-demand merchandise.</p>
+      <p>Some products are produced, printed, packed, and shipped through third-party fulfillment partners, including Printify and its print providers. That means products are typically made after you order them, not pulled from a giant mysterious warehouse of shirt destiny.</p>
 
-      <h2>Production and shipping</h2>
-      <p>All orders are printed fresh to order and typically ship within 7 days of purchase. Delivery timelines after shipping are estimates and not guaranteed. We are not responsible for delays caused by shipping carriers, customs authorities, or circumstances outside our control.</p>
-      <p>Risk of loss and title for products pass to you upon delivery to the shipping carrier. Becky Wexlin Creative is not responsible for lost or damaged packages after handoff to the carrier, but we will work with you to resolve issues where possible.</p>
+      <h2>3. Eligibility to Use the Site</h2>
+      <p>By using this site, you represent that:</p>
+      <ul>
+        <li>You are at least the age of majority in your state or jurisdiction, or you are using the site with the involvement and consent of a parent or legal guardian;</li>
+        <li>The information you provide is accurate and complete; and</li>
+        <li>You will use the site only for lawful purposes and in accordance with these Terms.</li>
+      </ul>
 
-      <h2>Returns and refunds</h2>
-      <p>Because every product is printed to order specifically for you, <strong>all sales are final and nonrefundable</strong>. We do not accept returns or exchanges for sizing issues or change of mind.</p>
-      <p>If your order arrives damaged, defective, or incorrect, we will replace it at no cost to you. Contact us within 14 days of delivery with your order number and a photo of the issue.</p>
+      <h2>4. Account Responsibility</h2>
+      <p>You may be able to create an account or otherwise provide information through the site. You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account.</p>
+      <p>You agree to notify us promptly if you believe your account, password, or personal information has been compromised. We reserve the right to suspend or terminate accounts that are inaccurate, fraudulent, abusive, or otherwise violate these Terms.</p>
 
-      <h2>Intellectual property</h2>
-      <p>All designs, graphics, text, images and other content on this website are the property of Becky Wexlin Creative or its content suppliers and are protected by applicable intellectual property laws. You may not reproduce, distribute, modify or create derivative works from any content on this site without our express written permission.</p>
+      <h2>5. Product Information and Availability</h2>
+      <p>We try to describe products as accurately as possible, including colors, sizes, materials, and designs. However:</p>
+      <ul>
+        <li>Colors may appear differently depending on your screen or device;</li>
+        <li>Mockups are illustrative and may not perfectly match the final product;</li>
+        <li>Placement, scale, and print appearance may vary slightly;</li>
+        <li>Product availability may change without notice; and</li>
+        <li>We do not guarantee that all descriptions, images, pricing, or other content are error-free.</li>
+      </ul>
+      <p>We reserve the right to correct errors, inaccuracies, or omissions at any time, including after an order is submitted.</p>
 
-      <h2>User conduct</h2>
-      <p>You agree not to use this website for any unlawful purpose or in any way that could damage, disable, or impair the site. You may not attempt to gain unauthorised access to any part of the website or its related systems.</p>
+      <h2>6. Orders and Acceptance</h2>
+      <p>When you place an order, you are making an offer to purchase a product subject to these Terms. We reserve the right to accept, decline, limit, or cancel any order at our discretion, including in cases involving:</p>
+      <ul>
+        <li>Suspected fraud or unauthorized activity;</li>
+        <li>Inaccurate pricing or product information;</li>
+        <li>Product unavailability;</li>
+        <li>Payment issues;</li>
+        <li>Suspected resale or abusive purchasing behavior; or</li>
+        <li>Violations of these Terms.</li>
+      </ul>
+      <p>An order confirmation email does not guarantee acceptance. Your order is considered accepted when we process it for fulfillment.</p>
 
-      <h2>Disclaimer of warranties</h2>
-      <p>This website and its content are provided "as is" without warranties of any kind, either express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, or non-infringement.</p>
+      <h2>7. Pricing and Payment</h2>
+      <p>All prices are listed in U.S. dollars unless otherwise stated. You agree to pay all charges associated with your order, including:</p>
+      <ul>
+        <li>The listed product price;</li>
+        <li>Shipping and handling charges;</li>
+        <li>Applicable taxes; and</li>
+        <li>Any other clearly disclosed fees.</li>
+      </ul>
+      <p>We reserve the right to change prices at any time without notice. If a pricing error occurs, we may cancel the affected order and issue a refund if payment has already been made.</p>
+      <p>Payments are processed through third-party providers. We do not control those providers and are not responsible for errors, delays, or security issues caused by them.</p>
 
-      <h2>Limitation of liability</h2>
-      <p>To the fullest extent permitted by law, Becky Wexlin Creative shall not be liable for any indirect, incidental, special, consequential or punitive damages arising from your use of this website or any products purchased through it. Our total liability to you for any claim shall not exceed the amount you paid for the product giving rise to the claim.</p>
+      <h2>8. Shipping, Fulfillment, and Delivery</h2>
+      <p>Because our products are generally made to order, processing and shipping times may vary. We will make reasonable efforts to fulfill orders within the timeframes shown on the site or at checkout, but <strong>shipping and delivery dates are estimates only, not guarantees</strong>.</p>
+      <p>We are not responsible for delays caused by:</p>
+      <ul>
+        <li>Carriers;</li>
+        <li>Weather;</li>
+        <li>Customs;</li>
+        <li>Supply chain issues;</li>
+        <li>Fulfillment partner delays;</li>
+        <li>Incorrect shipping information provided by the customer; or</li>
+        <li>Events outside our reasonable control.</li>
+      </ul>
+      <p>If we cannot ship your order within the promised time or, if no time is stated, within the time required by law, we may contact you with a revised shipping timeline and options, including cancellation of the unshipped portion of the order where required.</p>
+      <p>Risk of loss and title transfer to you upon delivery to the shipping address you provide, subject to applicable law.</p>
 
-      <h2>Governing law</h2>
-      <p>These terms are governed by and construed in accordance with applicable law. Any disputes arising from these terms or your use of the website shall be subject to the exclusive jurisdiction of the relevant courts.</p>
+      <h2>9. All Sales Final; Defects and Order Issues</h2>
 
-      <h2>Changes to these terms</h2>
-      <p>We may update these terms at any time by posting the revised version on this page with an updated date. Continued use of the website after any changes constitutes acceptance of the revised terms.</p>
+      <h3>A. All Sales Final</h3>
+      <p><strong>All sales are final.</strong> Because our products are made to order, we do not accept returns, exchanges, or cancellations for:</p>
+      <ul>
+        <li>Buyer's remorse;</li>
+        <li>Change of mind;</li>
+        <li>Ordering the wrong size;</li>
+        <li>Ordering the wrong color;</li>
+        <li>Entering the wrong shipping address;</li>
+        <li>Selecting the wrong product variant; or</li>
+        <li>Any other reason unrelated to a defect or our error.</li>
+      </ul>
+      <p>Please read product descriptions carefully before ordering. Measure twice, click once.</p>
 
-      <h2>Contact</h2>
-      <p>Questions about these terms? <a href="contact.html">Contact us</a> or email <a href="mailto:hello@beckywexlincreative.com">hello@beckywexlincreative.com</a>.</p>
+      <h3>B. Defective, Damaged, or Incorrect Items</h3>
+      <p>If your item arrives damaged, defective, misprinted, or materially different from what you ordered, contact us at <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a> within <strong>14 days</strong> of delivery. Please include:</p>
+      <ul>
+        <li>Your order number;</li>
+        <li>A description of the issue; and</li>
+        <li>Clear photos showing the problem.</li>
+      </ul>
+      <p>If we determine that the item is defective, damaged, or incorrect due to our error or a fulfillment issue, we may, at our discretion:</p>
+      <ul>
+        <li>Replace the item;</li>
+        <li>Issue store credit; or</li>
+        <li>Issue a refund to the original payment method.</li>
+      </ul>
+      <p>We reserve the right to deny claims that appear fraudulent, abusive, untimely, unsupported, or inconsistent with the order history or evidence provided.</p>
+
+      <h3>C. Lost or Stolen Packages</h3>
+      <p>If tracking shows that a package was delivered to the address provided at checkout, we are generally not responsible for theft or loss after delivery. That said, if something seems off, contact us and we will do our best to help investigate. We believe in shirts, not chaos.</p>
+
+      <h2>10. Cancellations and Order Changes</h2>
+      <p>Because orders may move quickly into production, we cannot guarantee that cancellation or modification requests can be honored. If you need to request a change, email <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a> as soon as possible.</p>
+      <p>If production has not started, we may be able to help. If production has started or the order has been sent for fulfillment, the order generally cannot be changed or canceled.</p>
+
+      <h2>11. Promotions, Discounts, and Giveaways</h2>
+      <p>From time to time, we may offer promotions, discount codes, giveaways, or limited-time offers. These may be subject to additional terms. Unless otherwise stated:</p>
+      <ul>
+        <li>Promotions cannot be combined;</li>
+        <li>Discounts have no cash value;</li>
+        <li>Expired promotions will not be honored;</li>
+        <li>We may modify or end a promotion at any time; and</li>
+        <li>Promotional misuse, fraud, or abuse may result in order cancellation or disqualification.</li>
+      </ul>
+
+      <h2>12. Intellectual Property</h2>
+      <p>All content on this site, including text, graphics, logos, images, product designs, branding, icons, layout, look and feel, and other materials, is owned by or licensed to Becky Wexlin LLC and is protected by applicable intellectual property laws.</p>
+      <p>You may not, without our prior written permission:</p>
+      <ul>
+        <li>Copy;</li>
+        <li>Reproduce;</li>
+        <li>Modify;</li>
+        <li>Republish;</li>
+        <li>Upload;</li>
+        <li>Transmit;</li>
+        <li>Distribute;</li>
+        <li>Sell;</li>
+        <li>Exploit; or</li>
+        <li>Create derivative works from any site content,</li>
+      </ul>
+      <p>except for personal, non-commercial use that does not violate these Terms.</p>
+
+      <h2>13. User Conduct</h2>
+      <p>You agree not to use the site to:</p>
+      <ul>
+        <li>Violate any law or regulation;</li>
+        <li>Infringe any intellectual property or other rights;</li>
+        <li>Submit false or misleading information;</li>
+        <li>Attempt to interfere with site security or functionality;</li>
+        <li>Upload malware, malicious code, or harmful material;</li>
+        <li>Scrape, crawl, or harvest site content or customer data without permission;</li>
+        <li>Impersonate another person or entity; or</li>
+        <li>Engage in abusive, fraudulent, or disruptive behavior.</li>
+      </ul>
+      <p>We reserve the right to restrict access, cancel orders, or take other action if we believe your conduct violates these Terms or harms our business, customers, or partners.</p>
+
+      <h2>14. User Submissions and Feedback</h2>
+      <p>If you submit reviews, comments, suggestions, ideas, testimonials, photos, or other content to us, you grant us a non-exclusive, worldwide, royalty-free, transferable, sublicensable license to use, reproduce, display, publish, adapt, modify, and distribute that content in connection with our business, marketing, and operations.</p>
+      <p>You represent that:</p>
+      <ul>
+        <li>You own or control the rights to the content you submit;</li>
+        <li>Your content does not infringe the rights of any third party; and</li>
+        <li>Your content is not unlawful, defamatory, obscene, abusive, or misleading.</li>
+      </ul>
+      <p>We are not obligated to keep any submission confidential, compensate you for it, or publish it.</p>
+
+      <h2>15. Third-Party Services and Links</h2>
+      <p>Our site may contain links to third-party websites, platforms, apps, or services, or may integrate with third-party providers such as payment processors, marketing platforms, fulfillment providers, and shipping carriers.</p>
+      <p>We do not control those third parties and are not responsible for their content, policies, actions, products, or services. Your use of third-party services is governed by their own terms and policies.</p>
+
+      <h2>16. Disclaimer of Warranties</h2>
+      <p><strong>THIS SITE AND ALL PRODUCTS AND SERVICES ARE PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, TO THE MAXIMUM EXTENT PERMITTED BY LAW.</strong></p>
+      <p><strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW, BECKY WEXLIN LLC DISCLAIMS ALL WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.</strong></p>
+      <p><strong>WE DO NOT WARRANT THAT:</strong></p>
+      <ul>
+        <li><strong>THE SITE WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE;</strong></li>
+        <li><strong>THE SITE WILL ALWAYS BE AVAILABLE;</strong></li>
+        <li><strong>ANY DEFECTS WILL BE CORRECTED;</strong></li>
+        <li><strong>THE SITE OR EMAILS SENT FROM US ARE FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS; OR</strong></li>
+        <li><strong>PRODUCTS WILL ALWAYS MEET EVERY SUBJECTIVE EXPECTATION YOU MAY HAVE IN YOUR BEAUTIFUL, COMPLEX HEART.</strong></li>
+      </ul>
+      <p>Some jurisdictions do not allow certain warranty disclaimers, so some of the above may not apply to you.</p>
+
+      <h2>17. Limitation of Liability</h2>
+      <p><strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW, BECKY WEXLIN LLC AND ITS OWNERS, OFFICERS, EMPLOYEES, CONTRACTORS, AFFILIATES, SERVICE PROVIDERS, FULFILLMENT PARTNERS, AND LICENSORS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, DATA, GOODWILL, OR BUSINESS OPPORTUNITY, ARISING OUT OF OR RELATED TO:</strong></p>
+      <ul>
+        <li><strong>YOUR USE OF OR INABILITY TO USE THE SITE;</strong></li>
+        <li><strong>YOUR PURCHASE OR USE OF ANY PRODUCT;</strong></li>
+        <li><strong>SHIPPING DELAYS OR DELIVERY FAILURES OUTSIDE OUR REASONABLE CONTROL;</strong></li>
+        <li><strong>ERRORS, OMISSIONS, OR INTERRUPTIONS ON THE SITE;</strong></li>
+        <li><strong>UNAUTHORIZED ACCESS TO OR USE OF YOUR INFORMATION; OR</strong></li>
+        <li><strong>ANY THIRD-PARTY CONDUCT, SERVICES, OR CONTENT.</strong></li>
+      </ul>
+      <p><strong>TO THE MAXIMUM EXTENT PERMITTED BY LAW, OUR TOTAL LIABILITY FOR ANY CLAIM ARISING OUT OF OR RELATING TO THE SITE OR ANY ORDER WILL NOT EXCEED THE AMOUNT YOU PAID FOR THE SPECIFIC PRODUCT OR ORDER GIVING RISE TO THE CLAIM.</strong></p>
+      <p>Some jurisdictions do not allow the exclusion or limitation of certain damages, so some of these limitations may not apply to you.</p>
+
+      <h2>18. Indemnification</h2>
+      <p>You agree to defend, indemnify, and hold harmless Becky Wexlin LLC and its affiliates, owners, officers, employees, contractors, service providers, and partners from and against any claims, damages, liabilities, losses, costs, and expenses, including reasonable attorneys' fees, arising out of or related to:</p>
+      <ul>
+        <li>Your violation of these Terms;</li>
+        <li>Your misuse of the site;</li>
+        <li>Your violation of any law or third-party right; or</li>
+        <li>Any content or information you submit to us.</li>
+      </ul>
+
+      <h2>19. Privacy</h2>
+      <p>Your use of the site is also subject to our <a href="privacy.html">Privacy Policy</a>, which explains how we collect, use, and share personal information.</p>
+
+      <h2>20. Electronic Communications</h2>
+      <p>By using the site or communicating with us electronically, you consent to receive communications from us electronically, including emails, notices, and records related to your orders, account, customer support, and these Terms.</p>
+      <p>You agree that electronic communications satisfy any legal requirement that such communications be in writing, to the extent permitted by law.</p>
+
+      <h2>21. Governing Law</h2>
+      <p>These Terms and any dispute arising out of or relating to the site, our products, or these Terms will be governed by the laws of the State of California, without regard to conflict of laws principles.</p>
+
+      <h2>22. Disputes and Venue</h2>
+      <p>To the extent permitted by law, any dispute, claim, or controversy arising out of or relating to these Terms, the site, or any purchase from Becky Wexlin LLC shall be resolved exclusively in the state or federal courts located in Santa Barbara County, California, and you consent to the personal jurisdiction and venue of those courts.</p>
+      <p>If applicable law does not allow exclusive venue as stated above, then disputes will be handled in the manner required by that law.</p>
+
+      <h2>23. Force Majeure</h2>
+      <p>We are not liable for any delay or failure to perform resulting from causes beyond our reasonable control, including acts of God, natural disasters, war, terrorism, labor disputes, supply shortages, internet or power outages, carrier failures, governmental actions, epidemics, pandemics, or other events beyond our control.</p>
+
+      <h2>24. Severability</h2>
+      <p>If any provision of these Terms is found to be unlawful, void, or unenforceable, that provision will be deemed severable and will not affect the validity and enforceability of the remaining provisions.</p>
+
+      <h2>25. No Waiver</h2>
+      <p>Our failure to enforce any provision of these Terms will not be deemed a waiver of that provision or any other right.</p>
+
+      <h2>26. Entire Agreement</h2>
+      <p>These Terms, together with our <a href="privacy.html">Privacy Policy</a> and any other policies or legal notices posted on the site, constitute the entire agreement between you and Becky Wexlin LLC regarding your use of the site and purchases made through it.</p>
+
+      <h2>27. Changes to These Terms</h2>
+      <p>We may update these Terms from time to time. When we do, we will revise the "Last Updated" date at the top of this page. Your continued use of the site after any changes become effective constitutes your acceptance of the revised Terms.</p>
+
+      <h2>28. Contact Us</h2>
+      <p>If you have questions about these Terms, please contact us:</p>
+      <p>Becky Wexlin LLC, 5142 Hollister Ave #509, Santa Barbara, CA 93111, United States</p>
+      <p>Email: <a href="mailto:hello@beckywexlin.com">hello@beckywexlin.com</a><br />Phone: (805) 699-5697<br />Website: <a href="https://beckywexlin.com">https://beckywexlin.com</a></p>
 
     </div>
   </main>
 
   <footer class="site-footer" role="contentinfo">
     <div class="footer-grid">
-      <div class="footer-logo"><img src="images/logo-lime.png" alt="Becky Wexlin Creative" /><p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p></div>
-      <div class="footer-col"><h4>Shop</h4><ul><li><a href="shop.html">All products</a></li><li><a href="shop.html#shirts">Shirts</a></li><li><a href="shop.html#hoodies">Hoodies</a></li></ul></div>
+      <div class="footer-logo"><img src="images/logo-lime.png" alt="Becky Wexlin" /><p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
+              <div class="footer-social">
+                <a href="https://instagram.com/beckywexlin" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+                <a href="https://tiktok.com/@beckywexlin" target="_blank" rel="noopener" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48v-7.15a8.16 8.16 0 005.58 2.17v-3.44a4.85 4.85 0 01-1-.1V6.69h1z"/></svg></a>
+                <a href="https://facebook.com/beckywexlin" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                <a href="https://pinterest.com/beckywexlin" target="_blank" rel="noopener" aria-label="Pinterest"><svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.372 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.631-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12 0-6.628-5.373-12-12-12z"/></svg></a>
+                <a href="https://x.com/beckywexlin" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+              </div></div>
+      <div class="footer-col"><h4>Shop</h4><ul><li><a href="shop.html">All products</a></li><li><a href="shop.html#shirts">Shirts</a></li><li><a href="shop.html#hoodies">Hoodies</a></li><li><a href="collections/graphic-tees.html">Graphic Tees</a></li><li><a href="shirts.html">Shirt Guide</a></li></ul></div>
       <div class="footer-col"><h4>Info</h4><ul><li><a href="about.html">About</a></li><li><a href="blog/index.html">Blog</a></li><li><a href="contact.html">Contact</a></li></ul></div>
       <div class="footer-col"><h4>Help</h4><ul><li><a href="faq.html">FAQ</a></li><li><a href="size-guide.html">Size guide</a></li><li><a href="care-guide.html">Care guide</a></li></ul></div>
     </div>
     <div class="footer-bottom">
-      <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative.</p>
-      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a></p>
+      <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin LLC.</p>
+      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a> &nbsp;·&nbsp; <a href="shipping.html">Shipping</a> &nbsp;·&nbsp; <a href="refunds.html">Refunds</a></p>
     </div>
   </footer>
 
+  <script src="js/cart.js"></script>
   <script src="js/main.js"></script>
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
