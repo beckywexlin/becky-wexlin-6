@@ -1,0 +1,13 @@
+node_modules
+.git
+.github
+.claude
+.wrangler
+.DS_Store
+wrangler.jsonc
+worker.js
+package.json
+package-lock.json
+.assetsignore
+.gitignore
+*.log
