@@ -5,6 +5,8 @@
 
 const PRINTIFY_BASE = 'https://api.printify.com/v1';
 const SHOP_ID = '26790889';
+const KLAVIYO_COMPANY_ID = 'SSfm5P';
+const KLAVIYO_REVISION = '2024-10-15';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -65,6 +67,73 @@ function buildFormBody(obj, prefix) {
     }
   }
   return parts.join('&');
+}
+
+async function klaviyoIdentify(email, firstName, lastName, source) {
+  await fetch(`https://a.klaviyo.com/client/profiles/?company_id=${KLAVIYO_COMPANY_ID}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'revision': KLAVIYO_REVISION },
+    body: JSON.stringify({
+      data: {
+        type: 'profile',
+        attributes: {
+          email,
+          first_name: firstName || '',
+          last_name: lastName || '',
+          properties: { source },
+        },
+      },
+    }),
+  });
+}
+
+async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, shipping, taxAmount) {
+  const total = items.reduce((sum, item) => {
+    const price = typeof item.price === 'string'
+      ? parseFloat(item.price.replace('$', ''))
+      : item.price;
+    return sum + price * (item.quantity || 1);
+  }, 0);
+
+  const orderDate = new Date().toISOString();
+
+  await fetch(`https://a.klaviyo.com/client/events/?company_id=${KLAVIYO_COMPANY_ID}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'revision': KLAVIYO_REVISION },
+    body: JSON.stringify({
+      data: {
+        type: 'event',
+        attributes: {
+          metric: { data: { type: 'metric', attributes: { name: 'Placed Order' } } },
+          profile: { data: { type: 'profile', attributes: { email, first_name: firstName || '', last_name: lastName || '' } } },
+          properties: {
+            order_id: orderId,
+            order_date: orderDate,
+            subtotal: total.toFixed(2),
+            value: (total + (taxAmount || 0)).toFixed(2),
+            tax: (taxAmount || 0).toFixed(2),
+            items: items.map(item => ({
+              name: item.title || item.name || '',
+              quantity: item.quantity || 1,
+              price: typeof item.price === 'string' ? parseFloat(item.price.replace('$', '')) : item.price,
+              image: item.image || '',
+              size: item.size || '',
+            })),
+            shipping_address: {
+              name: (shipping.firstName || '') + ' ' + (shipping.lastName || ''),
+              address1: shipping.address1 || '',
+              address2: shipping.address2 || '',
+              city: shipping.city || '',
+              state: shipping.state || '',
+              zip: shipping.zip || '',
+              country: shipping.country || 'US',
+            },
+          },
+          value: total,
+        },
+      },
+    }),
+  });
 }
 
 export default {
@@ -222,6 +291,16 @@ export default {
       if (!res.ok) {
         console.error('Printify order error:', JSON.stringify(body));
         return json({ error: 'Order failed', detail: body }, res.status);
+      }
+
+      // Fire Klaviyo profile + Placed Order event server-side
+      try {
+        await Promise.all([
+          klaviyoIdentify(shipping.email, shipping.firstName, shipping.lastName, 'Checkout — Order Placed'),
+          klaviyoPlacedOrder(shipping.email, shipping.firstName, shipping.lastName, items, paymentIntentId, shipping, 0),
+        ]);
+      } catch (e) {
+        console.error('Klaviyo error:', e.message);
       }
 
       return json({ success: true, orderId: body.id });

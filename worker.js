@@ -2,9 +2,17 @@ const API_BASE = 'https://becky-wexlin-api.beckywexlin.workers.dev';
 const SITE = 'https://beckywexlin.com';
 const BRAND = 'Becky Wexlin Creative';
 
+const CANONICAL_HOST = 'beckywexlin.com';
+const ALT_HOSTS = new Set(['beckyshirts.com', 'www.beckyshirts.com']);
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (ALT_HOSTS.has(url.hostname)) {
+      url.hostname = CANONICAL_HOST;
+      return Response.redirect(url.toString(), 301);
+    }
 
     if (url.pathname === '/worker.js') {
       return new Response('Not found', { status: 404 });
@@ -14,9 +22,50 @@ export default {
       return await renderProductPage(request, env, url);
     }
 
-    return env.ASSETS.fetch(request);
+    const slug = url.pathname.slice(1);
+    if (slug && !slug.includes('.') && !slug.includes('/')) {
+      const resolved = await resolveSlug(slug);
+      if (resolved) {
+        url.pathname = '/product.html';
+        url.searchParams.set('id', resolved);
+        return await renderProductPage(request, env, url);
+      }
+    }
+
+    const response = await env.ASSETS.fetch(request);
+    const ext = url.pathname.split('.').pop();
+    const immutable = ['js', 'css', 'woff2', 'woff', 'ttf'];
+    const longCache = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico', 'avif'];
+
+    if (immutable.includes(ext) || longCache.includes(ext)) {
+      const headers = new Headers(response.headers);
+      headers.set('Cache-Control', 'public, max-age=2592000, immutable');
+      return new Response(response.body, { status: response.status, headers });
+    }
+
+    return response;
   }
 };
+
+function slugify(title) {
+  return (title || '')
+    .toLowerCase()
+    .replace(/['']/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+async function resolveSlug(slug) {
+  try {
+    const r = await fetch(`${API_BASE}/api/products`, {
+      cf: { cacheTtl: 300, cacheEverything: true }
+    });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const match = (data.products || []).find(p => p.slug === slug);
+    return match ? match.id : null;
+  } catch { return null; }
+}
 
 function esc(s) {
   return String(s ?? '')
@@ -37,10 +86,14 @@ async function renderProductPage(request, env, url) {
     if (r.ok) product = await r.json();
   } catch {}
 
-  const htmlRes = await env.ASSETS.fetch(request);
+  const assetUrl = new URL(request.url);
+  assetUrl.pathname = '/product.html';
+  assetUrl.search = '';
+  const htmlRes = await env.ASSETS.fetch(assetUrl.toString());
   if (!product || !product.title) return htmlRes;
 
-  const canonical = `${SITE}/product.html?id=${id}`;
+  const slug = slugify(product.title);
+  const canonical = `${SITE}/${slug}`;
   const plainDesc = String(product.description || '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
@@ -103,6 +156,7 @@ async function renderProductPage(request, env, url) {
 <meta name="twitter:title" content="${esc(product.title)}">
 <meta name="twitter:description" content="${esc(shortDesc)}">
 <meta name="twitter:image" content="${esc(image)}">
+<meta name="product-id" content="${esc(id)}">
 <script type="application/ld+json" id="product-jsonld">${ldJson}</script>`;
 
   const rewriter = new HTMLRewriter().on('title', {

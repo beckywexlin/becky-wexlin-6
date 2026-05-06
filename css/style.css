@@ -3,7 +3,7 @@
    beckywexlin.com
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap');
+
 
 /* ── RESET ── */
 *, *::before, *::after {
@@ -943,4 +943,10 @@ ul {
   /* Bigger touch targets */
   .nav-cta { padding: 10px 18px; }
   .btn { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announce-inner,
+  .marquee-inner { animation: none !important; }
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }

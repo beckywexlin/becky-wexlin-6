@@ -1,0 +1,6 @@
+{
+  "name": "becky-wexlin-api",
+  "main": "js/worker.js",
+  "compatibility_date": "2025-09-27",
+  "compatibility_flags": ["nodejs_compat"]
+}

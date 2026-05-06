@@ -12,80 +12,6 @@ let taxCalculationId = null;
 let taxDebounce = null;
 let currentPaymentIntentId = null;
 
-// ── KLAVIYO PROFILE CAPTURE ──
-function pushToKlaviyo(email, firstName, lastName, source) {
-  return fetch('https://a.klaviyo.com/client/profiles/?company_id=SSfm5P', {
-    method: 'POST',
-    keepalive: true,
-    headers: { 'Content-Type': 'application/json', 'revision': '2024-10-15' },
-    body: JSON.stringify({
-      data: {
-        type: 'profile',
-        attributes: {
-          email: email,
-          first_name: firstName || '',
-          last_name: lastName || '',
-          properties: { source: source }
-        }
-      }
-    })
-  }).catch(() => {});
-}
-
-// ── KLAVIYO "PLACED ORDER" EVENT ──
-function pushOrderToKlaviyo(email, firstName, lastName, cart, orderId, shipping) {
-  var total = cart.reduce(function(sum, item) {
-    return sum + parseFloat(item.price.replace('$', '')) * item.quantity;
-  }, 0);
-
-  var today = new Date();
-  var orderDate = (today.getMonth() + 1).toString().padStart(2, '0') + '/' +
-    today.getDate().toString().padStart(2, '0') + '/' + today.getFullYear();
-
-  var items = cart.map(function(item) {
-    return {
-      name: item.title,
-      quantity: item.quantity,
-      price: parseFloat(item.price.replace('$', '')),
-      image: item.image || '',
-      size: item.size || ''
-    };
-  });
-
-  return fetch('https://a.klaviyo.com/client/events/?company_id=SSfm5P', {
-    method: 'POST',
-    keepalive: true,
-    headers: { 'Content-Type': 'application/json', 'revision': '2024-10-15' },
-    body: JSON.stringify({
-      data: {
-        type: 'event',
-        attributes: {
-          metric: { data: { type: 'metric', attributes: { name: 'Placed Order' } } },
-          profile: { data: { type: 'profile', attributes: { email: email, first_name: firstName || '', last_name: lastName || '' } } },
-          properties: {
-            order_id: orderId,
-            order_date: orderDate,
-            subtotal: total.toFixed(2),
-            value: (total + currentTaxAmount).toFixed(2),
-            tax: currentTaxAmount.toFixed(2),
-            items: items,
-            shipping_address: {
-              name: (shipping.firstName || '') + ' ' + (shipping.lastName || ''),
-              address1: shipping.address1 || '',
-              address2: shipping.address2 || '',
-              city: shipping.city || '',
-              state: shipping.state || '',
-              zip: shipping.zip || '',
-              country: shipping.country || 'US'
-            }
-          },
-          value: total
-        }
-      }
-    })
-  }).catch(() => {});
-}
-
 // ── INIT STRIPE ──
 async function initStripe() {
   const res = await fetch(CHECKOUT_WORKER + '/config');
@@ -213,14 +139,6 @@ async function submitOrder(shipping) {
       paymentIntentId: paymentIntent.id
     })
   });
-
-  // Push customer and order event to Klaviyo (await to ensure they fire before redirect)
-  try {
-    await Promise.all([
-      pushToKlaviyo(shipping.email, shipping.firstName, shipping.lastName, 'Checkout — Order Placed'),
-      pushOrderToKlaviyo(shipping.email, shipping.firstName, shipping.lastName, cart, paymentIntent.id, shipping)
-    ]);
-  } catch (e) {}
 
   // GA4 purchase event
   if (typeof gtag === 'function') {

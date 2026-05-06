@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="p:domain_verify" content="c1c861c2cdc399b1b0220dca6a40af45"/>
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
   <script>
@@ -46,8 +47,10 @@
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/shop.css" />
+  <link rel="dns-prefetch" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" />
 </head>
 
 <body>
@@ -113,12 +116,11 @@
   </nav>
 
   <!-- HERO -->
-  <section class="hero" aria-labelledby="hero-heading">
-    <div class="hero-content" style="text-align:center; align-items:center; display:flex; flex-direction:column;">
-      <img src="images/becky_wexlin_neon_transparent.png" alt="Becky Wexlin Creative" style="max-width:400px; width:100%; margin-bottom:0px; display:block;" />
-      <div class="hero-shipping-badge">Free shipping on all orders!</div>
-      <h1 id="hero-heading" style="white-space:nowrap;">Wear the <em style="color:var(--lime); font-style:italic;">weird.</em></h1>
-      <p class="hero-sub">Funky shirts &amp; hoodies for people who are done pretending to be normal.</p>
+  <section class="hero" aria-labelledby="hero-heading" style="padding: 16px 40px 20px;">
+    <div class="hero-content" style="text-align:center; align-items:center; display:flex; flex-direction:column; gap:0;">
+      <img src="images/becky_wexlin_neon_transparent.png" alt="Becky Wexlin Creative" width="200" height="200" fetchpriority="high" style="max-width:200px; width:100%; height:auto; margin-bottom:0; display:block;" />
+      <h1 id="hero-heading" style="white-space:nowrap; margin-top:8px;">Wear the <em style="color:var(--lime); font-style:italic;">weird.</em></h1>
+      <p class="hero-sub" style="margin-top:4px; margin-bottom:0;">Funky shirts &amp; hoodies for people who are done pretending to be normal.</p>
     </div>
   </section>
 
@@ -126,11 +128,10 @@
   <main id="main-content">
 
     <!-- Featured Products -->
-    <div class="section">
-      <div class="section-header">
+    <div class="section" style="padding-top: 32px;">
+      <div class="section-header" style="margin-bottom: 24px;">
         <p class="section-eyebrow">Fresh drops</p>
-        <h2 class="section-title">The latest &amp;<br>greatest weirdness</h2>
-        <p class="section-sub">You're already here. Might as well.</p>
+        <h2 class="section-title">The latest &amp; greatest weirdness</h2>
       </div>
 
       <div style="max-width:var(--max-w); margin:0 auto; padding:0 40px;">
@@ -198,7 +199,7 @@
         <article class="blog-card">
           <a href="blog/how-to-care-for-printed-graphic-tees.html">
             <div class="blog-card-img" style="overflow:hidden;">
-              <img src="images/gildan-hanging-laundry.jpg" alt="Graphic tee care" style="width:100%; height:100%; object-fit:cover;" />
+              <img src="images/gildan-hanging-laundry.jpg" alt="Graphic tee care" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" />
             </div>
             <div class="blog-card-body">
               <p class="blog-tag">Care guide</p>
@@ -210,7 +211,7 @@
         <article class="blog-card">
           <a href="blog/history-of-the-graphic-tee.html">
             <div class="blog-card-img" style="overflow:hidden;">
-              <img src="images/cotton-crew-streetwear-casual-black-and-white.jpg" alt="History of the graphic tee" style="width:100%; height:100%; object-fit:cover;" />
+              <img src="images/cotton-crew-streetwear-casual-black-and-white.jpg" alt="History of the graphic tee" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" />
             </div>
             <div class="blog-card-body">
               <p class="blog-tag">Culture</p>
@@ -222,7 +223,7 @@
         <article class="blog-card">
           <a href="blog/why-meme-shirts-are-having-a-moment.html">
             <div class="blog-card-img" style="overflow:hidden;">
-              <img src="images/classic-crew-slim-fit-short-ground.jpg" alt="Meme shirts" style="width:100%; height:100%; object-fit:cover;" />
+              <img src="images/classic-crew-slim-fit-short-ground.jpg" alt="Meme shirts" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" />
             </div>
             <div class="blog-card-body">
               <p class="blog-tag">Behind the brand</p>
@@ -288,8 +289,8 @@
     </div>
   </footer>
 
-  <script src="js/main.js"></script>
-  <script src="js/cart.js"></script>
+  <script src="js/main.js" defer></script>
+  <script src="js/cart.js" defer></script>
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 
   <!-- PRODUCT LOADER -->
@@ -315,7 +316,7 @@
           const card = document.createElement('article');
           card.className = 'shop-product-card';
           card.innerHTML = `
-            <a href="product.html?id=${p.id}" aria-label="Shop ${p.title}">
+            <a href="/${p.slug}" aria-label="Shop ${p.title}">
               <div class="shop-card-img">
                 ${p.image
                   ? `<img src="${p.image}" alt="${p.title}" loading="lazy" />`

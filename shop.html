@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="p:domain_verify" content="c1c861c2cdc399b1b0220dca6a40af45"/>
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
   <script>
@@ -38,8 +39,10 @@
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/shop.css" />
+  <link rel="dns-prefetch" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" />
 </head>
 
 <body>
@@ -217,8 +220,8 @@
     </div>
   </footer>
 
-  <script src="js/cart.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/cart.js" defer></script>
+  <script src="js/main.js" defer></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -243,7 +246,7 @@
       var rawDesc = (product.description || '').replace(/<[^>]+>/g, '').trim();
 var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
       return '<article class="shop-product-card" data-category="' + (product.category || '') + '">'
-        + '<a href="product.html?id=' + product.id + '" aria-label="Shop ' + product.title + '">'
+        + '<a href="/' + product.slug + '" aria-label="Shop ' + product.title + '">'
         + '<div class="shop-card-img">'
         + badge
         + '<img src="' + product.image + '" alt="' + product.title + '" loading="lazy" onerror="this.src=\'images/404.png\'" />'

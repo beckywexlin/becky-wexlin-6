@@ -29,6 +29,22 @@ async function printify(path, env, opts = {}) {
   return { status: res.status, ok: res.ok, body };
 }
 
+const CACHE_TTL = 300;
+
+async function cachedResponse(cacheKey, handler) {
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+  const fresh = await handler();
+  if (fresh.status === 200) {
+    const resp = new Response(fresh.body, fresh);
+    resp.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
+    await cache.put(cacheKey, resp.clone());
+    return resp;
+  }
+  return fresh;
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -57,29 +73,35 @@ export default {
 
     // /api/products
     if (pathname === "/api/products") {
-      const page  = url.searchParams.get("page")  || 1;
-      const limit = url.searchParams.get("limit") || 20;
-      const { status, ok, body } = await printify(
-        `/shops/${SHOP_ID}/products.json?page=${page}&limit=${limit}`, env
-      );
-      if (!ok) return json({ error: "Printify error", detail: body }, status);
-      const products = (body.data || body.products || []).filter(p => {
-  const hasImage = !!(p.images && p.images.length > 0);
-  const hasVariants = (p.variants || []).some(v => v.is_enabled);
-  return p.visible && hasImage && hasVariants;
-}).map(normalizeProduct);
-      return json({ products, total: body.total ?? products.length });
+      const cacheKey = new Request(url.toString(), { method: 'GET' });
+      return cachedResponse(cacheKey, async () => {
+        const page  = url.searchParams.get("page")  || 1;
+        const limit = url.searchParams.get("limit") || 50;
+        const { status, ok, body } = await printify(
+          `/shops/${SHOP_ID}/products.json?page=${page}&limit=${limit}`, env
+        );
+        if (!ok) return json({ error: "Printify error", detail: body }, status);
+        const products = (body.data || body.products || []).filter(p => {
+          const hasImage = !!(p.images && p.images.length > 0);
+          const hasVariants = (p.variants || []).some(v => v.is_enabled);
+          return p.visible && hasImage && hasVariants;
+        }).map(normalizeProduct);
+        return json({ products, total: body.total ?? products.length });
+      });
     }
 
     // /api/products/:id
     const productMatch = pathname.match(/^\/api\/products\/([^/]+)$/);
     if (productMatch) {
-      const id = productMatch[1];
-      const { status, ok, body } = await printify(
-        `/shops/${SHOP_ID}/products/${id}.json`, env
-      );
-      if (!ok) return json({ error: "Product not found", detail: body }, status);
-      return json(normalizeProduct(body));
+      const cacheKey = new Request(url.toString(), { method: 'GET' });
+      return cachedResponse(cacheKey, async () => {
+        const id = productMatch[1];
+        const { status, ok, body } = await printify(
+          `/shops/${SHOP_ID}/products/${id}.json`, env
+        );
+        if (!ok) return json({ error: "Product not found", detail: body }, status);
+        return json(normalizeProduct(body));
+      });
     }
 
     return json({ error: "Not found" }, 404);
@@ -97,6 +119,14 @@ function stripHtml(html) {
   // Collapse whitespace
   clean = clean.replace(/\s+/g, ' ').trim();
   return clean;
+}
+
+function slugify(title) {
+  return (title || '')
+    .toLowerCase()
+    .replace(/['']/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 function normalizeProduct(p) {
@@ -121,6 +151,7 @@ function normalizeProduct(p) {
 
   return {
     id:          p.id,
+    slug:        slugify(p.title),
     title:       p.title,
     description: stripHtml(p.description),
     image,
