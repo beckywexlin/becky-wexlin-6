@@ -255,6 +255,120 @@
 
 .sidebar-posts a:hover { color: var(--lime); }
 
+/* ── PRODUCT STRIP ── */
+.product-strip {
+  background: var(--offblack);
+  border-bottom: 1px solid #2A2A2A;
+  padding: 14px 0;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+
+.product-strip::before,
+.product-strip::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 48px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.product-strip::before {
+  left: 0;
+  background: linear-gradient(to right, var(--offblack), transparent);
+}
+
+.product-strip::after {
+  right: 0;
+  background: linear-gradient(to left, var(--offblack), transparent);
+}
+
+.product-strip-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--lime);
+  z-index: 3;
+  background: linear-gradient(to right, var(--offblack) 70%, transparent);
+}
+
+.product-strip-track {
+  display: inline-flex;
+  animation: strip-scroll 40s linear infinite;
+}
+
+.product-strip-track:hover {
+  animation-play-state: paused;
+}
+
+.product-strip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 24px;
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+.product-strip-item:hover {
+  opacity: 0.7;
+}
+
+.product-strip-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #111;
+  flex-shrink: 0;
+}
+
+.product-strip-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-strip-name {
+  font-size: 13px;
+  font-weight: 400;
+  color: #ccc;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-strip-price {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--lime);
+}
+
+.product-strip-divider {
+  color: #333;
+  padding: 0 4px;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+@keyframes strip-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .post-layout {

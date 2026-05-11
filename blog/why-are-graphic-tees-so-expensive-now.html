@@ -145,6 +145,11 @@
     </div>
   </header>
 
+  <!-- PRODUCT STRIP -->
+  <div class="product-strip">
+    <div class="product-strip-track" id="product-strip-track"></div>
+  </div>
+
   <main id="main-content">
     <div class="post-layout">
       <article class="post-content">
@@ -326,6 +331,19 @@
         document.getElementById('sidebar-products').innerHTML =
           '<p style="font-size:13px;color:#555;">Check out the shop →</p>';
       }
+    })();
+
+    // Product strip
+    (async () => {
+      try {
+        const res = await fetch('https://becky-wexlin-api.beckywexlin.workers.dev/api/products');
+        const data = await res.json();
+        const products = (data.products || data);
+        const track = document.getElementById('product-strip-track');
+        if (!track || !products.length) return;
+        const html = products.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.images?.[0] ? `<img src="${p.images[0]}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.variants?.[0]?.price || ''}</span></a><span class="product-strip-divider">·</span>`).join('');
+        track.innerHTML = html + html;
+      } catch { /* silent */ }
     })();
   </script>
 
