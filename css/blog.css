@@ -257,12 +257,14 @@
 
 /* ── PRODUCT STRIP ── */
 .product-strip {
-  background: var(--offblack);
+  background: #161616;
+  border-top: 1px solid #2A2A2A;
   border-bottom: 1px solid #2A2A2A;
   padding: 14px 0;
   overflow: hidden;
   white-space: nowrap;
   position: relative;
+  min-height: 64px;
 }
 
 .product-strip::before,
@@ -278,12 +280,12 @@
 
 .product-strip::before {
   left: 0;
-  background: linear-gradient(to right, var(--offblack), transparent);
+  background: linear-gradient(to right, #161616, transparent);
 }
 
 .product-strip::after {
   right: 0;
-  background: linear-gradient(to left, var(--offblack), transparent);
+  background: linear-gradient(to left, #161616, transparent);
 }
 
 .product-strip-label {
@@ -300,7 +302,7 @@
   text-transform: uppercase;
   color: var(--lime);
   z-index: 3;
-  background: linear-gradient(to right, var(--offblack) 70%, transparent);
+  background: linear-gradient(to right, #161616 70%, transparent);
 }
 
 .product-strip-track {
