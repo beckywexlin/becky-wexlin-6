@@ -40,6 +40,8 @@
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/blog.css?v=3" />
+  <link rel="preconnect" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
+  <link rel="preconnect" href="https://images-api.printify.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" />
@@ -301,12 +303,20 @@
     // Product strip
     (async () => {
       try {
-        const res = await fetch('https://becky-wexlin-api.beckywexlin.workers.dev/api/products');
-        const data = await res.json();
-        const products = (data.products || data);
         const track = document.getElementById('product-strip-track');
-        if (!track || !products.length) return;
-        const html = products.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.images?.[0] ? `<img src="${p.images[0]}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.variants?.[0]?.price || ''}</span></a><span class="product-strip-divider">·</span>`).join('');
+        if (!track) return;
+        let products;
+        const cached = sessionStorage.getItem('bw_products');
+        if (cached) { products = JSON.parse(cached); }
+        else {
+          const res = await fetch('https://becky-wexlin-api.beckywexlin.workers.dev/api/products');
+          const data = await res.json();
+          products = (data.products || data).map(p => ({ slug: p.slug, title: p.title, img: p.images?.[0] || '', price: p.variants?.[0]?.price || '' }));
+          try { sessionStorage.setItem('bw_products', JSON.stringify(products)); } catch {}
+        }
+        if (!products.length) return;
+        const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
+        const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="${p.img}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
         track.innerHTML = html + html;
       } catch { /* silent */ }
     })();
