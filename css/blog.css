@@ -307,7 +307,7 @@
 
 .product-strip-track {
   display: inline-flex;
-  animation: strip-scroll 40s linear infinite;
+  animation: strip-scroll 100s linear infinite;
 }
 
 .product-strip-track:hover {
