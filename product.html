@@ -441,10 +441,12 @@
         }
         if (!products.length) return;
         const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-        const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="${p.img}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+        const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
         track.innerHTML = html + html;
       } catch { /* silent */ }
     })();
+
+    function proxyImg(url) { return url ? '/img/' + encodeURIComponent(url) : ''; }
 
     const WORKER_URL = 'https://becky-wexlin-api.beckywexlin.workers.dev';
     const params = new URLSearchParams(window.location.search);
@@ -550,7 +552,7 @@
     /* ── IMAGE NAVIGATION ───────────────────────────── */
     function setMainImage(index, thumb) {
       currentImageIndex = index;
-      document.getElementById('main-img-el').src = currentProduct.images[index];
+      document.getElementById('main-img-el').src = proxyImg(currentProduct.images[index]);
       document.querySelectorAll('.product-thumb').forEach(t => t.classList.remove('active'));
       if (thumb) thumb.classList.add('active');
       if (thumb) thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -560,7 +562,7 @@
       const len = currentProduct.images.length;
       currentImageIndex = (currentImageIndex - 1 + len) % len;
       const thumbs = document.querySelectorAll('.product-thumb');
-      document.getElementById('main-img-el').src = currentProduct.images[currentImageIndex];
+      document.getElementById('main-img-el').src = proxyImg(currentProduct.images[currentImageIndex]);
       thumbs.forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
       if (thumbs[currentImageIndex]) thumbs[currentImageIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
@@ -569,7 +571,7 @@
       const len = currentProduct.images.length;
       currentImageIndex = (currentImageIndex + 1) % len;
       const thumbs = document.querySelectorAll('.product-thumb');
-      document.getElementById('main-img-el').src = currentProduct.images[currentImageIndex];
+      document.getElementById('main-img-el').src = proxyImg(currentProduct.images[currentImageIndex]);
       thumbs.forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
       if (thumbs[currentImageIndex]) thumbs[currentImageIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
@@ -596,7 +598,7 @@
           return `
             <a class="related-card" href="/${p.slug}">
               <div class="related-card-img">
-                ${img ? `<img src="${img}" alt="${p.title}" loading="lazy" />` : ''}
+                ${img ? `<img src="${proxyImg(img)}" alt="${p.title}" loading="lazy" />` : ''}
               </div>
               <div class="related-card-info">
                 <p class="related-card-title">${p.title}</p>
@@ -815,7 +817,7 @@
               <div class="img-nav-wrap">
                 <button class="arrow-btn" onclick="prevImage()" aria-label="Previous image">&#8592;</button>
                 <div class="product-main-img" id="main-img">
-                  ${p.images[0] ? `<img src="${p.images[0]}" alt="${p.title}" id="main-img-el" />` : ''}
+                  ${p.images[0] ? `<img src="${proxyImg(p.images[0])}" alt="${p.title}" id="main-img-el" />` : ''}
                 </div>
                 <button class="arrow-btn" onclick="nextImage()" aria-label="Next image">&#8594;</button>
               </div>
@@ -824,7 +826,7 @@
               <div class="product-thumbs">
                 ${p.images.map((img, i) => `
                   <div class="product-thumb ${i === 0 ? 'active' : ''}" onclick="setMainImage(${i}, this)">
-                    <img src="${img}" alt="${p.title} view ${i + 1}" loading="lazy" />
+                    <img src="${proxyImg(img)}" alt="${p.title} view ${i + 1}" loading="lazy" />
                   </div>`).join('')}
               </div>
 

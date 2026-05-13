@@ -334,7 +334,7 @@
           const picks = products.sort(() => Math.random() - 0.5).slice(0, 3);
           sb.innerHTML = picks.map(p => `
             <a class="sidebar-product-card" href="/${p.slug}">
-              <div class="sidebar-product-thumb">${p.img ? `<img src="${p.img}" alt="${p.title}" />` : ''}</div>
+              <div class="sidebar-product-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div>
               <div class="sidebar-product-info">
                 <p class="sidebar-product-name">${p.title}</p>
                 <p class="sidebar-product-price">$${p.price}</p>
@@ -346,7 +346,7 @@
         const track = document.getElementById('product-strip-track');
         if (track) {
           const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-          const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="${p.img}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+          const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
           track.innerHTML = html + html;
         }
       } catch { /* silent */ }

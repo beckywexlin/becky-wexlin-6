@@ -18,6 +18,11 @@ export default {
       return new Response('Not found', { status: 404 });
     }
 
+    // Image proxy — cache Printify images at the edge
+    if (url.pathname.startsWith('/img/')) {
+      return await proxyImage(url);
+    }
+
     if ((url.pathname === '/product.html' || url.pathname === '/product') && url.searchParams.get('id')) {
       return await renderProductPage(request, env, url);
     }
@@ -46,6 +51,25 @@ export default {
     return response;
   }
 };
+
+async function proxyImage(url) {
+  const raw = decodeURIComponent(url.pathname.slice(5)); // strip /img/
+  if (!raw.startsWith('https://images-api.printify.com/')) {
+    return new Response('Forbidden', { status: 403 });
+  }
+  try {
+    const imgRes = await fetch(raw, {
+      cf: { cacheTtl: 86400, cacheEverything: true }
+    });
+    if (!imgRes.ok) return new Response('Not found', { status: 404 });
+    const headers = new Headers(imgRes.headers);
+    headers.set('Cache-Control', 'public, max-age=2592000, immutable');
+    headers.set('Access-Control-Allow-Origin', '*');
+    return new Response(imgRes.body, { status: 200, headers });
+  } catch {
+    return new Response('Error', { status: 502 });
+  }
+}
 
 function slugify(title) {
   return (title || '')
