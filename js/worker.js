@@ -104,6 +104,69 @@ export default {
       });
     }
 
+    // Printify webhook — shipment events
+    if (pathname === "/webhooks/printify" && req.method === "POST") {
+      try {
+        const payload = await req.json();
+        const topic = payload.topic || payload.type || '';
+
+        if (topic === 'order:shipment:delivered' || topic === 'order:shipment:ready') {
+          const shipment = payload.resource || payload;
+          const orderId = shipment.order_id || shipment.id || '';
+          const tracking = shipment.carrier?.tracking_number || shipment.tracking?.number || '';
+          const carrier = shipment.carrier?.name || shipment.tracking?.carrier || '';
+          const trackingUrl = shipment.carrier?.tracking_url || shipment.tracking?.url || '';
+          const items = shipment.line_items || shipment.items || [];
+
+          // Look up the original order to get the customer email
+          let email = shipment.address?.email || '';
+          if (!email && orderId) {
+            const orderRes = await printify(`/shops/${SHOP_ID}/orders/${orderId}.json`, env);
+            if (orderRes.ok) {
+              email = orderRes.body.address_to?.email || '';
+            }
+          }
+
+          if (email) {
+            // Send "Order Shipped" event to Klaviyo
+            const klaviyoPayload = {
+              data: {
+                type: 'event',
+                attributes: {
+                  metric: { data: { type: 'metric', attributes: { name: 'Order Shipped' } } },
+                  profile: { data: { type: 'profile', attributes: { email } } },
+                  properties: {
+                    order_id: orderId,
+                    tracking_number: tracking,
+                    carrier,
+                    tracking_url: trackingUrl,
+                    items: items.map(i => ({
+                      name: i.title || i.name || '',
+                      quantity: i.quantity || 1,
+                    })),
+                  },
+                },
+              },
+            };
+
+            await fetch('https://a.klaviyo.com/api/events', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Klaviyo-API-Key ${env.KLAVIYO_API_KEY}`,
+                'Content-Type': 'application/json',
+                'revision': '2024-10-15',
+              },
+              body: JSON.stringify(klaviyoPayload),
+            });
+          }
+        }
+
+        return json({ received: true });
+      } catch (e) {
+        return json({ error: e.message }, 500);
+      }
+    }
+
     return json({ error: "Not found" }, 404);
   },
 };
