@@ -44,7 +44,8 @@
   <link rel="preconnect" href="https://images-api.printify.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" /></noscript>
   <style>
     .sidebar-product-card {
       display: flex;
@@ -254,30 +255,6 @@
 
     (async () => {
       try {
-        const res = await fetch('https://becky-wexlin-api.beckywexlin.workers.dev/api/products');
-        const data = await res.json();
-        const products = (data.products || data).sort(() => Math.random() - 0.5).slice(0, 3);
-        document.getElementById('sidebar-products').innerHTML = products.map(p => `
-          <a class="sidebar-product-card" href="/${p.slug}">
-            <div class="sidebar-product-thumb">
-              ${p.images?.[0] ? `<img src="${p.images[0]}" alt="${p.title}" loading="lazy" />` : ''}
-            </div>
-            <div class="sidebar-product-info">
-              <p class="sidebar-product-name">${p.title}</p>
-              <p class="sidebar-product-price">$${p.variants?.[0]?.price || ''}</p>
-            </div>
-          </a>`).join('');
-      } catch {
-        document.getElementById('sidebar-products').innerHTML =
-          '<p style="font-size:13px;color:#555;">Check out the shop →</p>';
-      }
-    })();
-
-    // Product strip
-    (async () => {
-      try {
-        const track = document.getElementById('product-strip-track');
-        if (!track) return;
         let products;
         const cached = sessionStorage.getItem('bw_products');
         if (cached) { products = JSON.parse(cached); }
@@ -288,9 +265,28 @@
           try { sessionStorage.setItem('bw_products', JSON.stringify(products)); } catch {}
         }
         if (!products.length) return;
-        const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-        const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="${p.img}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
-        track.innerHTML = html + html;
+
+        // Sidebar
+        const sb = document.getElementById('sidebar-products');
+        if (sb) {
+          const picks = products.sort(() => Math.random() - 0.5).slice(0, 3);
+          sb.innerHTML = picks.map(p => `
+            <a class="sidebar-product-card" href="/${p.slug}">
+              <div class="sidebar-product-thumb">${p.img ? `<img src="${p.img}" alt="${p.title}" />` : ''}</div>
+              <div class="sidebar-product-info">
+                <p class="sidebar-product-name">${p.title}</p>
+                <p class="sidebar-product-price">$${p.price}</p>
+              </div>
+            </a>`).join('');
+        }
+
+        // Strip
+        const track = document.getElementById('product-strip-track');
+        if (track) {
+          const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
+          const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="${p.img}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+          track.innerHTML = html + html;
+        }
       } catch { /* silent */ }
     })();
   </script>
