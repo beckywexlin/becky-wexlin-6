@@ -139,11 +139,13 @@
     <div class="filter-inner">
       <div class="filter-tabs" id="filter-tabs">
         <button class="filter-tab active" data-filter="all">All</button>
-        <button class="filter-tab" data-filter="shirts">Shirts</button>
-        <button class="filter-tab" data-filter="hoodies">Hoodies</button>
-        <button class="filter-tab" data-filter="new">New arrivals</button>
       </div>
-      <p class="filter-count"><span id="product-count">0</span> items</p>
+      <div class="filter-right">
+        <div class="shop-search">
+          <input type="text" id="shop-search" placeholder="Search shirts..." aria-label="Search products" autocomplete="off" />
+        </div>
+        <p class="filter-count"><span id="product-count">0</span> items</p>
+      </div>
     </div>
   </div>
 
@@ -256,29 +258,37 @@
     })();
 
     var PROXY_BASE = 'https://becky-wexlin-api.beckywexlin.workers.dev';
-
-    var loading        = document.getElementById('shop-loading');
-    var errorBox       = document.getElementById('shop-error');
-    var errorMsg       = document.getElementById('shop-error-msg');
+    var loading    = document.getElementById('shop-loading');
+    var errorBox   = document.getElementById('shop-error');
+    var errorMsg   = document.getElementById('shop-error-msg');
     var shirtsSection  = document.getElementById('shirts');
     var hoodiesSection = document.getElementById('hoodies');
     var shirtsGrid     = document.getElementById('shirts-grid');
     var hoodiesGrid    = document.getElementById('hoodies-grid');
     var emptyState     = document.getElementById('shop-empty');
     var counter        = document.getElementById('product-count');
-    var tabs           = document.querySelectorAll('.filter-tab');
+    var tabsWrap       = document.getElementById('filter-tabs');
+    var searchInput    = document.getElementById('shop-search');
     var allCards       = [];
+    var activeFilter   = 'all';
+
+    // Category mapping — tags that become filter tabs
+    var TAG_CATEGORIES = [
+      { filter: 'shirts',     label: 'Shirts',        match: function(p) { return p.category === 'shirts'; } },
+      { filter: 'hoodies',    label: 'Hoodies',       match: function(p) { return p.category === 'hoodies'; } },
+      { filter: 'streetwear', label: 'Streetwear',    match: function(p) { return (p.tags || []).some(function(t) { return t.toLowerCase().indexOf('streetwear') > -1; }); } },
+      { filter: 'santa-barbara', label: 'Santa Barbara', match: function(p) { return (p.tags || []).some(function(t) { return t.toLowerCase().indexOf('santa barbara') > -1; }); } },
+      { filter: 'sale',       label: 'Sale',          match: function(p) { return (p.tags || []).some(function(t) { var l = t.toLowerCase(); return l === 'sale' || l === 'on sale'; }); } },
+    ];
 
     function buildCard(product) {
-      var badge = product.isNew
-        ? '<div class="shop-card-badge' + ((product.category || '').indexOf('hoodie') > -1 ? ' shop-card-badge--pink' : '') + '">New</div>'
-        : '';
       var rawDesc = (product.description || '').replace(/<[^>]+>/g, '').trim();
-var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
-      return '<article class="shop-product-card" data-category="' + (product.category || '') + '">'
+      var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
+      // Build data attributes for category matching
+      var tagCats = TAG_CATEGORIES.filter(function(c) { return c.match(product); }).map(function(c) { return c.filter; }).join(' ');
+      return '<article class="shop-product-card" data-category="' + tagCats + '" data-title="' + (product.title || '').toLowerCase() + '" data-tags="' + (product.tags || []).join(' ').toLowerCase() + '" data-desc="' + (rawDesc || '').toLowerCase().substring(0, 200) + '">'
         + '<a href="/' + product.slug + '" aria-label="Shop ' + product.title + '">'
         + '<div class="shop-card-img">'
-        + badge
         + '<img src="/img/' + encodeURIComponent(product.image) + '" alt="' + product.title + '" loading="lazy" onerror="this.src=\'images/404.png\'" />'
         + '<div class="shop-card-overlay"><span>Shop now &rarr;</span></div>'
         + '</div>'
@@ -287,19 +297,24 @@ var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
         + '<p class="shop-card-desc">' + (desc || 'Fresh from the weird side of the closet.') + '</p>'
         + '<div class="shop-card-footer">'
         + '<span class="shop-card-price">$' + product.price + '</span>'
-        + '<span class="shop-card-type">' + (product.type || '') + '</span>'
         + '</div></div></a></article>';
     }
 
-    function applyFilter(filter) {
+    function applyFilters() {
+      var query = (searchInput.value || '').toLowerCase().trim();
       var visible = 0;
       for (var i = 0; i < allCards.length; i++) {
-        var cats = allCards[i].getAttribute('data-category') || '';
-        if (filter === 'all' || cats.split(' ').indexOf(filter) > -1) {
-          allCards[i].hidden = false;
+        var card = allCards[i];
+        var catMatch = activeFilter === 'all' || (' ' + (card.getAttribute('data-category') || '') + ' ').indexOf(activeFilter) > -1;
+        var searchMatch = !query
+          || (card.getAttribute('data-title') || '').indexOf(query) > -1
+          || (card.getAttribute('data-tags') || '').indexOf(query) > -1
+          || (card.getAttribute('data-desc') || '').indexOf(query) > -1;
+        if (catMatch && searchMatch) {
+          card.hidden = false;
           visible++;
         } else {
-          allCards[i].hidden = true;
+          card.hidden = true;
         }
       }
       counter.textContent = visible;
@@ -310,20 +325,44 @@ var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
       emptyState.style.display = visible === 0 ? 'block' : 'none';
     }
 
-    tabs.forEach(function(tab) {
-      tab.addEventListener('click', function() {
-        tabs.forEach(function(t) { t.classList.remove('active'); });
-        tab.classList.add('active');
-        applyFilter(tab.getAttribute('data-filter'));
+    function buildTabs(products) {
+      // Only show tabs for categories that have products
+      TAG_CATEGORIES.forEach(function(cat) {
+        var count = products.filter(cat.match).length;
+        if (count > 0) {
+          var btn = document.createElement('button');
+          btn.className = 'filter-tab';
+          btn.setAttribute('data-filter', cat.filter);
+          btn.textContent = cat.label;
+          tabsWrap.appendChild(btn);
+        }
       });
+      // Attach click handlers
+      tabsWrap.querySelectorAll('.filter-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          tabsWrap.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+          activeFilter = tab.getAttribute('data-filter');
+          applyFilters();
+        });
+      });
+    }
+
+    // Search — debounced
+    var searchTimer;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(applyFilters, 150);
     });
 
     fetch(PROXY_BASE + '/api/products')
       .then(function(res) { return res.json(); })
       .then(function(data) {
         loading.style.display = 'none';
-        var shirts  = data.products.filter(function(p) { var c = p.category || ''; return c.indexOf('hoodie') === -1; });
-        var hoodies = data.products.filter(function(p) { var c = p.category || ''; return c.indexOf('hoodie') > -1; });
+        var products = data.products || [];
+        buildTabs(products);
+        var shirts  = products.filter(function(p) { return (p.category || '').indexOf('hoodie') === -1; });
+        var hoodies = products.filter(function(p) { return (p.category || '').indexOf('hoodie') > -1; });
         if (shirts.length) {
           shirtsGrid.innerHTML = shirts.map(buildCard).join('');
           shirtsSection.style.display = '';
@@ -336,7 +375,7 @@ var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
         if (!allCards.length) {
           emptyState.style.display = 'block';
         } else {
-          applyFilter('all');
+          applyFilters();
         }
       })
       .catch(function(err) {
