@@ -296,7 +296,8 @@
       var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
       // Build data attributes for category matching
       var tagCats = TAG_CATEGORIES.filter(function(c) { return c.match(product); }).map(function(c) { return c.filter; }).join(' ');
-      return '<article class="shop-product-card" data-category="' + tagCats + '" data-title="' + (product.title || '').toLowerCase() + '" data-tags="' + (product.tags || []).join(' ').toLowerCase() + '" data-desc="' + (rawDesc || '').toLowerCase().substring(0, 200) + '">'
+      function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      return '<article class="shop-product-card" data-category="' + tagCats + '" data-title="' + esc((product.title || '').toLowerCase()) + '" data-tags="' + esc((product.tags || []).join(' ').toLowerCase()) + '" data-desc="' + esc((rawDesc || '').toLowerCase().substring(0, 200)) + '">'
         + '<a href="/' + product.slug + '" aria-label="Shop ' + product.title + '">'
         + '<div class="shop-card-img">'
         + '<img src="/img/' + encodeURIComponent(product.image) + '" alt="' + product.title + '" loading="lazy" onerror="this.src=\'images/404.png\'" />'
