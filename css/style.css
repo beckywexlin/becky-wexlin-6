@@ -289,6 +289,58 @@ ul {
   padding: 32px 0;
 }
 
+/* ── EMAIL CAPTURE POPUP ── */
+#email-popup {
+  position: fixed; inset: 0; z-index: 10000;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#email-popup.active { opacity: 1; pointer-events: all; }
+
+.email-popup-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
+}
+
+.email-popup-card {
+  position: relative; z-index: 1;
+  background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px;
+  padding: 40px 36px; max-width: 420px; width: 90%; text-align: center;
+  transform: translateY(20px); transition: transform 0.3s;
+}
+#email-popup.active .email-popup-card { transform: translateY(0); }
+
+.email-popup-close {
+  position: absolute; top: 12px; right: 16px;
+  background: none; border: none; color: #555; font-size: 24px;
+  cursor: pointer; transition: color 0.2s;
+}
+.email-popup-close:hover { color: #fff; }
+
+.email-popup-eyebrow {
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--lime); margin-bottom: 12px;
+}
+.email-popup-title {
+  font-family: var(--font-display); font-size: 28px; font-weight: 900;
+  font-style: italic; color: #fff; line-height: 1.1; margin-bottom: 12px;
+}
+.email-popup-sub {
+  font-size: 14px; color: #888; line-height: 1.6; margin-bottom: 24px;
+}
+
+.email-popup-form input {
+  width: 100%; background: #111; border: 1px solid #2a2a2a;
+  border-radius: var(--radius); color: #fff; font-family: var(--font-body);
+  font-size: 15px; padding: 14px 16px; margin-bottom: 12px; box-sizing: border-box;
+}
+.email-popup-form input:focus { outline: none; border-color: var(--lime); }
+.email-popup-form input::placeholder { color: #555; }
+
+.email-popup-fine {
+  font-size: 11px; color: #444; margin-top: 16px;
+}
+
 /* ── HAMBURGER (mobile) ── */
 .nav-hamburger {
   display: none;

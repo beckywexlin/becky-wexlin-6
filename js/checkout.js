@@ -11,6 +11,8 @@ let currentTaxAmount = 0;
 let taxCalculationId = null;
 let taxDebounce = null;
 let currentPaymentIntentId = null;
+let currentPromoCode = '';
+let currentDiscount = 0;
 
 // ── INIT STRIPE ──
 async function initStripe() {
@@ -24,7 +26,7 @@ async function createPaymentIntent(items, tax) {
   const res = await fetch(CHECKOUT_WORKER + '/create-payment-intent', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items, tax: tax || 0, taxCalculationId })
+    body: JSON.stringify({ items, tax: tax || 0, taxCalculationId, promoCode: currentPromoCode })
   });
   const data = await res.json();
   currentPaymentIntentId = data.paymentIntentId;
@@ -91,7 +93,7 @@ function updateTotal() {
   const subtotal = cart.reduce((sum, item) => {
     return sum + parseFloat(item.price.replace('$', '')) * item.quantity;
   }, 0);
-  const total = (subtotal + currentTaxAmount).toFixed(2);
+  const total = (subtotal - currentDiscount + currentTaxAmount).toFixed(2);
   document.getElementById('checkout-total').textContent = '$' + total;
 }
 
@@ -223,6 +225,52 @@ async function initCheckout() {
     }
   });
 
+  // Promo code handler
+  const promoBtn = document.getElementById('promo-apply');
+  const promoInput = document.getElementById('promo-code');
+  const promoMsg = document.getElementById('promo-msg');
+  if (promoBtn) {
+    promoBtn.addEventListener('click', async () => {
+      const code = promoInput.value.trim();
+      if (!code) return;
+      promoBtn.textContent = '...';
+      promoBtn.disabled = true;
+      try {
+        const res = await fetch(CHECKOUT_WORKER + '/validate-promo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, items: cart }),
+        });
+        const data = await res.json();
+        if (data.valid) {
+          currentPromoCode = code;
+          currentDiscount = data.discount;
+          promoMsg.textContent = data.label + ' applied!';
+          promoMsg.className = 'promo-success';
+          promoMsg.style.display = '';
+          promoInput.disabled = true;
+          promoBtn.style.display = 'none';
+          document.getElementById('discount-row').style.display = '';
+          document.getElementById('discount-label').textContent = data.label;
+          document.getElementById('discount-amount').textContent = '-$' + data.discount.toFixed(2);
+          updateTotal();
+        } else {
+          promoMsg.textContent = 'Invalid code';
+          promoMsg.className = 'promo-error';
+          promoMsg.style.display = '';
+          currentPromoCode = '';
+          currentDiscount = 0;
+        }
+      } catch {
+        promoMsg.textContent = 'Could not validate';
+        promoMsg.className = 'promo-error';
+        promoMsg.style.display = '';
+      }
+      promoBtn.textContent = 'Apply';
+      promoBtn.disabled = false;
+    });
+  }
+
   await initStripe();
   const clientSecret = await createPaymentIntent(cart, 0);
   await mountPaymentElement(clientSecret);
@@ -303,7 +351,8 @@ if (!/^[A-Za-z]{2}$/.test(stateVal)) {
           items: cart,
           tax: currentTaxAmount,
           taxCalculationId,
-          paymentIntentId: currentPaymentIntentId
+          paymentIntentId: currentPaymentIntentId,
+          promoCode: currentPromoCode
         })
       });
 

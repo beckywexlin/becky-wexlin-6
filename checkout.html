@@ -190,6 +190,17 @@
     .geo-attribution a { color: #c8f135; text-decoration: none; }
     .geo-attribution a:hover { text-decoration: underline; }
 
+    .promo-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #2a2a2a; }
+    .promo-input-row { display: flex; gap: 8px; }
+    .promo-input-row input {
+      flex: 1; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: var(--radius);
+      color: #fff; font-family: var(--font-body); font-size: 14px; padding: 10px 14px;
+    }
+    .promo-input-row input:focus { outline: none; border-color: var(--lime); }
+    .promo-input-row input::placeholder { color: #555; }
+    .promo-success { color: var(--lime); }
+    .promo-error { color: var(--pink); }
+
     @media (max-width: 900px) {
       .checkout-page { grid-template-columns: 1fr; padding: 32px 20px; }
       .order-summary { position: static; }
@@ -317,10 +328,21 @@
     <div class="order-summary">
       <p class="checkout-section-title">Your order</p>
       <div id="checkout-summary"></div>
+      <div class="promo-section">
+        <div class="promo-input-row">
+          <input type="text" id="promo-code" placeholder="Discount code" />
+          <button type="button" id="promo-apply" class="btn btn-outline" style="padding:10px 16px; font-size:13px;">Apply</button>
+        </div>
+        <p id="promo-msg" style="font-size:12px; margin-top:6px; display:none;"></p>
+      </div>
       <div class="checkout-totals">
         <div class="checkout-total-row">
           <span>Subtotal</span>
           <span id="checkout-subtotal">$0.00</span>
+        </div>
+        <div class="checkout-total-row" id="discount-row" style="display:none;">
+          <span id="discount-label">Discount</span>
+          <span id="discount-amount" style="color: var(--lime);">-$0.00</span>
         </div>
         <div class="checkout-total-row">
           <span>Shipping</span>
@@ -343,6 +365,7 @@
   <script src="js/checkout.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/search.js" defer></script>
+  <script src="js/popup.js" defer></script>
 
   <!-- ── Geoapify address autocomplete ── -->
   <script>

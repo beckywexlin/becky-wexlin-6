@@ -136,6 +136,25 @@ async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, sh
   });
 }
 
+// ── PROMO CODES ──
+const PROMO_CODES = {
+  'WELCOME10': { type: 'percent', value: 10 },
+};
+
+function applyPromo(code, subtotalCents) {
+  const promo = PROMO_CODES[(code || '').toUpperCase().trim()];
+  if (!promo) return { valid: false, discount: 0 };
+  if (promo.type === 'percent') {
+    const discount = Math.round(subtotalCents * promo.value / 100);
+    return { valid: true, discount, label: `${promo.value}% off` };
+  }
+  if (promo.type === 'fixed') {
+    const discount = Math.min(promo.value, subtotalCents);
+    return { valid: true, discount, label: `$${(promo.value / 100).toFixed(2)} off` };
+  }
+  return { valid: false, discount: 0 };
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -150,12 +169,25 @@ export default {
       return json({ publishableKey: env.STRIPE_PUBLISHABLE_KEY });
     }
 
+    // ── POST /validate-promo ──
+    if (pathname === '/validate-promo' && req.method === 'POST') {
+      const { code, items } = await req.json();
+      const subtotal = subtotalCents(items);
+      const result = applyPromo(code, subtotal);
+      return json({
+        valid: result.valid,
+        discount: result.discount / 100,
+        label: result.label || '',
+      });
+    }
+
     // ── POST /create-payment-intent ──
     if (pathname === '/create-payment-intent' && req.method === 'POST') {
-      const { items, tax } = await req.json();
+      const { items, tax, promoCode } = await req.json();
       const subtotal = subtotalCents(items);
+      const promo = applyPromo(promoCode, subtotal);
       const taxCents = Math.round((tax || 0) * 100);
-      const amount = subtotal + taxCents;
+      const amount = Math.max(subtotal - promo.discount + taxCents, 50);
 
       const pi = await stripeAPI(env, 'POST', '/payment_intents', {
         amount,
@@ -221,10 +253,11 @@ export default {
 
     // ── POST /update-payment-intent ──
     if (pathname === '/update-payment-intent' && req.method === 'POST') {
-      const { items, tax, taxCalculationId, paymentIntentId } = await req.json();
+      const { items, tax, taxCalculationId, paymentIntentId, promoCode } = await req.json();
       const subtotal = subtotalCents(items);
+      const promo = applyPromo(promoCode, subtotal);
       const taxCents = Math.round((tax || 0) * 100);
-      const amount = subtotal + taxCents;
+      const amount = Math.max(subtotal - promo.discount + taxCents, 50);
 
       try {
         const result = await stripeAPI(env, 'POST', `/payment_intents/${paymentIntentId}`, {
