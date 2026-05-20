@@ -169,6 +169,13 @@
         <div class="shop-product-grid" id="shirts-grid"></div>
       </section>
 
+      <section id="santa-barbara" aria-labelledby="sb-heading" style="display:none;">
+        <h2 id="sb-heading" class="shop-section-heading">
+          <span class="text-lime">—</span> Santa Barbara
+        </h2>
+        <div class="shop-product-grid" id="sb-grid"></div>
+      </section>
+
       <section id="hoodies" aria-labelledby="hoodies-heading" style="display:none;">
         <h2 id="hoodies-heading" class="shop-section-heading">
           <span class="text-pink">—</span> Hoodies
@@ -263,8 +270,10 @@
     var errorBox   = document.getElementById('shop-error');
     var errorMsg   = document.getElementById('shop-error-msg');
     var shirtsSection  = document.getElementById('shirts');
+    var sbSection      = document.getElementById('santa-barbara');
     var hoodiesSection = document.getElementById('hoodies');
     var shirtsGrid     = document.getElementById('shirts-grid');
+    var sbGrid         = document.getElementById('sb-grid');
     var hoodiesGrid    = document.getElementById('hoodies-grid');
     var emptyState     = document.getElementById('shop-empty');
     var counter        = document.getElementById('product-count');
@@ -320,8 +329,10 @@
       }
       counter.textContent = visible;
       var shirtsVisible  = shirtsSection.querySelectorAll('.shop-product-card:not([hidden])').length;
+      var sbVisible      = sbSection.querySelectorAll('.shop-product-card:not([hidden])').length;
       var hoodiesVisible = hoodiesSection.querySelectorAll('.shop-product-card:not([hidden])').length;
       shirtsSection.style.display  = shirtsVisible  ? '' : 'none';
+      sbSection.style.display      = sbVisible      ? '' : 'none';
       hoodiesSection.style.display = hoodiesVisible ? '' : 'none';
       emptyState.style.display = visible === 0 ? 'block' : 'none';
     }
@@ -362,11 +373,24 @@
         loading.style.display = 'none';
         var products = data.products || [];
         buildTabs(products);
-        var shirts  = products.filter(function(p) { return (p.category || '').indexOf('hoodie') === -1; });
+
+        function isSB(p) {
+          var title = (p.title || '').toLowerCase();
+          var tags = (p.tags || []).map(function(t) { return t.toLowerCase(); });
+          return title.indexOf('santa barbara') > -1 || tags.some(function(t) { return t.indexOf('santa barbara') > -1; });
+        }
+
+        var sb      = products.filter(function(p) { return isSB(p); });
+        var shirts  = products.filter(function(p) { return !isSB(p) && (p.category || '').indexOf('hoodie') === -1; });
         var hoodies = products.filter(function(p) { return (p.category || '').indexOf('hoodie') > -1; });
+
         if (shirts.length) {
           shirtsGrid.innerHTML = shirts.map(buildCard).join('');
           shirtsSection.style.display = '';
+        }
+        if (sb.length) {
+          sbGrid.innerHTML = sb.map(buildCard).join('');
+          sbSection.style.display = '';
         }
         if (hoodies.length) {
           hoodiesGrid.innerHTML = hoodies.map(buildCard).join('');
