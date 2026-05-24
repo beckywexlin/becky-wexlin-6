@@ -150,9 +150,6 @@
           </div>
         </div>
 
-        <div style="text-align:center; margin-top: 48px;">
-          <a href="shop.html" class="btn btn-outline">See everything in the shop</a>
-        </div>
       </div>
     </div>
 
@@ -350,8 +347,7 @@
           return;
         }
 
-        const featured = products.slice(0, 6);
-        featured.forEach(function(p) {
+        products.forEach(function(p) {
           const card = document.createElement('article');
           card.className = 'shop-product-card';
           card.innerHTML = `
