@@ -44,7 +44,14 @@ export default {
 
     if (immutable.includes(ext) || longCache.includes(ext)) {
       const headers = new Headers(response.headers);
-      headers.set('Cache-Control', 'public, max-age=2592000, immutable');
+      headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+      return new Response(response.body, { status: response.status, headers });
+    }
+
+    // HTML pages: revalidate on every request so updates are seen immediately
+    if (ext === 'html' || url.pathname.endsWith('/')) {
+      const headers = new Headers(response.headers);
+      headers.set('Cache-Control', 'public, no-cache');
       return new Response(response.body, { status: response.status, headers });
     }
 
