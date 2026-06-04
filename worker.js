@@ -18,6 +18,18 @@ export default {
       return new Response('Not found', { status: 404 });
     }
 
+    // 301 redirect .html URLs to clean versions (SEO canonicalization)
+    if (url.pathname.endsWith('.html')) {
+      // /blog/index.html → /blog/
+      if (url.pathname.endsWith('/index.html')) {
+        url.pathname = url.pathname.replace(/\/index\.html$/, '/');
+      } else {
+        // /shop.html → /shop, /blog/foo.html → /blog/foo
+        url.pathname = url.pathname.replace(/\.html$/, '');
+      }
+      return Response.redirect(url.toString(), 301);
+    }
+
     // Image proxy — cache Printify images at the edge
     if (url.pathname.startsWith('/img/')) {
       return await proxyImage(url);

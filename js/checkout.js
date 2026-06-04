@@ -271,6 +271,43 @@ async function initCheckout() {
     });
   }
 
+  // Klaviyo — Started Checkout event
+  if (cart.length > 0) {
+    var _learnq = window._learnq || [];
+    var klaviyoItems = cart.map(function(item) {
+      return {
+        ProductID: item.id,
+        ProductName: item.title,
+        Quantity: item.quantity,
+        ItemPrice: parseFloat(item.price.replace('$', '')),
+        ProductURL: 'https://www.beckywexlin.com/products/' + (item.id || ''),
+        ImageURL: item.image || ''
+      };
+    });
+    var klaviyoTotal = cart.reduce(function(sum, item) {
+      return sum + parseFloat(item.price.replace('$', '')) * item.quantity;
+    }, 0);
+    _learnq.push(['track', 'Started Checkout', {
+      '$event_id': 'checkout_' + Date.now(),
+      '$value': klaviyoTotal,
+      'ItemNames': cart.map(function(item) { return item.title; }),
+      'CheckoutURL': window.location.href,
+      'Items': klaviyoItems
+    }]);
+  }
+
+  // Klaviyo — identify user when email is entered
+  var emailInput = document.getElementById('email');
+  if (emailInput) {
+    emailInput.addEventListener('blur', function() {
+      var email = emailInput.value.trim();
+      if (email && email.includes('@')) {
+        var _learnq = window._learnq || [];
+        _learnq.push(['identify', { '$email': email }]);
+      }
+    });
+  }
+
   await initStripe();
   const clientSecret = await createPaymentIntent(cart, 0);
   await mountPaymentElement(clientSecret);
