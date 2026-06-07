@@ -929,6 +929,18 @@
             }]
           });
         }
+
+        // Klaviyo Viewed Product event
+        var _learnq = window._learnq || [];
+        _learnq.push(['track', 'Viewed Product', {
+          ProductName: p.title,
+          ProductID: p.id,
+          ImageURL: p.images && p.images[0] ? 'https://images-api.printify.com/mockup/' + p.id + '/12100/92570/' + (p.slug || '') + '.jpg?camera_label=front' : '',
+          URL: window.location.href,
+          Brand: 'Becky Wexlin',
+          Price: firstSorted ? parseFloat(firstSorted.price) : 0
+        }]);
+
         loadRelated();
 
       } catch (err) {

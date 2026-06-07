@@ -43,6 +43,20 @@ function addToCart(product) {
       }]
     });
   }
+
+  // Klaviyo Added to Cart event
+  var _learnq = window._learnq || [];
+  var klPrice = parseFloat((product.price || '0').toString().replace('$', '')) || 0;
+  _learnq.push(['track', 'Added to Cart', {
+    '$value': klPrice * qty,
+    ProductName: product.title,
+    ProductID: product.id,
+    Quantity: qty,
+    ItemPrice: klPrice,
+    ImageURL: product.image || '',
+    ProductURL: window.location.href
+  }]);
+
   saveCart();
   openCart();
 }
