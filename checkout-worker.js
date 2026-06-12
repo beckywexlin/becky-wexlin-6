@@ -87,7 +87,7 @@ async function klaviyoIdentify(email, firstName, lastName, source) {
   });
 }
 
-async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, shipping, taxAmount) {
+async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, shipping, taxAmount, promoCode, discountAmount) {
   const total = items.reduce((sum, item) => {
     const price = typeof item.price === 'string'
       ? parseFloat(item.price.replace('$', ''))
@@ -95,6 +95,7 @@ async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, sh
     return sum + price * (item.quantity || 1);
   }, 0);
 
+  const discount = discountAmount || 0;
   const orderDate = new Date().toISOString();
 
   await fetch(`https://a.klaviyo.com/client/events/?company_id=${KLAVIYO_COMPANY_ID}`, {
@@ -110,7 +111,9 @@ async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, sh
             order_id: orderId,
             order_date: orderDate,
             subtotal: total.toFixed(2),
-            value: (total + (taxAmount || 0)).toFixed(2),
+            discount_code: promoCode || '',
+            discount_amount: discount.toFixed(2),
+            value: (total - discount + (taxAmount || 0)).toFixed(2),
             tax: (taxAmount || 0).toFixed(2),
             items: items.map(item => ({
               name: item.title || item.name || '',
@@ -129,7 +132,7 @@ async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, sh
               country: shipping.country || 'US',
             },
           },
-          value: total,
+          value: total - discount,
         },
       },
     }),
@@ -139,6 +142,7 @@ async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, sh
 // ── PROMO CODES ──
 const PROMO_CODES = {
   'WELCOME10': { type: 'percent', value: 10 },
+  'GOLETA10':  { type: 'percent', value: 10 },
 };
 
 function applyPromo(code, subtotalCents) {
@@ -280,7 +284,7 @@ export default {
 
     // ── POST /create-order ──
     if (pathname === '/create-order' && req.method === 'POST') {
-      const { items, shipping, paymentIntentId } = await req.json();
+      const { items, shipping, paymentIntentId, promoCode } = await req.json();
 
       const line_items = items.map(item => ({
         product_id: item.id,
@@ -327,10 +331,11 @@ export default {
       }
 
       // Fire Klaviyo profile + Placed Order event server-side
+      const promo = applyPromo(promoCode, subtotalCents(items));
       try {
         await Promise.all([
           klaviyoIdentify(shipping.email, shipping.firstName, shipping.lastName, 'Checkout — Order Placed'),
-          klaviyoPlacedOrder(shipping.email, shipping.firstName, shipping.lastName, items, paymentIntentId, shipping, 0),
+          klaviyoPlacedOrder(shipping.email, shipping.firstName, shipping.lastName, items, paymentIntentId, shipping, 0, promoCode || '', promo.discount / 100),
         ]);
       } catch (e) {
         console.error('Klaviyo error:', e.message);

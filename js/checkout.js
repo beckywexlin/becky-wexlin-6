@@ -138,26 +138,37 @@ async function submitOrder(shipping) {
     body: JSON.stringify({
       items: cart,
       shipping,
-      paymentIntentId: paymentIntent.id
+      paymentIntentId: paymentIntent.id,
+      promoCode: currentPromoCode || ''
     })
   });
 
-  // GA4 purchase event
+  // GA4 purchase event — include UTM params + coupon for attribution
   if (typeof gtag === 'function') {
     const subtotal = cart.reduce((sum, item) => sum + parseFloat(item.price.replace('$', '')) * item.quantity, 0);
-    gtag('event', 'purchase', {
+    const purchaseParams = {
       transaction_id: paymentIntent.id,
-      value: subtotal + currentTaxAmount,
+      value: subtotal - currentDiscount + currentTaxAmount,
       tax: currentTaxAmount,
       currency: 'USD',
+      coupon: currentPromoCode || undefined,
       items: cart.map(item => ({
         item_id: item.id,
         item_name: item.title,
         item_variant: item.size || '',
         price: parseFloat(item.price.replace('$', '')),
-        quantity: item.quantity
+        quantity: item.quantity,
+        coupon: currentPromoCode || undefined
       }))
-    });
+    };
+    // Forward stored UTM params as custom dimensions for revenue attribution
+    try {
+      const utm = JSON.parse(sessionStorage.getItem('bw_utm') || '{}');
+      if (utm.utm_source) purchaseParams.campaign_source = utm.utm_source;
+      if (utm.utm_medium) purchaseParams.campaign_medium = utm.utm_medium;
+      if (utm.utm_campaign) purchaseParams.campaign_name = utm.utm_campaign;
+    } catch (e) {}
+    gtag('event', 'purchase', purchaseParams);
   }
 
   localStorage.removeItem('bw-cart');
@@ -225,49 +236,65 @@ async function initCheckout() {
     }
   });
 
+  // Auto-fill promo code from landing page (stored via ?code= param)
+  const savedPromo = localStorage.getItem('bw-promo');
+
   // Promo code handler
   const promoBtn = document.getElementById('promo-apply');
   const promoInput = document.getElementById('promo-code');
   const promoMsg = document.getElementById('promo-msg');
-  if (promoBtn) {
-    promoBtn.addEventListener('click', async () => {
-      const code = promoInput.value.trim();
-      if (!code) return;
-      promoBtn.textContent = '...';
-      promoBtn.disabled = true;
-      try {
-        const res = await fetch(CHECKOUT_WORKER + '/validate-promo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, items: cart }),
-        });
-        const data = await res.json();
-        if (data.valid) {
-          currentPromoCode = code;
-          currentDiscount = data.discount;
-          promoMsg.textContent = data.label + ' applied!';
-          promoMsg.className = 'promo-success';
-          promoMsg.style.display = '';
-          promoInput.disabled = true;
-          promoBtn.style.display = 'none';
-          document.getElementById('discount-row').style.display = '';
-          document.getElementById('discount-label').textContent = data.label;
-          document.getElementById('discount-amount').textContent = '-$' + data.discount.toFixed(2);
-          updateTotal();
-        } else {
-          promoMsg.textContent = 'Invalid code';
-          promoMsg.className = 'promo-error';
-          promoMsg.style.display = '';
-          currentPromoCode = '';
-          currentDiscount = 0;
-        }
-      } catch {
-        promoMsg.textContent = 'Could not validate';
+
+  async function applyPromoCode(code) {
+    if (!code) return;
+    promoBtn.textContent = '...';
+    promoBtn.disabled = true;
+    try {
+      const res = await fetch(CHECKOUT_WORKER + '/validate-promo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, items: cart }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        currentPromoCode = code;
+        currentDiscount = data.discount;
+        promoMsg.textContent = data.label + ' applied!';
+        promoMsg.className = 'promo-success';
+        promoMsg.style.display = '';
+        promoInput.disabled = true;
+        promoBtn.style.display = 'none';
+        document.getElementById('discount-row').style.display = '';
+        document.getElementById('discount-label').textContent = data.label;
+        document.getElementById('discount-amount').textContent = '-$' + data.discount.toFixed(2);
+        updateTotal();
+        // Clear stored promo after successful apply
+        localStorage.removeItem('bw-promo');
+      } else {
+        promoMsg.textContent = 'Invalid code';
         promoMsg.className = 'promo-error';
         promoMsg.style.display = '';
+        currentPromoCode = '';
+        currentDiscount = 0;
+        localStorage.removeItem('bw-promo');
       }
-      promoBtn.textContent = 'Apply';
-      promoBtn.disabled = false;
+    } catch {
+      promoMsg.textContent = 'Could not validate';
+      promoMsg.className = 'promo-error';
+      promoMsg.style.display = '';
+    }
+    promoBtn.textContent = 'Apply';
+    promoBtn.disabled = false;
+  }
+
+  // Auto-apply saved promo on page load
+  if (savedPromo && promoInput) {
+    promoInput.value = savedPromo;
+    applyPromoCode(savedPromo);
+  }
+
+  if (promoBtn) {
+    promoBtn.addEventListener('click', function() {
+      applyPromoCode(promoInput.value.trim());
     });
   }
 
@@ -287,13 +314,17 @@ async function initCheckout() {
     var klaviyoTotal = cart.reduce(function(sum, item) {
       return sum + parseFloat(item.price.replace('$', '')) * item.quantity;
     }, 0);
-    _learnq.push(['track', 'Started Checkout', {
+    var checkoutProps = {
       '$event_id': 'checkout_' + Date.now(),
       '$value': klaviyoTotal,
       'ItemNames': cart.map(function(item) { return item.title; }),
       'CheckoutURL': window.location.href,
       'Items': klaviyoItems
-    }]);
+    };
+    if (savedPromo) {
+      checkoutProps.DiscountCode = savedPromo;
+    }
+    _learnq.push(['track', 'Started Checkout', checkoutProps]);
   }
 
   // Klaviyo — identify user when email is entered

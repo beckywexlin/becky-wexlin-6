@@ -183,6 +183,27 @@
       margin-bottom: 12px;
     }
 
+    /* ── Promo banner ── */
+    .promo-banner {
+      display: none;
+      background: var(--lime);
+      color: var(--black);
+      text-align: center;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .promo-banner code {
+      background: rgba(0,0,0,0.12);
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.05em;
+    }
+    .promo-banner.visible { display: block; }
+
     /* ── Brand story ── */
     .lp-story {
       display: grid;
@@ -338,6 +359,11 @@
       <span>Free shipping on all orders &nbsp;&middot;&nbsp;</span>
       <span>Free shipping on all orders &nbsp;&middot;&nbsp;</span>
     </div>
+  </div>
+
+  <!-- PROMO BANNER (shown when ?code= is present) -->
+  <div class="promo-banner" id="promo-banner" role="status">
+    10% off for locals &mdash; use code <code>GOLETA10</code> at checkout
   </div>
 
   <!-- NAVIGATION -->
@@ -588,6 +614,31 @@
         grid.style.display = '';
       } catch(e) {
         document.getElementById('sb-loading').innerHTML = '<p style="color:#555;">Could not load products. <a href="shop.html" style="color:var(--lime);">Browse all &rarr;</a></p>';
+      }
+    })();
+
+    // ── Promo code auto-apply from URL ──
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var code = params.get('code');
+      if (code) {
+        // Store promo code for checkout auto-fill
+        localStorage.setItem('bw-promo', code.toUpperCase().trim());
+        // Show the promo banner
+        var banner = document.getElementById('promo-banner');
+        if (banner) banner.classList.add('visible');
+      }
+
+      // ── Persist UTM parameters across pages ──
+      var utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+      var hasUtm = false;
+      var utmData = {};
+      utmKeys.forEach(function(key) {
+        var val = params.get(key);
+        if (val) { utmData[key] = val; hasUtm = true; }
+      });
+      if (hasUtm) {
+        sessionStorage.setItem('bw_utm', JSON.stringify(utmData));
       }
     })();
   </script>
