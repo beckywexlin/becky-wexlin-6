@@ -304,33 +304,13 @@
   <script src="js/cart.js" defer></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
-    (async () => {
-      try {
-        const track = document.getElementById('product-strip-track');
-        if (!track) return;
-        let products;
-        const cached = sessionStorage.getItem('bw_products');
-        if (cached) { products = JSON.parse(cached); }
-        else {
-          const res = await fetch('https://becky-wexlin-api.beckywexlin.workers.dev/api/products');
-          const data = await res.json();
-          products = (data.products || data).map(p => ({ slug: p.slug, title: p.title, img: p.images?.[0] || '', price: p.variants?.[0]?.price || '' }));
-          try { sessionStorage.setItem('bw_products', JSON.stringify(products)); } catch {}
-        }
-        if (!products.length) return;
-        const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-        const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
-        track.innerHTML = html + html;
-      } catch { /* silent */ }
-    })();
-  </script>
 
-  <!-- PRODUCT LOADER -->
-  <script>
-    const grid = document.getElementById('product-grid');
-    const loading = document.getElementById('product-loading');
-
+    // Single fetch for both product strip + product grid
     (async function() {
+      const grid = document.getElementById('product-grid');
+      const loading = document.getElementById('product-loading');
+      const track = document.getElementById('product-strip-track');
+
       try {
         let products;
         const cached = sessionStorage.getItem('bw_products');
@@ -343,7 +323,15 @@
           try { sessionStorage.setItem('bw_products', JSON.stringify(products)); } catch {}
         }
 
-        loading.remove();
+        // Product strip
+        if (track && products.length) {
+          const subset = products.slice().sort(() => Math.random() - 0.5).slice(0, 12);
+          const stripHtml = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+          track.innerHTML = stripHtml + stripHtml;
+        }
+
+        // Product grid
+        if (loading) loading.remove();
 
         if (!products.length) {
           grid.innerHTML = '<p style="color:#888;">No products found.</p>';
@@ -374,7 +362,7 @@
         });
 
       } catch (err) {
-        loading.remove();
+        if (loading) loading.remove();
         grid.innerHTML = '<p style="color:#888;">Could not load products right now. <a href="shop.html" style="color:var(--lime)">Browse the shop</a></p>';
       }
     })();

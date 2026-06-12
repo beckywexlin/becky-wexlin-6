@@ -490,7 +490,7 @@
         }
         if (!products.length) return;
         const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-        const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+        const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
         track.innerHTML = html + html;
       } catch { /* silent */ }
     })();
@@ -627,23 +627,25 @@
 
     /* ── RELATED PRODUCTS ───────────────────────────── */
     async function loadRelated() {
-      console.log('loadRelated called');
       try {
-        const res = await fetch(WORKER_URL + '/api/products');
-        console.log('products status:', res.status);
-        const data = await res.json();
-        console.log('products data:', data);
-        const all = data.products || data;
-        console.log('all products:', all.length);
+        let all;
+        const cached = sessionStorage.getItem('bw_products');
+        if (cached) {
+          all = JSON.parse(cached);
+        } else {
+          const res = await fetch(WORKER_URL + '/api/products');
+          const data = await res.json();
+          all = (data.products || data).map(p => ({ slug: p.slug, title: p.title, img: p.images?.[0] || '', price: p.variants?.[0]?.price || '', id: p.id }));
+          try { sessionStorage.setItem('bw_products', JSON.stringify(all)); } catch {}
+        }
         const others = all.filter(p => String(p.id) !== String(productId));
         const shuffled = others.sort(() => Math.random() - 0.5).slice(0, 4);
-        console.log('shuffled:', shuffled.length);
         if (!shuffled.length) return;
 
         const grid = document.getElementById('related-grid');
         grid.innerHTML = shuffled.map(p => {
-          const price = p.variants?.[0]?.price || '';
-          const img = p.images?.[0] || '';
+          const price = p.price || p.variants?.[0]?.price || '';
+          const img = p.img || p.images?.[0] || '';
           return `
             <a class="related-card" href="/products/${p.slug}.html">
               <div class="related-card-img">
@@ -657,7 +659,6 @@
         }).join('');
 
         document.getElementById('related-section').style.display = 'block';
-        console.log('related section shown');
       } catch (e) {
         console.error('Related products error:', e);
       }
@@ -703,7 +704,7 @@
     async function getProductTags(id) {
       if (!tagsMap) {
         try {
-          const r = await fetch('/product-tags.json', { cache: 'no-cache' });
+          const r = await fetch('/product-tags.json');
           tagsMap = r.ok ? await r.json() : {};
         } catch { tagsMap = {}; }
       }

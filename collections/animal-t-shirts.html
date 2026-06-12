@@ -207,7 +207,7 @@
         var track = document.getElementById('product-strip-track');
         if (track) {
           var subset = products.sort(function() { return Math.random() - 0.5; }).slice(0, 12);
-          var html = subset.map(function(p) { return '<a class="product-strip-item" href="/products/' + p.slug + '.html"><div class="product-strip-thumb">' + (p.images && p.images[0] ? '<img src="/img/' + encodeURIComponent(p.images[0]) + '" alt="' + esc(p.title) + '" />' : '') + '</div><span class="product-strip-name">' + p.title + '</span><span class="product-strip-price">$' + (p.variants && p.variants[0] ? p.variants[0].price : '') + '</span></a><span class="product-strip-divider">&middot;</span>'; }).join('');
+          var html = subset.map(function(p) { return '<a class="product-strip-item" href="/products/' + p.slug + '.html"><div class="product-strip-thumb">' + (p.images && p.images[0] ? '<img src="/img/' + encodeURIComponent(p.images[0]) + '" alt="' + esc(p.title) + '" loading="lazy" />' : '') + '</div><span class="product-strip-name">' + p.title + '</span><span class="product-strip-price">$' + (p.variants && p.variants[0] ? p.variants[0].price : '') + '</span></a><span class="product-strip-divider">&middot;</span>'; }).join('');
           track.innerHTML = html + html;
         }
       } catch(e) {

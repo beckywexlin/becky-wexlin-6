@@ -286,7 +286,7 @@
         }
         if (!products.length) return;
         const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-        const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+        const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
         track.innerHTML = html + html;
       } catch { /* silent */ }
     })();
@@ -394,11 +394,22 @@
       searchTimer = setTimeout(applyFilters, 150);
     });
 
-    fetch(PROXY_BASE + '/api/products')
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
+    // Use cached product data if available, otherwise fetch
+    (function() {
+      var cachedFull = sessionStorage.getItem('bw_products_full');
+      if (cachedFull) {
+        return Promise.resolve(JSON.parse(cachedFull));
+      }
+      return fetch(PROXY_BASE + '/api/products')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          var products = data.products || [];
+          try { sessionStorage.setItem('bw_products_full', JSON.stringify(products)); } catch(e) {}
+          return products;
+        });
+    })()
+      .then(function(products) {
         loading.style.display = 'none';
-        var products = data.products || [];
         buildTabs(products);
 
         function isSB(p) {

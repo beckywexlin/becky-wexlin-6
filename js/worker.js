@@ -29,7 +29,7 @@ async function printify(path, env, opts = {}) {
   return { status: res.status, ok: res.ok, body };
 }
 
-const CACHE_TTL = 300;
+const CACHE_TTL = 3600;
 
 async function cachedResponse(cacheKey, handler) {
   const cache = caches.default;
