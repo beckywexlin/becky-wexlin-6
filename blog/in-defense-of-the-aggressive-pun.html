@@ -16,9 +16,9 @@
   <title>In Defense of the Aggressive Pun — Becky Wexlin Creative</title>
   <meta name="description" content="The pun shirt gets the most grief of any novelty tee. But it's the oldest, most resilient, and arguably most honest form of the weird t-shirt. Here's our defense." />
   <meta name="keywords" content="pun shirts, funny t-shirts, pun t-shirt, novelty tees, graphic tee humor, food pun shirts, animal pun shirts, weird shirts" />
-  <link rel="canonical" href="https://www.beckywexlin.com/blog/in-defense-of-the-aggressive-pun.html" />
+  <link rel="canonical" href="https://www.beckywexlin.com/blog/in-defense-of-the-aggressive-pun" />
   <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://www.beckywexlin.com/blog/in-defense-of-the-aggressive-pun.html" />
+  <meta property="og:url" content="https://www.beckywexlin.com/blog/in-defense-of-the-aggressive-pun" />
   <meta property="og:title" content="In Defense of the Aggressive Pun" />
   <meta property="og:description" content="The pun shirt gets the most grief of any novelty tee. But it's the oldest, most resilient, and arguably most honest form of the weird t-shirt." />
   <meta property="og:image" content="https://www.beckywexlin.com/images/bad-ass-tee-blog.jpg" />
@@ -328,7 +328,7 @@
         if (sb) {
           const picks = products.sort(() => Math.random() - 0.5).slice(0, 3);
           sb.innerHTML = picks.map(p => `
-            <a class="sidebar-product-card" href="/products/${p.slug}.html">
+            <a class="sidebar-product-card" href="/${p.slug}">
               <div class="sidebar-product-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div>
               <div class="sidebar-product-info">
                 <p class="sidebar-product-name">${p.title}</p>
@@ -341,7 +341,7 @@
         const track = document.getElementById('product-strip-track');
         if (track) {
           const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-          const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+          const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
           track.innerHTML = html + html;
         }
       } catch { /* silent */ }

@@ -15,9 +15,9 @@
   <title>Santa Barbara T-Shirts — Funny Local SB Tees & Hoodies | Becky Wexlin</title>
   <meta name="robots" content="index, follow">
   <meta name="description" content="Santa Barbara graphic tees and hoodies designed by an actual local. Funny, weird, and way better than anything on State Street. SB, Goleta, 805. Free shipping.">
-  <link rel="canonical" href="https://www.beckywexlin.com/collections/santa-barbara-t-shirts.html">
+  <link rel="canonical" href="https://www.beckywexlin.com/collections/santa-barbara-t-shirts">
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://www.beckywexlin.com/collections/santa-barbara-t-shirts.html" />
+  <meta property="og:url" content="https://www.beckywexlin.com/collections/santa-barbara-t-shirts" />
   <meta property="og:title" content="Santa Barbara T-Shirts — Funny Local SB Tees & Hoodies | Becky Wexlin" />
   <meta property="og:description" content="Santa Barbara graphic tees and hoodies designed by an actual local. Funny, weird, and way better than anything on State Street. SB, Goleta, 805. Free shipping." />
   <meta property="og:image" content="https://www.beckywexlin.com/images/og-image.jpg" />
@@ -176,7 +176,7 @@
       var rawDesc = (p.description || '').replace(/<[^>]+>/g, '').trim();
       var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
       return '<article class="shop-product-card">'
-        + '<a href="/products/' + p.slug + '.html" aria-label="Shop ' + esc(p.title) + '">'
+        + '<a href="/' + p.slug + '" aria-label="Shop ' + esc(p.title) + '">'
         + '<div class="shop-card-img">'
         + '<img src="/img/' + encodeURIComponent(p.image || '') + '" alt="' + esc(p.title) + '" loading="lazy" />'
         + '<div class="shop-card-overlay"><span>Shop now &rarr;</span></div>'
@@ -207,7 +207,7 @@
         var track = document.getElementById('product-strip-track');
         if (track) {
           var subset = products.sort(function() { return Math.random() - 0.5; }).slice(0, 12);
-          var html = subset.map(function(p) { return '<a class="product-strip-item" href="/products/' + p.slug + '.html"><div class="product-strip-thumb">' + (p.images && p.images[0] ? '<img src="/img/' + encodeURIComponent(p.images[0]) + '" alt="' + esc(p.title) + '" loading="lazy" />' : '') + '</div><span class="product-strip-name">' + p.title + '</span><span class="product-strip-price">$' + (p.variants && p.variants[0] ? p.variants[0].price : '') + '</span></a><span class="product-strip-divider">&middot;</span>'; }).join('');
+          var html = subset.map(function(p) { return '<a class="product-strip-item" href="/' + p.slug + '"><div class="product-strip-thumb">' + (p.images && p.images[0] ? '<img src="/img/' + encodeURIComponent(p.images[0]) + '" alt="' + esc(p.title) + '" loading="lazy" />' : '') + '</div><span class="product-strip-name">' + p.title + '</span><span class="product-strip-price">$' + (p.variants && p.variants[0] ? p.variants[0].price : '') + '</span></a><span class="product-strip-divider">&middot;</span>'; }).join('');
           track.innerHTML = html + html;
         }
       } catch(e) {

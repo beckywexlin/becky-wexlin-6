@@ -15,7 +15,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy — Becky Wexlin Creative</title>
   <meta name="description" content="Privacy policy for Becky Wexlin Creative. How we collect, use and protect your personal information." />
-  <link rel="canonical" href="https://www.beckywexlin.com/privacy.html" />
+  <link rel="canonical" href="https://www.beckywexlin.com/privacy" />
   <meta name="robots" content="index, follow" />
   <script type="application/ld+json">
   {
@@ -383,7 +383,7 @@
         }
         if (!products.length) return;
         const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-        const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+        const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
         track.innerHTML = html + html;
       } catch { /* silent */ }
     })();

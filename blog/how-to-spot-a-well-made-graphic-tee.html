@@ -16,9 +16,9 @@
   <title>How to Spot a Well-Made Graphic Tee Before You Buy — Becky Wexlin Creative</title>
   <meta name="description" content="Not all graphic tees are created equal. Here's exactly what to look for — fabric weight, print quality, stitching, and fit — so you never waste money on a shirt that falls apart after three washes." />
   <meta name="keywords" content="how to spot a quality graphic tee, graphic tee buying guide, how to tell if a graphic tee is good quality, best graphic tees, graphic tee quality checklist" />
-  <link rel="canonical" href="https://www.beckywexlin.com/blog/how-to-spot-a-well-made-graphic-tee.html" />
+  <link rel="canonical" href="https://www.beckywexlin.com/blog/how-to-spot-a-well-made-graphic-tee" />
   <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://www.beckywexlin.com/blog/how-to-spot-a-well-made-graphic-tee.html" />
+  <meta property="og:url" content="https://www.beckywexlin.com/blog/how-to-spot-a-well-made-graphic-tee" />
   <meta property="og:title" content="How to Spot a Well-Made Graphic Tee Before You Buy" />
   <meta property="og:description" content="Exactly what to look for so you never waste money on a shirt that falls apart after three washes." />
   <meta property="og:image" content="https://www.beckywexlin.com/images/cotton-crew-neck-tshirt-mens-yellow.jpg" />
@@ -317,7 +317,7 @@
         if (sb) {
           const picks = products.sort(() => Math.random() - 0.5).slice(0, 3);
           sb.innerHTML = picks.map(p => `
-            <a class="sidebar-product-card" href="/products/${p.slug}.html">
+            <a class="sidebar-product-card" href="/${p.slug}">
               <div class="sidebar-product-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div>
               <div class="sidebar-product-info">
                 <p class="sidebar-product-name">${p.title}</p>
@@ -330,7 +330,7 @@
         const track = document.getElementById('product-strip-track');
         if (track) {
           const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-          const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+          const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
           track.innerHTML = html + html;
         }
       } catch { /* silent */ }

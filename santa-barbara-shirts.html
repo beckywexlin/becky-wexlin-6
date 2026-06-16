@@ -16,9 +16,9 @@
   <meta name="robots" content="index, follow">
   <meta name="description" content="Santa Barbara shirts and apparel designed by an actual local. Funny graphic tees, hoodies, and gifts for people who know the 805. Free shipping on every order.">
   <meta name="keywords" content="Santa Barbara shirts, Santa Barbara t-shirts, Goleta shirts, Santa Barbara gifts, Santa Barbara apparel, SB tees, 805 shirts, Santa Barbara clothing">
-  <link rel="canonical" href="https://www.beckywexlin.com/santa-barbara-shirts.html">
+  <link rel="canonical" href="https://www.beckywexlin.com/santa-barbara-shirts">
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://www.beckywexlin.com/santa-barbara-shirts.html" />
+  <meta property="og:url" content="https://www.beckywexlin.com/santa-barbara-shirts" />
   <meta property="og:title" content="Santa Barbara Shirts — Local SB T-Shirts, Hoodies & Gifts | Becky Wexlin" />
   <meta property="og:description" content="Santa Barbara shirts and apparel designed by an actual local. Funny graphic tees, hoodies, and gifts for people who know the 805. Free shipping." />
   <meta property="og:image" content="https://www.beckywexlin.com/images/og-image.jpg" />
@@ -573,7 +573,7 @@
         if (!products.length) return;
         var subset = products.sort(function() { return Math.random() - 0.5; }).slice(0, 12);
         function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-        var html = subset.map(function(p) { return '<a class="product-strip-item" href="/products/' + p.slug + '.html"><div class="product-strip-thumb">' + (p.img ? '<img src="/img/' + encodeURIComponent(p.img) + '" alt="' + esc(p.title) + '" />' : '') + '</div><span class="product-strip-name">' + esc(p.title) + '</span><span class="product-strip-price">$' + p.price + '</span></a><span class="product-strip-divider">&middot;</span>'; }).join('');
+        var html = subset.map(function(p) { return '<a class="product-strip-item" href="/' + p.slug + '"><div class="product-strip-thumb">' + (p.img ? '<img src="/img/' + encodeURIComponent(p.img) + '" alt="' + esc(p.title) + '" />' : '') + '</div><span class="product-strip-name">' + esc(p.title) + '</span><span class="product-strip-price">$' + p.price + '</span></a><span class="product-strip-divider">&middot;</span>'; }).join('');
         track.innerHTML = html + html;
       } catch(e) {}
     })();
@@ -587,7 +587,7 @@
       var rawDesc = (p.description || '').replace(/<[^>]+>/g, '').trim();
       var desc = rawDesc.length > 90 ? rawDesc.substring(0, 87) + '...' : rawDesc;
       return '<article class="shop-product-card">'
-        + '<a href="/products/' + p.slug + '.html" aria-label="Shop ' + esc(p.title) + '">'
+        + '<a href="/' + p.slug + '" aria-label="Shop ' + esc(p.title) + '">'
         + '<div class="shop-card-img">'
         + '<img src="/img/' + encodeURIComponent(p.image || '') + '" alt="' + esc(p.title) + ' — Santa Barbara graphic tee" loading="lazy" />'
         + '<div class="shop-card-overlay"><span>Shop now &rarr;</span></div>'

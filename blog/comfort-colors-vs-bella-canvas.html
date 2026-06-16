@@ -16,9 +16,9 @@
   <title>Comfort Colors vs Bella Canvas: Which Blank Is Better for Graphic Tees? | Becky Wexlin</title>
   <meta name="description" content="Comfort Colors 1717 vs Bella Canvas 3001 — we print on both. Here's the honest comparison: fabric weight, fit, shrinkage, print quality, and which one you should pick." />
   <meta name="keywords" content="Comfort Colors vs Bella Canvas, Comfort Colors 1717, Bella Canvas 3001, best blank for graphic tees, heavyweight t-shirt, graphic tee blanks, garment dyed tee, Airlume cotton" />
-  <link rel="canonical" href="https://www.beckywexlin.com/blog/comfort-colors-vs-bella-canvas.html" />
+  <link rel="canonical" href="https://www.beckywexlin.com/blog/comfort-colors-vs-bella-canvas" />
   <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://www.beckywexlin.com/blog/comfort-colors-vs-bella-canvas.html" />
+  <meta property="og:url" content="https://www.beckywexlin.com/blog/comfort-colors-vs-bella-canvas" />
   <meta property="og:title" content="Comfort Colors vs Bella Canvas — which blank is actually better?" />
   <meta property="og:description" content="Comfort Colors 1717 vs Bella Canvas 3001 — we print on both. Here's the honest comparison: fabric weight, fit, shrinkage, print quality, and which one you should pick." />
   <meta property="og:image" content="https://www.beckywexlin.com/images/classic-crew-slim-fit-short-ground.jpg" />
@@ -428,7 +428,7 @@
         if (sb) {
           const picks = products.sort(() => Math.random() - 0.5).slice(0, 3);
           sb.innerHTML = picks.map(p => `
-            <a class="sidebar-product-card" href="/products/${p.slug}.html">
+            <a class="sidebar-product-card" href="/${p.slug}">
               <div class="sidebar-product-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div>
               <div class="sidebar-product-info">
                 <p class="sidebar-product-name">${p.title}</p>
@@ -441,7 +441,7 @@
         const track = document.getElementById('product-strip-track');
         if (track) {
           const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-          const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+          const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
           track.innerHTML = html + html;
         }
       } catch { /* silent */ }

@@ -16,9 +16,9 @@
   <title>How to Start a Graphic Tee Brand in 2026 — From Someone Who Did It | Becky Wexlin</title>
   <meta name="description" content="How to start a graphic tee brand — the real version. Blanks, printing, fulfillment, pricing, and what nobody tells you about selling shirts online. From the founder of Becky Wexlin." />
   <meta name="keywords" content="how to start a graphic tee brand, start a t-shirt business, graphic tee business, print on demand shirts, comfort colors blanks, t-shirt pricing, sell shirts online, t-shirt brand 2026" />
-  <link rel="canonical" href="https://www.beckywexlin.com/blog/how-to-start-a-graphic-tee-brand.html" />
+  <link rel="canonical" href="https://www.beckywexlin.com/blog/how-to-start-a-graphic-tee-brand" />
   <meta property="og:type" content="article" />
-  <meta property="og:url" content="https://www.beckywexlin.com/blog/how-to-start-a-graphic-tee-brand.html" />
+  <meta property="og:url" content="https://www.beckywexlin.com/blog/how-to-start-a-graphic-tee-brand" />
   <meta property="og:title" content="How to Start a Graphic Tee Brand in 2026 — From Someone Who Did It" />
   <meta property="og:description" content="How to start a graphic tee brand — the real version. Blanks, printing, fulfillment, pricing, and what nobody tells you about selling shirts online." />
   <meta property="article:published_time" content="2026-06-01" />
@@ -364,7 +364,7 @@
         if (sb) {
           const picks = products.sort(() => Math.random() - 0.5).slice(0, 3);
           sb.innerHTML = picks.map(p => `
-            <a class="sidebar-product-card" href="/products/${p.slug}.html">
+            <a class="sidebar-product-card" href="/${p.slug}">
               <div class="sidebar-product-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div>
               <div class="sidebar-product-info">
                 <p class="sidebar-product-name">${p.title}</p>
@@ -377,7 +377,7 @@
         const track = document.getElementById('product-strip-track');
         if (track) {
           const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-          const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+          const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
           track.innerHTML = html + html;
         }
       } catch { /* silent */ }

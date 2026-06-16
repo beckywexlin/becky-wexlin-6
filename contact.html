@@ -17,11 +17,11 @@
   <!-- ── PRIMARY SEO ── -->
   <title>Contact — Becky Wexlin Creative | Get in Touch</title>
   <meta name="description" content="Get in touch with Becky Wexlin Creative. Questions about orders, shipping, returns, or just want to say something weird? We're here." />
-  <link rel="canonical" href="https://www.beckywexlin.com/contact.html" />
+  <link rel="canonical" href="https://www.beckywexlin.com/contact" />
 
   <!-- ── OPEN GRAPH ── -->
   <meta property="og:type"        content="website" />
-  <meta property="og:url"         content="https://www.beckywexlin.com/contact.html" />
+  <meta property="og:url"         content="https://www.beckywexlin.com/contact" />
   <meta property="og:title"       content="Contact — Becky Wexlin Creative" />
   <meta property="og:description" content="Questions, feedback, cursed design ideas — we read it all." />
   <meta property="og:image"       content="https://www.beckywexlin.com/images/og-image.jpg" />
@@ -493,7 +493,7 @@
         }
         if (!products.length) return;
         const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-        const html = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+        const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
         track.innerHTML = html + html;
       } catch { /* silent */ }
     })();

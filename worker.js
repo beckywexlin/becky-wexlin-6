@@ -1,21 +1,33 @@
 const API_BASE = 'https://becky-wexlin-api.beckywexlin.workers.dev';
-const SITE = 'https://beckywexlin.com';
+const SITE = 'https://www.beckywexlin.com';
 const BRAND = 'Becky Wexlin Creative';
 
-const CANONICAL_HOST = 'beckywexlin.com';
-const ALT_HOSTS = new Set(['beckyshirts.com', 'www.beckyshirts.com']);
+const CANONICAL_HOST = 'www.beckywexlin.com';
+// Every production host that isn't the canonical one 301s to it (kills the
+// www/non-www + alt-domain duplicate-content split).
+const REDIRECT_HOSTS = new Set(['beckywexlin.com', 'beckyshirts.com', 'www.beckyshirts.com']);
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (ALT_HOSTS.has(url.hostname)) {
+    if (REDIRECT_HOSTS.has(url.hostname)) {
       url.hostname = CANONICAL_HOST;
       return Response.redirect(url.toString(), 301);
     }
 
     if (url.pathname === '/worker.js') {
       return new Response('Not found', { status: 404 });
+    }
+
+    // Legacy /products/<slug>(.html) → canonical root slug (/<slug>). Done before
+    // the generic .html rule so it's a single 301, not a chain.
+    if (url.pathname.startsWith('/products/')) {
+      const productSlug = url.pathname.replace(/^\/products\//, '').replace(/\.html$/, '');
+      if (productSlug && !productSlug.includes('/')) {
+        url.pathname = '/' + productSlug;
+        return Response.redirect(url.toString(), 301);
+      }
     }
 
     // 301 redirect .html URLs to clean versions (SEO canonicalization)
@@ -37,6 +49,15 @@ export default {
 
     if ((url.pathname === '/product.html' || url.pathname === '/product') && url.searchParams.get('id')) {
       return await renderProductPage(request, env, url);
+    }
+
+    // Server-render product grids so crawlers & AI bots see real products
+    // (these pages otherwise load their grids client-side from the API).
+    if (url.pathname === '/shop') {
+      return await renderShop(request, env);
+    }
+    if (url.pathname.startsWith('/collections/')) {
+      return await renderCollection(request, env);
     }
 
     const slug = url.pathname.slice(1);
@@ -99,15 +120,98 @@ function slugify(title) {
 }
 
 async function resolveSlug(slug) {
+  const products = await fetchCatalog();
+  const match = products.find(p => p.slug === slug);
+  return match ? match.id : null;
+}
+
+// Shared, edge-cached catalog fetch used by slug resolution + grid SSR.
+async function fetchCatalog() {
   try {
     const r = await fetch(`${API_BASE}/api/products`, {
       cf: { cacheTtl: 300, cacheEverything: true }
     });
-    if (!r.ok) return null;
+    if (!r.ok) return [];
     const data = await r.json();
-    const match = (data.products || []).find(p => p.slug === slug);
-    return match ? match.id : null;
-  } catch { return null; }
+    return data.products || [];
+  } catch { return []; }
+}
+
+function htmlResponse(html, srcRes) {
+  const headers = new Headers(srcRes.headers);
+  headers.set('Cache-Control', 'public, no-cache');
+  return new Response(html, { status: srcRes.status, headers });
+}
+
+// Product card markup mirroring the client-rendered cards, but linking to the
+// canonical root slug. Client JS re-renders identically after load; crawlers
+// (which often don't run JS) get real product links/names/images server-side.
+function buildCardHTML(p) {
+  const rawDesc = String(p.description || '').replace(/<[^>]+>/g, '').trim();
+  const desc = rawDesc.length > 90 ? rawDesc.slice(0, 87) + '...' : rawDesc;
+  return '<article class="shop-product-card">'
+    + `<a href="/${esc(p.slug)}" aria-label="Shop ${esc(p.title)}">`
+    + '<div class="shop-card-img">'
+    + `<img src="/img/${encodeURIComponent(p.image || '')}" alt="${esc(p.title)}" loading="lazy" onerror="this.src='/images/404.png'" />`
+    + '<div class="shop-card-overlay"><span>Shop now &rarr;</span></div>'
+    + '</div>'
+    + '<div class="shop-card-body">'
+    + `<h3 class="shop-card-name">${esc(p.title)}</h3>`
+    + `<p class="shop-card-desc">${esc(desc) || 'Fresh from the weird side.'}</p>`
+    + '<div class="shop-card-footer">'
+    + `<span class="shop-card-price">$${esc(p.price)}</span>`
+    + '</div></div></a></article>';
+}
+
+async function renderCollection(request, env) {
+  const assetRes = await env.ASSETS.fetch(request);
+  if (!(assetRes.headers.get('content-type') || '').includes('text/html')) return assetRes;
+  const html = await assetRes.text();
+
+  const m = html.match(/COLLECTION_SLUGS\s*=\s*(\[[^\]]*\])/);
+  let slugs = [];
+  if (m) { try { slugs = JSON.parse(m[1]); } catch {} }
+  if (!slugs.length) return htmlResponse(html, assetRes);
+
+  const products = await fetchCatalog();
+  const bySlug = new Map(products.map(p => [p.slug, p]));
+  const ordered = slugs.map(s => bySlug.get(s)).filter(Boolean);
+  if (!ordered.length) return htmlResponse(html, assetRes);
+
+  const cards = ordered.map(buildCardHTML).join('');
+  return new HTMLRewriter()
+    .on('[id="collection-grid"]', { element(el) { el.setInnerContent(cards, { html: true }); el.setAttribute('style', ''); } })
+    .on('[id="collection-loading"]', { element(el) { el.setAttribute('style', 'display:none'); } })
+    .transform(htmlResponse(html, assetRes));
+}
+
+async function renderShop(request, env) {
+  const assetRes = await env.ASSETS.fetch(request);
+  if (!(assetRes.headers.get('content-type') || '').includes('text/html')) return assetRes;
+  const html = await assetRes.text();
+
+  const products = await fetchCatalog();
+  if (!products.length) return htmlResponse(html, assetRes);
+
+  const isSB = p => {
+    const title = String(p.title || '').toLowerCase();
+    const tags = (p.tags || []).map(t => String(t).toLowerCase());
+    return title.includes('santa barbara') || tags.some(t => t.includes('santa barbara'));
+  };
+  const sb = products.filter(isSB);
+  const shirts = products.filter(p => !isSB(p) && !String(p.category || '').includes('hoodie'));
+  const hoodies = products.filter(p => String(p.category || '').includes('hoodie'));
+  const cardSet = arr => arr.map(buildCardHTML).join('');
+
+  return new HTMLRewriter()
+    .on('[id="shirts-grid"]', { element(el) { el.setInnerContent(cardSet(shirts), { html: true }); } })
+    .on('[id="shirts"]', { element(el) { if (shirts.length) el.setAttribute('style', ''); } })
+    .on('[id="sb-grid"]', { element(el) { el.setInnerContent(cardSet(sb), { html: true }); } })
+    .on('[id="santa-barbara"]', { element(el) { if (sb.length) el.setAttribute('style', ''); } })
+    .on('[id="hoodies-grid"]', { element(el) { el.setInnerContent(cardSet(hoodies), { html: true }); } })
+    .on('[id="hoodies"]', { element(el) { if (hoodies.length) el.setAttribute('style', ''); } })
+    .on('[id="shop-loading"]', { element(el) { el.setAttribute('style', 'display:none'); } })
+    .transform(htmlResponse(html, assetRes));
 }
 
 function esc(s) {

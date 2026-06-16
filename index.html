@@ -45,6 +45,20 @@
     }
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Becky Wexlin Creative",
+    "alternateName": "Becky Wexlin",
+    "url": "https://www.beckywexlin.com/",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Becky Wexlin Creative",
+      "logo": "https://www.beckywexlin.com/images/bw_retro_transparent.png"
+    }
+  }
+  </script>
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css" />
@@ -326,7 +340,7 @@
         // Product strip
         if (track && products.length) {
           const subset = products.slice().sort(() => Math.random() - 0.5).slice(0, 12);
-          const stripHtml = subset.map(p => `<a class="product-strip-item" href="/products/${p.slug}.html"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+          const stripHtml = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
           track.innerHTML = stripHtml + stripHtml;
         }
 
@@ -342,7 +356,7 @@
           const card = document.createElement('article');
           card.className = 'shop-product-card';
           card.innerHTML = `
-            <a href="/products/${p.slug}.html" aria-label="Shop ${p.title}">
+            <a href="/${p.slug}" aria-label="Shop ${p.title}">
               <div class="shop-card-img">
                 ${p.img
                   ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />`
