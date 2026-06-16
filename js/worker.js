@@ -91,12 +91,40 @@ async function buildProductsResponse(url, env) {
     `/shops/${SHOP_ID}/products.json?page=${page}&limit=${limit}`, env
   );
   if (!ok) return json({ error: "Printify error", detail: body }, status);
-  const products = (body.data || body.products || []).filter(p => {
+  const all = (body.data || body.products || []).filter(p => {
     const hasImage = !!(p.images && p.images.length > 0);
     const hasVariants = (p.variants || []).some(v => v.is_enabled);
     return p.visible && hasImage && hasVariants;
   }).map(normalizeProduct);
+
+  // Default to a SLIM listing payload (~6KB gzip vs ~44KB full). The full
+  // response is dominated by data no list/strip consumer reads — top-level
+  // `options` (~50%), the full `images` array, the full `variants` array, and
+  // long descriptions. We drop those but PRESERVE the field shapes every client
+  // reads (images[0], variants[0].price, description) so no client needs edits.
+  // Product detail pages get full data from /api/products/:id. ?view=full opts
+  // back into the complete list if ever needed.
+  if (url.searchParams.get('view') === 'full') {
+    return json({ products: all, total: body.total ?? all.length });
+  }
+  const products = all.map(slimProduct);
   return json({ products, total: body.total ?? products.length });
+}
+
+function slimProduct(p) {
+  const image = p.image ?? (p.images && p.images[0]) ?? null;
+  return {
+    id: p.id,
+    slug: p.slug,
+    title: p.title,
+    category: p.category,
+    tags: p.tags,
+    price: p.price,
+    image,
+    images: image ? [image] : [],
+    variants: [{ price: p.price }],
+    description: String(p.description || '').slice(0, 200),
+  };
 }
 
 export default {
