@@ -2,5 +2,9 @@
   "name": "becky-wexlin-api",
   "main": "js/worker.js",
   "compatibility_date": "2025-09-27",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "triggers": {
+    // Keep the product catalog cache warm so visitors never wait on Printify.
+    "crons": ["*/5 * * * *"]
+  }
 }

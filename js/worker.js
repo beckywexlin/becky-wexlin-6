@@ -29,24 +29,78 @@ async function printify(path, env, opts = {}) {
   return { status: res.status, ok: res.ok, body };
 }
 
-const CACHE_TTL = 3600;
+// How long a cached entry is considered "fresh". After this, it's still served
+// instantly but refreshed in the background (stale-while-revalidate).
+const FRESH_TTL = 300;
+// How long caches.default physically retains an entry. Kept long so we always
+// have something stale to serve instead of blocking on the slow Printify API.
+const STORE_TTL = 86400;
+// What we tell the browser/CDN. Short max-age + SWR so the edge re-checks often
+// but never makes a user wait on a revalidation.
+const CLIENT_CC = 'public, max-age=120, stale-while-revalidate=86400';
 
-async function cachedResponse(cacheKey, handler) {
+// Fetch fresh data, store it long-lived in caches.default, and return a
+// browser-facing copy. The ONLY path that blocks on the upstream Printify call.
+async function refreshCache(cache, cacheKey, handler, now) {
+  const fresh = await handler();
+  if (fresh.status !== 200) return fresh;
+  const body = await fresh.arrayBuffer();
+
+  const stored = new Response(body, fresh);
+  stored.headers.set('Cache-Control', `public, max-age=${STORE_TTL}`);
+  stored.headers.set('x-cached-at', String(now));
+  await cache.put(cacheKey, stored.clone());
+
+  const client = new Response(body, fresh);
+  client.headers.set('Cache-Control', CLIENT_CC);
+  client.headers.set('x-cached-at', String(now));
+  client.headers.set('x-cache', 'MISS');
+  return client;
+}
+
+// Serve from cache if present. Fresh hits return immediately; stale hits return
+// immediately AND kick off a background refresh. Only a completely empty cache
+// (first request ever / post-eviction) waits on the upstream.
+async function cachedResponse(cacheKey, handler, ctx) {
   const cache = caches.default;
   const cached = await cache.match(cacheKey);
-  if (cached) return cached;
-  const fresh = await handler();
-  if (fresh.status === 200) {
-    const resp = new Response(fresh.body, fresh);
-    resp.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
-    await cache.put(cacheKey, resp.clone());
-    return resp;
+  const now = Date.now();
+
+  if (cached) {
+    const cachedAt = Number(cached.headers.get('x-cached-at') || 0);
+    const ageSec = (now - cachedAt) / 1000;
+    if (ageSec >= FRESH_TTL && ctx) {
+      // stale — refresh in the background, don't make this user wait
+      ctx.waitUntil(refreshCache(cache, cacheKey, handler, now));
+    }
+    const out = new Response(cached.body, cached);
+    out.headers.set('Cache-Control', CLIENT_CC);
+    out.headers.set('x-cache', ageSec >= FRESH_TTL ? 'STALE' : 'HIT');
+    return out;
   }
-  return fresh;
+
+  return await refreshCache(cache, cacheKey, handler, now);
+}
+
+// Builds the /api/products payload. Shared by the request handler and the cron
+// warmer so the cache key and contents stay identical.
+async function buildProductsResponse(url, env) {
+  const page  = url.searchParams.get("page")  || 1;
+  const limit = url.searchParams.get("limit") || 50;
+  const { status, ok, body } = await printify(
+    `/shops/${SHOP_ID}/products.json?page=${page}&limit=${limit}`, env
+  );
+  if (!ok) return json({ error: "Printify error", detail: body }, status);
+  const products = (body.data || body.products || []).filter(p => {
+    const hasImage = !!(p.images && p.images.length > 0);
+    const hasVariants = (p.variants || []).some(v => v.is_enabled);
+    return p.visible && hasImage && hasVariants;
+  }).map(normalizeProduct);
+  return json({ products, total: body.total ?? products.length });
 }
 
 export default {
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     const url = new URL(req.url);
     const { pathname } = url;
 
@@ -74,20 +128,7 @@ export default {
     // /api/products
     if (pathname === "/api/products") {
       const cacheKey = new Request(url.toString(), { method: 'GET' });
-      return cachedResponse(cacheKey, async () => {
-        const page  = url.searchParams.get("page")  || 1;
-        const limit = url.searchParams.get("limit") || 50;
-        const { status, ok, body } = await printify(
-          `/shops/${SHOP_ID}/products.json?page=${page}&limit=${limit}`, env
-        );
-        if (!ok) return json({ error: "Printify error", detail: body }, status);
-        const products = (body.data || body.products || []).filter(p => {
-          const hasImage = !!(p.images && p.images.length > 0);
-          const hasVariants = (p.variants || []).some(v => v.is_enabled);
-          return p.visible && hasImage && hasVariants;
-        }).map(normalizeProduct);
-        return json({ products, total: body.total ?? products.length });
-      });
+      return cachedResponse(cacheKey, () => buildProductsResponse(url, env), ctx);
     }
 
     // /api/products/:id
@@ -101,7 +142,7 @@ export default {
         );
         if (!ok) return json({ error: "Product not found", detail: body }, status);
         return json(normalizeProduct(body));
-      });
+      }, ctx);
     }
 
     // Printify webhook — shipment events
@@ -168,6 +209,16 @@ export default {
     }
 
     return json({ error: "Not found" }, 404);
+  },
+
+  // Cron warmer — repopulate the catalog cache before it ever goes stale, so no
+  // visitor ever triggers the slow (~15s) Printify fetch on the request path.
+  async scheduled(event, env, ctx) {
+    const url = new URL("https://becky-wexlin-api.beckywexlin.workers.dev/api/products");
+    const cacheKey = new Request(url.toString(), { method: 'GET' });
+    ctx.waitUntil(
+      refreshCache(caches.default, cacheKey, () => buildProductsResponse(url, env), Date.now())
+    );
   },
 };
 
