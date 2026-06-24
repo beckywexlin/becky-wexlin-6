@@ -171,9 +171,25 @@
     })();
   </script>
 <script>
-  // Clear cart on order success
-  localStorage.removeItem('bw-cart');
-  localStorage.removeItem('bw-shipping');
+  // GA4 purchase — fire exactly once for this order, then clear the cart.
+  (function () {
+    try {
+      var order = JSON.parse(localStorage.getItem('bw-purchase') || 'null');
+      if (order && order.transaction_id) {
+        var fired = JSON.parse(localStorage.getItem('bw-purchase-fired') || '[]');
+        if (fired.indexOf(order.transaction_id) === -1) {
+          if (typeof gtag === 'function') { gtag('event', 'purchase', order); }
+          fired.push(order.transaction_id);
+          localStorage.setItem('bw-purchase-fired', JSON.stringify(fired.slice(-20)));
+        }
+      }
+    } catch (e) {}
+    // Single-use payload — remove so a refresh can't re-send.
+    localStorage.removeItem('bw-purchase');
+    // Clear cart on order success
+    localStorage.removeItem('bw-cart');
+    localStorage.removeItem('bw-shipping');
+  })();
 </script>
 </body>
 </html>

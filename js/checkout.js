@@ -143,13 +143,15 @@ async function submitOrder(shipping) {
     })
   });
 
-  // GA4 purchase event — include UTM params + coupon for attribution
-  if (typeof gtag === 'function') {
+  // GA4 purchase payload — stashed here, fired once on the order-success page
+  // so a refresh can't re-send and there's a single source of truth.
+  try {
     const subtotal = cart.reduce((sum, item) => sum + parseFloat(item.price.replace('$', '')) * item.quantity, 0);
     const purchaseParams = {
       transaction_id: paymentIntent.id,
       value: subtotal - currentDiscount + currentTaxAmount,
       tax: currentTaxAmount,
+      shipping: 0,
       currency: 'USD',
       coupon: currentPromoCode || undefined,
       items: cart.map(item => ({
@@ -168,8 +170,8 @@ async function submitOrder(shipping) {
       if (utm.utm_medium) purchaseParams.campaign_medium = utm.utm_medium;
       if (utm.utm_campaign) purchaseParams.campaign_name = utm.utm_campaign;
     } catch (e) {}
-    gtag('event', 'purchase', purchaseParams);
-  }
+    localStorage.setItem('bw-purchase', JSON.stringify(purchaseParams));
+  } catch (e) {}
 
   localStorage.removeItem('bw-cart');
   localStorage.removeItem('bw-shipping');
