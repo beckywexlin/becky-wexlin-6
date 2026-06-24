@@ -32,7 +32,7 @@
     "@context": "https://schema.org",
     "@type": "ContactPage",
     "name": "Contact Becky Wexlin Creative",
-    "url": "https://www.beckywexlin.com/contact.html",
+    "url": "https://www.beckywexlin.com/contact",
     "mainEntity": {
       "@type": "Organization",
       "name": "Becky Wexlin Creative",
@@ -62,14 +62,14 @@
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.beckywexlin.com/" },
-      { "@type": "ListItem", "position": 2, "name": "Contact", "item": "https://www.beckywexlin.com/contact.html" }
+      { "@type": "ListItem", "position": 2, "name": "Contact", "item": "https://www.beckywexlin.com/contact" }
     ]
   }
   </script>
 
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=3" />
   <link rel="stylesheet" href="css/blog.css?v=3" />
   <link rel="preconnect" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
   <link rel="preconnect" href="https://images-api.printify.com" />
@@ -256,7 +256,7 @@
         <span id="cart-total">$0.00</span>
       </div>
       <p class="cart-shipping-note">Free shipping on all orders</p>
-      <a href="checkout.html" class="btn btn-primary" style="width:100%; text-align:center; display:block;">Checkout</a>
+      <a href="/checkout" class="btn btn-primary" style="width:100%; text-align:center; display:block;">Checkout</a>
       <button class="btn btn-outline" onclick="closeCart()" style="width:100%; margin-top:12px;">Continue shopping</button>
     </div>
   </div>
@@ -276,15 +276,15 @@
   </div>
 
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
-    <a href="index.html" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
+    <a href="/" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
       <img src="images/logo-lime.png" alt="Becky Wexlin Creative" width="36" height="36" />
     </a>
     <ul class="nav-links" id="nav-links">
-      <li><a href="shop.html">Shop</a></li>
-      <li><a href="blog/index.html">Blog</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="contact.html" class="active">Contact</a></li>
-      <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+      <li><a href="/shop">Shop</a></li><li><a href="/collections/">Collections</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/contact" class="active">Contact</a></li>
+      <li><a href="/shop" class="nav-cta">Shop now</a></li>
       <li>
         <button class="cart-icon-btn" onclick="openCart()">
           Cart
@@ -407,7 +407,7 @@
 
         <div class="contact-info-block" id="shipping">
           <h3>Shipping</h3>
-          <p>All orders are printed fresh and made to order. Your order is routed to the production facility closest to your address to keep transit time and shipping costs down. You'll receive a tracking number by email once your order is on its way. For full details, see our <a href="shipping.html">shipping policy</a>.</p>
+          <p>All orders are printed fresh and made to order. Your order is routed to the production facility closest to your address to keep transit time and shipping costs down. You'll receive a tracking number by email once your order is on its way. For full details, see our <a href="/shipping">shipping policy</a>.</p>
         </div>
 
         <div class="contact-info-block" id="returns">
@@ -417,7 +417,7 @@
 
         <div class="contact-info-block" id="faq">
           <h3>Quick answers</h3>
-          <p>For FAQs about the brand, printing, and sizing, head to the <a href="about.html">About page</a>. Most questions are answered there.</p>
+          <p>For FAQs about the brand, printing, and sizing, head to the <a href="/about">About page</a>. Most questions are answered there.</p>
         </div>
 
       </aside>
@@ -442,33 +442,33 @@
       <div class="footer-col">
         <h4>Shop</h4>
         <ul>
-          <li><a href="shop.html">All products</a></li>
-          <li><a href="shop.html#shirts">Shirts</a></li>
-          <li><a href="shop.html#hoodies">Hoodies</a></li>
-          <li><a href="collections/graphic-tees.html">Graphic Tees</a></li>
-          <li><a href="shirts.html">Shirt Guide</a></li>
+          <li><a href="/shop">All products</a></li>
+          <li><a href="/shop#shirts">Shirts</a></li>
+          <li><a href="/shop#hoodies">Hoodies</a></li>
+          <li><a href="/collections/graphic-tees">Graphic Tees</a></li>
+          <li><a href="/shirts">Shirt Guide</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Info</h4>
         <ul>
-          <li><a href="about.html">About</a></li>
-          <li><a href="blog/index.html">Blog</a></li>
-          <li><a href="contact.html">Contact</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/contact">Contact</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Help</h4>
         <ul>
-          <li><a href="faq.html">FAQ</a></li>
-          <li><a href="shipping.html">Shipping</a></li>
-          <li><a href="refunds.html">Returns</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/shipping">Shipping</a></li>
+          <li><a href="/refunds">Returns</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
       <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative. Made with stubbornness and strong opinions.</p>
-      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a> &nbsp;·&nbsp; <a href="shipping.html">Shipping</a> &nbsp;·&nbsp; <a href="refunds.html">Refunds</a></p>
+      <p class="footer-copy"><a href="/privacy">Privacy policy</a> &nbsp;·&nbsp; <a href="/terms">Terms</a> &nbsp;·&nbsp; <a href="/shipping">Shipping</a> &nbsp;·&nbsp; <a href="/refunds">Refunds</a></p>
     </div>
   </footer>
 

@@ -43,7 +43,7 @@
   </script>
   <link rel="icon" type="image/png" href="../images/logo-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
-  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/style.css?v=3" />
   <link rel="stylesheet" href="../css/blog.css?v=3" />
   <link rel="preconnect" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
   <link rel="preconnect" href="https://images-api.printify.com" />
@@ -73,7 +73,7 @@
         <span id="cart-total">$0.00</span>
       </div>
       <p class="cart-shipping-note">Free shipping on all orders</p>
-      <a href="../checkout.html" class="btn btn-primary" style="width:100%; text-align:center; display:block;">Checkout</a>
+      <a href="/checkout" class="btn btn-primary" style="width:100%; text-align:center; display:block;">Checkout</a>
       <button class="btn btn-outline" onclick="closeCart()" style="width:100%; margin-top:12px;">Continue shopping</button>
     </div>
   </div>
@@ -93,15 +93,15 @@
   </div>
 
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
-    <a href="../index.html" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
+    <a href="/" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
       <img src="../images/bw_retro_transparent.png" alt="Becky Wexlin Creative" width="200" height="60" />
     </a>
     <ul class="nav-links" id="nav-links">
-      <li><a href="../shop.html">Shop</a></li>
-      <li><a href="index.html" class="active">Blog</a></li>
-      <li><a href="../about.html">About</a></li>
-      <li><a href="../contact.html">Contact</a></li>
-      <li><a href="../shop.html" class="nav-cta">Shop now</a></li>
+      <li><a href="/shop">Shop</a></li><li><a href="/collections/">Collections</a></li>
+      <li><a href="/blog/" class="active">Blog</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/contact">Contact</a></li>
+      <li><a href="/shop" class="nav-cta">Shop now</a></li>
       <li>
         <button class="cart-icon-btn" onclick="openCart()">
           Cart
@@ -142,11 +142,11 @@
         <div>
           <p class="blog-tag">Featured</p>
           <h2 style="font-family: var(--font-display); font-size: 36px; font-style: italic; font-weight: 900; color: var(--white); line-height: 1.1; margin-bottom: 16px;">
-            <a href="how-to-spot-a-well-made-graphic-tee.html" style="transition: color 0.2s;">How to spot a well-made graphic tee before you buy</a>
+            <a href="/blog/how-to-spot-a-well-made-graphic-tee" style="transition: color 0.2s;">How to spot a well-made graphic tee before you buy</a>
           </h2>
           <p style="font-size: 15px; color: #777; line-height: 1.7; margin-bottom: 24px;">Not all graphic tees are created equal. Here's exactly what to look for — fabric weight, print quality, stitching — so you never waste money on something that falls apart after three washes.</p>
           <div style="display: flex; align-items: center; gap: 16px;">
-            <a href="how-to-spot-a-well-made-graphic-tee.html" class="btn btn-primary" style="padding: 10px 22px; font-size: 13px;">Read the post</a>
+            <a href="/blog/how-to-spot-a-well-made-graphic-tee" class="btn btn-primary" style="padding: 10px 22px; font-size: 13px;">Read the post</a>
             <span style="font-size: 13px; color: #555;">8 min read</span>
           </div>
         </div>
@@ -156,7 +156,7 @@
       <div class="blog-grid">
 
         <article class="blog-card">
-          <a href="comfort-colors-vs-bella-canvas.html">
+          <a href="/blog/comfort-colors-vs-bella-canvas">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/classic-crew-slim-fit-short-ground.webp" type="image/webp"><source srcset="../images/classic-crew-slim-fit-short-ground.jpg" type="image/jpeg"><img src="../images/classic-crew-slim-fit-short-ground.jpg" alt="Comfort Colors vs Bella Canvas blank comparison" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -170,7 +170,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="how-to-start-a-graphic-tee-brand.html">
+          <a href="/blog/how-to-start-a-graphic-tee-brand">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/graphic-shirts-black-casual-clothing_rack.webp" type="image/webp"><source srcset="../images/graphic-shirts-black-casual-clothing_rack.jpg" type="image/jpeg"><img src="../images/graphic-shirts-black-casual-clothing_rack.jpg" alt="How to start a graphic tee brand" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -184,7 +184,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="best-graphic-tee-gifts-2026.html">
+          <a href="/blog/best-graphic-tee-gifts-2026">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/funky-adult-screenprint-alley.webp" type="image/webp"><source srcset="../images/funky-adult-screenprint-alley.jpg" type="image/jpeg"><img src="../images/funky-adult-screenprint-alley.jpg" alt="Best graphic tee gifts in 2026" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -198,7 +198,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="best-weird-graphic-tee-brands.html">
+          <a href="/blog/best-weird-graphic-tee-brands">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/fuck-you-tattooed-man-with-a-t-shirt-smiling-at-a-bar.webp" type="image/webp"><source srcset="../images/fuck-you-tattooed-man-with-a-t-shirt-smiling-at-a-bar.jpg" type="image/jpeg"><img src="../images/fuck-you-tattooed-man-with-a-t-shirt-smiling-at-a-bar.jpg" alt="Tattooed man wearing a weird graphic tee at a bar" loading="lazy" width="800" height="533" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -212,7 +212,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="why-are-graphic-tees-so-expensive-now.html">
+          <a href="/blog/why-are-graphic-tees-so-expensive-now">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/supreme-tee.webp" type="image/webp"><source srcset="../images/supreme-tee.jpg" type="image/jpeg"><img src="../images/supreme-tee.jpg" alt="Why are graphic tees so expensive now?" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -226,7 +226,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="how-to-style-a-graphic-tee-with-jeans.html">
+          <a href="/blog/how-to-style-a-graphic-tee-with-jeans">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/1980-alt-tee.webp" type="image/webp"><source srcset="../images/1980-alt-tee.jpg" type="image/jpeg"><img src="../images/1980-alt-tee.jpg" alt="How to style a graphic tee with jeans" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -240,7 +240,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="in-defense-of-the-aggressive-pun.html">
+          <a href="/blog/in-defense-of-the-aggressive-pun">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/bad-ass-tee-blog.webp" type="image/webp"><source srcset="../images/bad-ass-tee-blog.jpg" type="image/jpeg"><img src="../images/bad-ass-tee-blog.jpg" alt="In defense of the aggressive pun" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -254,7 +254,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="how-to-care-for-printed-graphic-tees.html">
+          <a href="/blog/how-to-care-for-printed-graphic-tees">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/gildan-hanging-laundry.webp" type="image/webp"><source srcset="../images/gildan-hanging-laundry.jpg" type="image/jpeg"><img src="../images/gildan-hanging-laundry.jpg" alt="Graphic tee care" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -268,7 +268,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="what-makes-a-quality-graphic-tee.html">
+          <a href="/blog/what-makes-a-quality-graphic-tee">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/cotton-tshirt-hanging-primary_colors.webp" type="image/webp"><source srcset="../images/cotton-tshirt-hanging-primary_colors.jpg" type="image/jpeg"><img src="../images/cotton-tshirt-hanging-primary_colors.jpg" alt="Quality graphic tees" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -282,7 +282,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="history-of-the-graphic-tee.html">
+          <a href="/blog/history-of-the-graphic-tee">
             <div class="blog-card-img" style="overflow:hidden;">
               <picture><source srcset="../images/cotton-crew-streetwear-casual-black-and-white.webp" type="image/webp"><source srcset="../images/cotton-crew-streetwear-casual-black-and-white.jpg" type="image/jpeg"><img src="../images/cotton-crew-streetwear-casual-black-and-white.jpg" alt="History of the graphic tee" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" /></picture>
             </div>
@@ -296,7 +296,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="best-weird-shirts-to-give-as-gifts.html">
+          <a href="/blog/best-weird-shirts-to-give-as-gifts">
             <div class="blog-card-img" style="overflow:hidden;">
               <img src="../images/free_the_aliens_tee.png" alt="Weird shirts as gifts" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" />
             </div>
@@ -310,7 +310,7 @@
         </article>
 
         <article class="blog-card">
-          <a href="why-meme-shirts-are-having-a-moment.html">
+          <a href="/blog/why-meme-shirts-are-having-a-moment">
             <div class="blog-card-img" style="overflow:hidden;">
               <img src="../images/eye_glitch_shirt.png" alt="Meme shirts culture" loading="lazy" width="400" height="300" style="width:100%; height:100%; object-fit:cover;" />
             </div>
@@ -343,33 +343,33 @@
       <div class="footer-col">
         <h4>Shop</h4>
         <ul>
-          <li><a href="../shop.html">All products</a></li>
-          <li><a href="../shop.html#shirts">Shirts</a></li>
-          <li><a href="../shop.html#hoodies">Hoodies</a></li>
-          <li><a href="../collections/graphic-tees.html">Graphic Tees</a></li>
-          <li><a href="../shirts.html">Shirt Guide</a></li>
+          <li><a href="/shop">All products</a></li>
+          <li><a href="/shop#shirts">Shirts</a></li>
+          <li><a href="/shop#hoodies">Hoodies</a></li>
+          <li><a href="/collections/graphic-tees">Graphic Tees</a></li>
+          <li><a href="/shirts">Shirt Guide</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Info</h4>
         <ul>
-          <li><a href="../about.html">About</a></li>
-          <li><a href="index.html">Blog</a></li>
-          <li><a href="../contact.html">Contact</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/contact">Contact</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Help</h4>
         <ul>
-          <li><a href="../faq.html">FAQ</a></li>
-          <li><a href="../shipping.html">Shipping</a></li>
-          <li><a href="../refunds.html">Returns</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/shipping">Shipping</a></li>
+          <li><a href="/refunds">Returns</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
       <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative.</p>
-      <p class="footer-copy"><a href="../privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="../terms.html">Terms</a> &nbsp;·&nbsp; <a href="../shipping.html">Shipping</a> &nbsp;·&nbsp; <a href="../refunds.html">Refunds</a></p>
+      <p class="footer-copy"><a href="/privacy">Privacy policy</a> &nbsp;·&nbsp; <a href="/terms">Terms</a> &nbsp;·&nbsp; <a href="/shipping">Shipping</a> &nbsp;·&nbsp; <a href="/refunds">Refunds</a></p>
     </div>
   </footer>
 

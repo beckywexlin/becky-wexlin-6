@@ -55,14 +55,14 @@
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.beckywexlin.com/" },
-      { "@type": "ListItem", "position": 2, "name": "Shop", "item": "https://www.beckywexlin.com/shop.html" },
-      { "@type": "ListItem", "position": 3, "name": "Product", "item": "https://www.beckywexlin.com/product.html" }
+      { "@type": "ListItem", "position": 2, "name": "Shop", "item": "https://www.beckywexlin.com/shop" },
+      { "@type": "ListItem", "position": 3, "name": "Product", "item": "https://www.beckywexlin.com/product" }
     ]
   }
   </script>
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=3" />
   <link rel="stylesheet" href="css/blog.css?v=3" />
   <link rel="preconnect" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
   <link rel="preconnect" href="https://images-api.printify.com" />
@@ -377,7 +377,7 @@
         <span id="cart-total">$0.00</span>
       </div>
       <p class="cart-shipping-note">Free shipping on all orders</p>
-      <a href="checkout.html" class="btn btn-primary" style="width:100%;text-align:center;display:block;">Checkout</a>
+      <a href="/checkout" class="btn btn-primary" style="width:100%;text-align:center;display:block;">Checkout</a>
       <button class="btn btn-outline" onclick="closeCart()" style="width:100%;margin-top:12px;">Continue shopping</button>
     </div>
   </div>
@@ -385,11 +385,11 @@
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
     <a href="/" class="nav-logo"><img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" width="200" height="60" /></a>
     <ul class="nav-links" id="nav-links">
-      <li><a href="shop.html">Shop</a></li>
-      <li><a href="blog/index.html">Blog</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="contact.html">Contact</a></li>
-      <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+      <li><a href="/shop">Shop</a></li><li><a href="/collections/">Collections</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/contact">Contact</a></li>
+      <li><a href="/shop" class="nav-cta">Shop now</a></li>
       <li>
         <button class="cart-icon-btn" onclick="openCart()">
           Cart <span class="cart-count" style="display:none;">0</span>
@@ -438,34 +438,34 @@
       <div class="footer-col">
         <h4>Shop</h4>
         <ul>
-          <li><a href="shop.html">All products</a></li>
-          <li><a href="shop.html#shirts">Shirts</a></li>
-          <li><a href="shop.html#hoodies">Hoodies</a></li>
-          <li><a href="shop.html#new">New arrivals</a></li>
-          <li><a href="collections/graphic-tees.html">Graphic Tees</a></li>
-          <li><a href="shirts.html">Shirt Guide</a></li>
+          <li><a href="/shop">All products</a></li>
+          <li><a href="/shop#shirts">Shirts</a></li>
+          <li><a href="/shop#hoodies">Hoodies</a></li>
+          <li><a href="/shop#new">New arrivals</a></li>
+          <li><a href="/collections/graphic-tees">Graphic Tees</a></li>
+          <li><a href="/shirts">Shirt Guide</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Info</h4>
         <ul>
-          <li><a href="about.html">About</a></li>
-          <li><a href="blog/index.html">Blog</a></li>
-          <li><a href="contact.html">Contact</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="/blog/">Blog</a></li>
+          <li><a href="/contact">Contact</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Help</h4>
         <ul>
-          <li><a href="faq.html">FAQ</a></li>
-          <li><a href="shipping.html">Shipping</a></li>
-          <li><a href="refunds.html">Returns</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/shipping">Shipping</a></li>
+          <li><a href="/refunds">Returns</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
       <p class="footer-copy">&copy; <span id="year"></span> Becky Wexlin Creative. Made with stubbornness and strong opinions.</p>
-      <p class="footer-copy"><a href="privacy.html">Privacy policy</a> &nbsp;·&nbsp; <a href="terms.html">Terms</a> &nbsp;·&nbsp; <a href="shipping.html">Shipping</a> &nbsp;·&nbsp; <a href="refunds.html">Refunds</a></p>
+      <p class="footer-copy"><a href="/privacy">Privacy policy</a> &nbsp;·&nbsp; <a href="/terms">Terms</a> &nbsp;·&nbsp; <a href="/shipping">Shipping</a> &nbsp;·&nbsp; <a href="/refunds">Refunds</a></p>
     </div>
   </footer>
 
@@ -717,7 +717,7 @@
       if (!host) return;
       if (!tags.length) { host.style.display = 'none'; return; }
       host.innerHTML = tags.map(t =>
-        `<a class="tag-chip" href="shop.html?tag=${encodeURIComponent(t)}">${t}</a>`
+        `<a class="tag-chip" href="/shop?tag=${encodeURIComponent(t)}">${t}</a>`
       ).join('');
       host.style.display = 'flex';
     }
@@ -884,7 +884,7 @@
 
             <!-- RIGHT: product info -->
             <div class="product-info">
-              <a href="shop.html" class="product-back">Back to shop</a>
+              <a href="/shop" class="product-back">Back to shop</a>
               <h1 class="product-title">${p.title}</h1>
               <p class="product-price-large" id="product-price">$${firstSorted ? firstSorted.price : ''}</p>
               <div class="product-description">${formatDescription(p.description)}</div>
@@ -945,7 +945,7 @@
         loadRelated();
 
       } catch (err) {
-        page.innerHTML = '<p style="color:#888;text-align:center;padding:80px;">Could not load product. <a href="shop.html" style="color:var(--lime)">Back to shop</a></p>';
+        page.innerHTML = '<p style="color:#888;text-align:center;padding:80px;">Could not load product. <a href="/shop" style="color:var(--lime)">Back to shop</a></p>';
       }
     }
 

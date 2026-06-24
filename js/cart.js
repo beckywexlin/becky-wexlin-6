@@ -99,7 +99,7 @@ function renderCartItems() {
   if (!container) return;
 
   if (cart.length === 0) {
-    container.innerHTML = '<p class="cart-empty">Your cart is empty.<br><a href="shop.html" style="color:var(--lime);font-size:14px;text-decoration:underline;text-underline-offset:3px;">Add something weird →</a></p>';
+    container.innerHTML = '<p class="cart-empty">Your cart is empty.<br><a href="/shop" style="color:var(--lime);font-size:14px;text-decoration:underline;text-underline-offset:3px;">Add something weird →</a></p>';
     footer.style.display = 'none';
     return;
   }

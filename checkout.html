@@ -16,7 +16,7 @@
   <title>Checkout — Becky Wexlin Creative</title>
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=3" />
   <link rel="dns-prefetch" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -214,11 +214,11 @@
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
     <a href="/" class="nav-logo"><img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" width="200" height="60" /></a>
     <ul class="nav-links" id="nav-links">
-      <li><a href="shop.html">Shop</a></li>
-      <li><a href="blog/index.html">Blog</a></li>
-      <li><a href="about.html">About</a></li>
-      <li><a href="contact.html">Contact</a></li>
-      <li><a href="shop.html" class="nav-cta">Shop now</a></li>
+      <li><a href="/shop">Shop</a></li><li><a href="/collections/">Collections</a></li>
+      <li><a href="/blog/">Blog</a></li>
+      <li><a href="/about">About</a></li>
+      <li><a href="/contact">Contact</a></li>
+      <li><a href="/shop" class="nav-cta">Shop now</a></li>
     </ul>
     <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -311,7 +311,7 @@
 
         <label style="display:flex; align-items:flex-start; gap:10px; margin-bottom:20px; cursor:pointer; font-size:13px; color:#888; line-height:1.5;">
           <input type="checkbox" id="accept-terms" required style="margin-top:2px; accent-color:var(--lime); flex-shrink:0; width:20px; height:20px; cursor:pointer;" />
-          <span>I agree to the <a href="terms.html" target="_blank" style="color:var(--lime);">Terms of Service</a>, <a href="refunds.html" target="_blank" style="color:var(--lime);">Refund Policy</a>, and <a href="privacy.html" target="_blank" style="color:var(--lime);">Privacy Policy</a>. I understand all sales are final.</span>
+          <span>I agree to the <a href="/terms" target="_blank" style="color:var(--lime);">Terms of Service</a>, <a href="/refunds" target="_blank" style="color:var(--lime);">Refund Policy</a>, and <a href="/privacy" target="_blank" style="color:var(--lime);">Privacy Policy</a>. I understand all sales are final.</span>
         </label>
 
         <button type="submit" id="checkout-submit" class="btn btn-primary" style="width:100%; font-size:16px; padding:16px;">
