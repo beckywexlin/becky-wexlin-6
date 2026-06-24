@@ -23,10 +23,15 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   /* ── ACTIVE NAV LINK ── */
-  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+  // Links are clean root-relative URLs (e.g. /shop, /blog/). Compare normalized
+  // pathnames so the active state works on the live clean-URL site.
+  const norm = p => (p.replace(/\/+$/, '') || '/');
+  const here = norm(window.location.pathname);
   document.querySelectorAll('.nav-links a').forEach(link => {
-    const linkPath = link.getAttribute('href');
-    if (linkPath === currentPath || (currentPath === '' && linkPath === 'index.html')) {
+    const href = link.getAttribute('href');
+    if (!href) return;
+    const linkPath = norm(new URL(href, window.location.origin).pathname);
+    if (linkPath === here) {
       link.classList.add('active');
     }
   });
