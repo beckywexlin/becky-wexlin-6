@@ -92,9 +92,22 @@ export default {
   }
 };
 
+// Printify-controlled image hosts we'll proxy. Printify migrated most mockups
+// from images-api.printify.com to its production S3 mockup buckets, so we must
+// allow those too or the extra gallery views 403 (broken images).
+function isAllowedImageHost(rawUrl) {
+  let host;
+  try { host = new URL(rawUrl).hostname; } catch { return false; }
+  if (host === 'images-api.printify.com' || host === 'images.printify.com') return true;
+  // Printify prod mockup media S3 buckets (region may vary), e.g.
+  // pfy-prod-products-mockup-media.s3.us-east-2.amazonaws.com
+  if (/^pfy-prod-[a-z0-9-]+\.s3[.-][a-z0-9-]+\.amazonaws\.com$/.test(host)) return true;
+  return false;
+}
+
 async function proxyImage(url) {
   const raw = decodeURIComponent(url.pathname.slice(5)); // strip /img/
-  if (!raw.startsWith('https://images-api.printify.com/')) {
+  if (!isAllowedImageHost(raw)) {
     return new Response('Forbidden', { status: 403 });
   }
   try {
