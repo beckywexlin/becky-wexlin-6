@@ -36,4 +36,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  /* ── PERSIST UTM PARAMS (campaign attribution for the GA4 purchase event) ── */
+  // Runs on every page so any UTM-tagged landing (e.g. /shop?utm_source=tiktok)
+  // is captured and later attached to the purchase event in checkout.js.
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+    const utmData = {};
+    let hasUtm = false;
+    utmKeys.forEach(function (k) {
+      const v = params.get(k);
+      if (v) { utmData[k] = v; hasUtm = true; }
+    });
+    if (hasUtm) sessionStorage.setItem('bw_utm', JSON.stringify(utmData));
+  } catch (e) {}
+
 });
