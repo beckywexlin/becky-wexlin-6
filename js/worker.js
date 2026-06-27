@@ -85,13 +85,39 @@ async function cachedResponse(cacheKey, handler, ctx) {
 // Builds the /api/products payload. Shared by the request handler and the cron
 // warmer so the cache key and contents stay identical.
 async function buildProductsResponse(url, env) {
-  const page  = url.searchParams.get("page")  || 1;
-  const limit = url.searchParams.get("limit") || 50;
-  const { status, ok, body } = await printify(
-    `/shops/${SHOP_ID}/products.json?page=${page}&limit=${limit}`, env
-  );
-  if (!ok) return json({ error: "Printify error", detail: body }, status);
-  const all = (body.data || body.products || []).filter(p => {
+  // Printify caps each page at 50 products. Fetch EVERY page so products beyond
+  // the first 50 aren't silently dropped from the catalog. An explicit ?page=
+  // still does a single-page fetch (back-compat / debugging).
+  const PAGE_SIZE = 50;
+  const explicitPage = url.searchParams.get("page");
+  let raw = [];
+  let total = null;
+
+  if (explicitPage) {
+    const limit = url.searchParams.get("limit") || 50;
+    const { status, ok, body } = await printify(
+      `/shops/${SHOP_ID}/products.json?page=${explicitPage}&limit=${limit}`, env
+    );
+    if (!ok) return json({ error: "Printify error", detail: body }, status);
+    raw = body.data || body.products || [];
+    total = body.total ?? null;
+  } else {
+    for (let page = 1; page <= 20; page++) {
+      const { status, ok, body } = await printify(
+        `/shops/${SHOP_ID}/products.json?page=${page}&limit=${PAGE_SIZE}`, env
+      );
+      if (!ok) {
+        if (page === 1) return json({ error: "Printify error", detail: body }, status);
+        break; // a later-page failure: serve what we have rather than nothing
+      }
+      const data = body.data || body.products || [];
+      raw = raw.concat(data);
+      total = body.total ?? total;
+      if (data.length < PAGE_SIZE) break; // last page reached
+    }
+  }
+
+  const all = raw.filter(p => {
     const hasImage = !!(p.images && p.images.length > 0);
     const hasVariants = (p.variants || []).some(v => v.is_enabled);
     return p.visible && hasImage && hasVariants;
@@ -105,10 +131,10 @@ async function buildProductsResponse(url, env) {
   // Product detail pages get full data from /api/products/:id. ?view=full opts
   // back into the complete list if ever needed.
   if (url.searchParams.get('view') === 'full') {
-    return json({ products: all, total: body.total ?? all.length });
+    return json({ products: all, total: total ?? all.length });
   }
   const products = all.map(slimProduct);
-  return json({ products, total: body.total ?? products.length });
+  return json({ products, total: total ?? products.length });
 }
 
 function slimProduct(p) {
