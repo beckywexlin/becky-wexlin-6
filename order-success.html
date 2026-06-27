@@ -171,8 +171,48 @@
     })();
   </script>
 <script>
-  // GA4 purchase — fire exactly once for this order, then clear the cart.
-  (function () {
+  (async function () {
+    var CHECKOUT_WORKER = 'https://checkout.beckywexlin.workers.dev';
+    // ── Redirect-payment recovery ──
+    // Most card payments confirm inline (checkout.js creates the order + stashes
+    // the purchase payload before redirecting here with no query params). But a
+    // payment method that does a FULL redirect returns here with Stripe's
+    // ?payment_intent=...&redirect_status=succeeded and the inline code never ran
+    // — so the Printify order was never created. Recover it here. Strictly gated
+    // on the payment_intent param, so the normal inline flow is untouched.
+    try {
+      var params = new URLSearchParams(location.search);
+      var pi = params.get('payment_intent');
+      var rs = params.get('redirect_status');
+      if (pi && rs === 'succeeded') {
+        var handled = JSON.parse(localStorage.getItem('bw-order-created') || '[]');
+        var cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+        var shipping = JSON.parse(localStorage.getItem('bw-shipping') || 'null');
+        if (cart.length && shipping && handled.indexOf(pi) === -1) {
+          try {
+            await fetch(CHECKOUT_WORKER + '/create-order', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ items: cart, shipping: shipping, paymentIntentId: pi, promoCode: '' })
+            });
+            handled.push(pi);
+            localStorage.setItem('bw-order-created', JSON.stringify(handled.slice(-20)));
+          } catch (e) {}
+          // Build the GA4 purchase payload from the cart (inline flow didn't stash one here).
+          if (!localStorage.getItem('bw-purchase')) {
+            try {
+              var sub = cart.reduce(function (s, i) { return s + parseFloat(String(i.price).replace('$', '')) * (i.quantity || 1); }, 0);
+              localStorage.setItem('bw-purchase', JSON.stringify({
+                transaction_id: pi, value: sub, shipping: 0, currency: 'USD',
+                items: cart.map(function (i) { return { item_id: i.id, item_name: i.title, item_variant: i.size || '', price: parseFloat(String(i.price).replace('$', '')), quantity: i.quantity || 1 }; })
+              }));
+            } catch (e) {}
+          }
+        }
+      }
+    } catch (e) {}
+
+    // ── GA4 purchase — fire exactly once for this order, then clear the cart ──
     try {
       var order = JSON.parse(localStorage.getItem('bw-purchase') || 'null');
       if (order && order.transaction_id) {
@@ -186,7 +226,6 @@
     } catch (e) {}
     // Single-use payload — remove so a refresh can't re-send.
     localStorage.removeItem('bw-purchase');
-    // Clear cart on order success
     localStorage.removeItem('bw-cart');
     localStorage.removeItem('bw-shipping');
   })();
