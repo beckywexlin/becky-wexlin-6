@@ -17,8 +17,8 @@
     + '.shop-card-img:hover .cg-arrow{display:flex;}'
     + '@media (hover:none){.shop-card-img:hover .cg-arrow{display:none;}}'
     + '.cg-count{position:absolute;top:8px;right:8px;z-index:4;background:rgba(0,0,0,.55);color:#fff;font-size:11px;line-height:1;padding:3px 8px;border-radius:999px;font-family:var(--font-body,sans-serif);pointer-events:none;}'
-    + '.cg-dots{position:absolute;bottom:8px;left:0;right:0;display:flex;gap:5px;justify-content:center;z-index:4;}'
-    + '.cg-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5);box-shadow:0 0 2px rgba(0,0,0,.6);cursor:pointer;border:none;padding:0;}'
+    + '.cg-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:5px;align-items:center;z-index:4;background:rgba(0,0,0,.4);padding:5px 8px;border-radius:999px;}'
+    + '.cg-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);cursor:pointer;border:none;padding:0;flex:0 0 auto;}'
     + '.cg-dot.on{background:#fff;}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -44,9 +44,9 @@
     var img = wrap && wrap.querySelector('img');
     if (!wrap || !a || !img) return;
     var slug = a.getAttribute('href').replace(/^\//, '').split(/[?#]/)[0];
-    var imgs = bySlug[slug];
+    var imgs = (bySlug[slug] || []).slice(0, 8); // cap — a 20-photo swipe is tedious and clutters the dots
     card.setAttribute('data-cg', '1');
-    if (!imgs || imgs.length < 2) return; // single photo — nothing to swipe
+    if (imgs.length < 2) return; // single photo — nothing to swipe
 
     var i = 0;
 

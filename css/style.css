@@ -1111,7 +1111,7 @@ ul {
   .footer-grid { gap: 24px; }
   .announce-bar { padding: 8px 0; }
   .announce-inner span { font-size: 12px; }
-  .cart-drawer { width: 100% !important; max-width: 100%; }
+  .cart-drawer { width: 100% !important; max-width: 100%; right: -100%; }
   /* Bigger touch targets */
   .nav-cta { padding: 10px 18px; }
   .btn { min-height: 44px; }
