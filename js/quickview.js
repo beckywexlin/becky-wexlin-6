@@ -10,10 +10,8 @@
 
   /* ── styles ── */
   var css = ''
-    + '.qv-btn{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.78);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 14px;font-family:var(--font-body,sans-serif);font-size:12px;font-weight:500;letter-spacing:.03em;cursor:pointer;z-index:3;opacity:0;transition:opacity .2s,background .2s,color .2s;white-space:nowrap;}'
+    + '.qv-btn{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.8);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:8px 14px;font-family:var(--font-body,sans-serif);font-size:12px;font-weight:600;letter-spacing:.03em;cursor:pointer;z-index:5;opacity:1;transition:background .2s,color .2s,border-color .2s;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35);}'
     + '.qv-btn:hover{background:var(--lime,#c8f135);color:#000;border-color:var(--lime,#c8f135);}'
-    + '.shop-product-card:hover .qv-btn{opacity:1;}'
-    + '@media (hover:none){.qv-btn{opacity:1;bottom:8px;padding:7px 12px;}}'
     + '#qv-overlay{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s;}'
     + '#qv-overlay.on{opacity:1;pointer-events:all;}'
     + '.qv-modal{background:var(--offblack,#161616);border:1px solid #2a2a2a;border-radius:16px;width:100%;max-width:860px;max-height:90vh;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;position:relative;}'
