@@ -340,11 +340,11 @@
   .filter-tabs { flex-wrap: wrap; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .filter-tab   { padding: 8px 14px; font-size: 13px; min-height: 36px; white-space: nowrap; }
   .shop-product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .shop-card-img { height: 180px; }
+  .shop-card-img { height: 240px; }
   .shop-card-body { padding: 12px; height: auto; min-height: 120px; }
   .shop-card-name { font-size: 13px; }
   .shop-card-price { font-size: 14px; }
 }
 @media (max-width: 480px) {
-  .shop-card-img { height: 160px; }
+  .shop-card-img { height: 230px; }
 }
