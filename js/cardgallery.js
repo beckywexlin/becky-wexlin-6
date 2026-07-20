@@ -11,7 +11,7 @@
   /* ── styles ── */
   var css = ''
     + '.shop-card-img{position:relative;}'
-    + '.shop-card-img .shop-card-overlay{pointer-events:none;}'
+    + '.shop-card-img .shop-card-overlay{display:none !important;}'
     + '.cg-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:30px;height:30px;border:none;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:18px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;}'
     + '.cg-prev{left:8px;}.cg-next{right:8px;}'
     + '.shop-card-img:hover .cg-arrow{display:flex;}'
