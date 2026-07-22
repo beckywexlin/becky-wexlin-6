@@ -107,7 +107,7 @@ async function submitOrder(shipping) {
   const { error, paymentIntent } = await stripe.confirmPayment({
     elements,
     confirmParams: {
-      return_url: window.location.origin + '/order-success.html',
+      return_url: window.location.origin + '/order-success',
       payment_method_data: {
         billing_details: {
           name: shipping.firstName + ' ' + shipping.lastName,
@@ -132,6 +132,18 @@ async function submitOrder(shipping) {
 
   // Send order to Printify via worker
   const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+
+  // Read GA4 client_id so the worker can attribute the server-side purchase event
+  let gaClientId = '';
+  try {
+    const gaCookie = document.cookie.split('; ').find(c => c.startsWith('_ga='));
+    if (gaCookie) {
+      // _ga=GA1.1.123456789.1234567890 → "123456789.1234567890"
+      const parts = gaCookie.split('.');
+      gaClientId = parts.slice(2).join('.');
+    }
+  } catch (e) {}
+
   await fetch(CHECKOUT_WORKER + '/create-order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -139,7 +151,8 @@ async function submitOrder(shipping) {
       items: cart,
       shipping,
       paymentIntentId: paymentIntent.id,
-      promoCode: currentPromoCode || ''
+      promoCode: currentPromoCode || '',
+      gaClientId
     })
   });
 
@@ -175,7 +188,7 @@ async function submitOrder(shipping) {
 
   localStorage.removeItem('bw-cart');
   localStorage.removeItem('bw-shipping');
-  window.location.href = 'order-success.html';
+  window.location.href = '/order-success';
   return true;
 }
 
@@ -184,7 +197,7 @@ async function initCheckout() {
   const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
 
   if (cart.length === 0 && !window.location.search.includes('payment_intent')) {
-    window.location.href = 'index.html';
+    window.location.href = '/';
     return;
   }
 
@@ -309,7 +322,7 @@ async function initCheckout() {
         ProductName: item.title,
         Quantity: item.quantity,
         ItemPrice: parseFloat(item.price.replace('$', '')),
-        ProductURL: 'https://www.beckywexlin.com/products/' + (item.id || ''),
+        ProductURL: 'https://www.beckywexlin.com/' + (item.slug || item.id || ''),
         ImageURL: item.image || ''
       };
     });

@@ -13,6 +13,7 @@
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Order Confirmed — Becky Wexlin Creative</title>
+  <link rel="canonical" href="https://www.beckywexlin.com/order-success" />
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css?v=4" />
@@ -190,10 +191,15 @@
         var shipping = JSON.parse(localStorage.getItem('bw-shipping') || 'null');
         if (cart.length && shipping && handled.indexOf(pi) === -1) {
           try {
+            var gaClientId = '';
+            try {
+              var gaCookie = document.cookie.split('; ').find(function(c) { return c.indexOf('_ga=') === 0; });
+              if (gaCookie) { var gaParts = gaCookie.split('.'); gaClientId = gaParts.slice(2).join('.'); }
+            } catch (e) {}
             await fetch(CHECKOUT_WORKER + '/create-order', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ items: cart, shipping: shipping, paymentIntentId: pi, promoCode: '' })
+              body: JSON.stringify({ items: cart, shipping: shipping, paymentIntentId: pi, promoCode: '', gaClientId: gaClientId })
             });
             handled.push(pi);
             localStorage.setItem('bw-order-created', JSON.stringify(handled.slice(-20)));

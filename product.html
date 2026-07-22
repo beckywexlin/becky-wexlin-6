@@ -503,7 +503,7 @@
     const productId = params.get('id') || injectedId;
     const page = document.getElementById('product-page');
 
-    if (!productId) window.location.href = 'shop.html';
+    if (!productId) window.location.href = '/shop';
 
     let currentProduct = null;
     let selectedVariant = null;
@@ -524,10 +524,12 @@
     }
 
     function renderSizeButtons(variants, colorFilter) {
-      return sortedVariants(variants, colorFilter).map((v, i) => {
+      const sorted = sortedVariants(variants, colorFilter);
+      const firstAvailIdx = sorted.findIndex(v => v.available);
+      return sorted.map((v, i) => {
         const label = v.title.includes(' / ') ? v.title.split(' / ').pop() : v.title;
         return `<button
-          class="variant-btn ${i === 0 ? 'selected' : ''} ${!v.available ? 'unavailable' : ''}"
+          class="variant-btn ${i === firstAvailIdx ? 'selected' : ''} ${!v.available ? 'unavailable' : ''}"
           onclick="selectVariant(${v.id}, '${v.title}', '${v.price}', ${v.available}, this)"
           ${!v.available ? 'disabled' : ''}
         >${label}</button>`;
@@ -854,7 +856,8 @@
         currentImageIndex = 0;
         document.title = p.title + ' — Becky Wexlin Creative';
 
-        const firstSorted = sortedVariants(p.variants, null)[0];
+        const allSorted = sortedVariants(p.variants, null);
+        const firstSorted = allSorted.find(v => v.available) || allSorted[0];
         injectSeoTags(p, firstSorted);
 
         page.innerHTML = `

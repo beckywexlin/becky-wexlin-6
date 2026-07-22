@@ -284,7 +284,7 @@ export default {
 
     // ── POST /create-order ──
     if (pathname === '/create-order' && req.method === 'POST') {
-      const { items, shipping, paymentIntentId, promoCode } = await req.json();
+      const { items, shipping, paymentIntentId, promoCode, gaClientId } = await req.json();
 
       const line_items = items.map(item => ({
         product_id: item.id,
@@ -339,6 +339,53 @@ export default {
         ]);
       } catch (e) {
         console.error('Klaviyo error:', e.message);
+      }
+
+      // GA4 Measurement Protocol — server-side purchase event (survives closed
+      // tabs, ad blockers, and redirect-based payment methods). Requires
+      // GA4_API_SECRET set via `wrangler secret put GA4_API_SECRET`.
+      if (env.GA4_API_SECRET && gaClientId) {
+        try {
+          const subtotal = items.reduce((sum, item) => {
+            const price = typeof item.price === 'string'
+              ? parseFloat(item.price.replace('$', ''))
+              : item.price;
+            return sum + price * (item.quantity || 1);
+          }, 0);
+          const ga4Items = items.map(item => ({
+            item_id: item.id,
+            item_name: item.title || item.name || '',
+            item_variant: item.size || '',
+            price: typeof item.price === 'string'
+              ? parseFloat(item.price.replace('$', ''))
+              : item.price,
+            quantity: item.quantity || 1,
+          }));
+          const mp = {
+            client_id: gaClientId,
+            events: [{
+              name: 'purchase',
+              params: {
+                transaction_id: paymentIntentId,
+                value: subtotal - promo.discount / 100,
+                currency: 'USD',
+                shipping: 0,
+                items: ga4Items,
+              },
+            }],
+          };
+          if (promoCode) mp.events[0].params.coupon = promoCode;
+          await fetch(
+            `https://www.google-analytics.com/mp/collect?measurement_id=G-WYJNL0114K&api_secret=${env.GA4_API_SECRET}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(mp),
+            }
+          );
+        } catch (e) {
+          console.error('GA4 Measurement Protocol error:', e.message);
+        }
       }
 
       return json({ success: true, orderId: body.id });
