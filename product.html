@@ -508,6 +508,7 @@
     let currentProduct = null;
     let selectedVariant = null;
     let currentImageIndex = 0;
+    let currentImages = [];  // filtered by selected color
 
     const SIZE_ORDER = ['XS','S','M','L','XL','2XL','3XL','4XL','5XL'];
 
@@ -548,11 +549,39 @@
           ${colors.map((c, i) => `<button class="variant-btn ${i === 0 ? 'selected' : ''}" onclick="selectColor('${c}', this)">${c}</button>`).join('')}
         </div>`;
       }
-      html += `<p class="variant-label" style="margin-top:16px;">Size</p>
+      html += `<p class="variant-label" style="margin-top:16px;">Size <a href="/size-guide" style="font-weight:400;font-size:12px;color:var(--lime);text-decoration:underline;margin-left:6px;">Size&nbsp;guide</a></p>
       <div class="variant-options" id="size-options">
         ${renderSizeButtons(p.variants, multiColor ? colors[0] : null)}
       </div>`;
       return html;
+    }
+
+    function getImagesForColor(color) {
+      if (!color || !currentProduct) return currentProduct ? currentProduct.images : [];
+      // Get variant IDs that match this color
+      const colorVariantIds = currentProduct.variants
+        .filter(v => v.title.startsWith(color + ' / '))
+        .map(v => v.id);
+      // Filter images that have at least one matching variant ID
+      const matched = currentProduct.images.filter(img =>
+        img.variant_ids && img.variant_ids.some(vid => colorVariantIds.includes(vid))
+      );
+      // Fall back to all images if no variant-specific images found
+      return matched.length ? matched : currentProduct.images;
+    }
+
+    function rebuildGallery(images) {
+      currentImages = images;
+      currentImageIndex = 0;
+      const mainImg = document.getElementById('main-img-el');
+      if (mainImg && images.length) mainImg.src = proxyImg(images[0].src);
+      const thumbStrip = document.querySelector('.product-thumbs');
+      if (thumbStrip) {
+        thumbStrip.innerHTML = images.map((img, i) => `
+          <div class="product-thumb ${i === 0 ? 'active' : ''}" onclick="setMainImage(${i}, this)">
+            <img src="${proxyImg(img.src)}" alt="${currentProduct.title} view ${i + 1}" loading="lazy" />
+          </div>`).join('');
+      }
     }
 
     function selectColor(color, btn) {
@@ -560,6 +589,7 @@
       btn.classList.add('selected');
       document.getElementById('selected-color-label').textContent = color;
       document.getElementById('size-options').innerHTML = renderSizeButtons(currentProduct.variants, color);
+      rebuildGallery(getImagesForColor(color));
       const first = document.querySelector('#size-options .variant-btn:not([disabled])');
       if (first) first.click();
     }
@@ -595,7 +625,7 @@
         title: currentProduct.title,
         size: selectedVariant.title,
         price: selectedVariant.price,
-        image: currentProduct.images[0] || '',
+        image: currentImages[0]?.src || '',
         quantity: qty
       });
     }
@@ -603,26 +633,26 @@
     /* ── IMAGE NAVIGATION ───────────────────────────── */
     function setMainImage(index, thumb) {
       currentImageIndex = index;
-      document.getElementById('main-img-el').src = proxyImg(currentProduct.images[index]);
+      document.getElementById('main-img-el').src = proxyImg(currentImages[index]?.src);
       document.querySelectorAll('.product-thumb').forEach(t => t.classList.remove('active'));
       if (thumb) thumb.classList.add('active');
       if (thumb) thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
     function prevImage() {
-      const len = currentProduct.images.length;
+      const len = currentImages.length;
       currentImageIndex = (currentImageIndex - 1 + len) % len;
       const thumbs = document.querySelectorAll('.product-thumb');
-      document.getElementById('main-img-el').src = proxyImg(currentProduct.images[currentImageIndex]);
+      document.getElementById('main-img-el').src = proxyImg(currentImages[currentImageIndex]?.src);
       thumbs.forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
       if (thumbs[currentImageIndex]) thumbs[currentImageIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
     function nextImage() {
-      const len = currentProduct.images.length;
+      const len = currentImages.length;
       currentImageIndex = (currentImageIndex + 1) % len;
       const thumbs = document.querySelectorAll('.product-thumb');
-      document.getElementById('main-img-el').src = proxyImg(currentProduct.images[currentImageIndex]);
+      document.getElementById('main-img-el').src = proxyImg(currentImages[currentImageIndex]?.src);
       thumbs.forEach((t, i) => t.classList.toggle('active', i === currentImageIndex));
       if (thumbs[currentImageIndex]) thumbs[currentImageIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
@@ -741,7 +771,7 @@
         .replace(/\s+/g, ' ')
         .trim();
       const shortDesc = plainDesc.length > 155 ? plainDesc.slice(0, 152) + '...' : plainDesc;
-      const image = p.images?.[0] || '';
+      const image = p.images?.[0]?.src || '';
       const price = firstSorted ? String(firstSorted.price) : '';
       const anyAvailable = (p.variants || []).some(v => v.available);
 
@@ -820,7 +850,7 @@
         '@type': 'Product',
         name: p.title,
         description: plainDesc,
-        image: p.images || [],
+        image: (p.images || []).map(i => i.src),
         sku: String(p.id),
         brand: { '@type': 'Brand', name: 'Becky Wexlin Creative' },
         ...(tags.length ? { keywords: tags.join(', ') } : {}),
@@ -860,6 +890,13 @@
         const firstSorted = allSorted.find(v => v.available) || allSorted[0];
         injectSeoTags(p, firstSorted);
 
+        // Determine initial images (filter to first color if multi-color)
+        const initColors = [...new Set(p.variants
+          .map(v => v.title.includes(' / ') ? v.title.split(' / ')[0] : null)
+          .filter(Boolean))];
+        const initImages = initColors.length > 1 ? getImagesForColor(initColors[0]) : p.images;
+        currentImages = initImages;
+
         page.innerHTML = `
           <div class="product-layout">
 
@@ -870,16 +907,16 @@
               <div class="img-nav-wrap">
                 <button class="arrow-btn" onclick="prevImage()" aria-label="Previous image">&#8592;</button>
                 <div class="product-main-img" id="main-img">
-                  ${p.images[0] ? `<img src="${proxyImg(p.images[0])}" alt="${p.title}" id="main-img-el" />` : ''}
+                  ${initImages[0] ? `<img src="${proxyImg(initImages[0].src)}" alt="${p.title}" id="main-img-el" />` : ''}
                 </div>
                 <button class="arrow-btn" onclick="nextImage()" aria-label="Next image">&#8594;</button>
               </div>
 
-              <!-- ALL thumbnails in a scrollable horizontal strip -->
+              <!-- Thumbnails for current color -->
               <div class="product-thumbs">
-                ${p.images.map((img, i) => `
+                ${initImages.map((img, i) => `
                   <div class="product-thumb ${i === 0 ? 'active' : ''}" onclick="setMainImage(${i}, this)">
-                    <img src="${proxyImg(img)}" alt="${p.title} view ${i + 1}" loading="lazy" />
+                    <img src="${proxyImg(img.src)}" alt="${p.title} view ${i + 1}" loading="lazy" />
                   </div>`).join('')}
               </div>
 
@@ -908,8 +945,9 @@
                 </button>
               </div>
               <div class="product-meta">
-                <p>Free shipping on all orders</p>
-                <p>Printed on demand — made just for you</p>
+                <p>&#10003; Free shipping on all orders</p>
+                <p>&#10003; Made to order, just for you</p>
+                <p>&#10003; Wrong or damaged? We&rsquo;ll make it right within 14 days</p>
               </div>
               <div class="product-tags" id="product-tags" style="display:none;"></div>
             </div>
@@ -939,7 +977,7 @@
         _learnq.push(['track', 'Viewed Product', {
           ProductName: p.title,
           ProductID: p.id,
-          ImageURL: p.images && p.images[0] ? 'https://images-api.printify.com/mockup/' + p.id + '/12100/92570/' + (p.slug || '') + '.jpg?camera_label=front' : '',
+          ImageURL: p.images && p.images[0]?.src ? 'https://images-api.printify.com/mockup/' + p.id + '/12100/92570/' + (p.slug || '') + '.jpg?camera_label=front' : '',
           URL: window.location.href,
           Brand: 'Becky Wexlin',
           Price: firstSorted ? parseFloat(firstSorted.price) : 0
