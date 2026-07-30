@@ -353,6 +353,10 @@
           return;
         }
 
+        // Pin the proven front-runner (highest engagement) to the first slot + badge it
+        const FEATURED_SLUG = 'punky-memento-mori-tee';
+        products.sort(function (a, b) { return a.slug === FEATURED_SLUG ? -1 : (b.slug === FEATURED_SLUG ? 1 : 0); });
+
         products.forEach(function(p) {
           const card = document.createElement('article');
           card.className = 'shop-product-card';
@@ -363,6 +367,7 @@
                   ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />`
                   : '<div style="width:100%;height:100%;background:#2A2A2A;"></div>'
                 }
+                ${p.slug === FEATURED_SLUG ? '<span style="position:absolute;top:8px;left:8px;z-index:3;background:var(--lime);color:#111;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:999px;">&#9733; Fan favourite</span>' : ''}
                 <div class="shop-card-overlay"><span>Shop now &rarr;</span></div>
               </div>
               <div class="shop-card-body">
