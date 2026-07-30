@@ -2,6 +2,16 @@ const API_BASE = 'https://becky-wexlin-api.beckywexlin.workers.dev';
 const SITE = 'https://www.beckywexlin.com';
 const BRAND = 'Becky Wexlin Creative';
 
+// Per-slug SEO title/description overrides. Injects the keywords people actually
+// search into the <title>/meta Google reads, WITHOUT changing the Printify title
+// (which would change the slug and break the ranking URL). Keyed by canonical slug.
+const SEO_OVERRIDES = {
+  'dicks-out-for-harambe': {
+    title: 'Dicks Out for Harambe Shirt',
+    description: 'The "Dicks Out for Harambe" shirt — a meme graphic tee for people who never let it go. Soft cotton, bold print, free shipping.'
+  }
+};
+
 const CANONICAL_HOST = 'www.beckywexlin.com';
 // Every production host that isn't the canonical one 301s to it (kills the
 // www/non-www + alt-domain duplicate-content split).
@@ -253,18 +263,21 @@ async function renderProductPage(request, env, url) {
   if (!product || !product.title) return htmlRes;
 
   const slug = slugify(product.title);
+  const seo = SEO_OVERRIDES[slug] || {};
   const canonical = `${SITE}/${slug}`;
   const plainDesc = String(product.description || '')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  const shortDesc = plainDesc.length > 155 ? plainDesc.slice(0, 152) + '...' : plainDesc;
-  const image = (product.images && product.images[0]) || '';
+  const shortDesc = seo.description
+    ? seo.description
+    : (plainDesc.length > 155 ? plainDesc.slice(0, 152) + '...' : plainDesc);
+  const image = (product.images && product.images[0]?.src) || '';
   const variants = product.variants || [];
   const firstAvail = variants.find(v => v.available) || variants[0];
   const price = firstAvail ? String(firstAvail.price) : '';
   const anyAvailable = variants.some(v => v.available);
-  const title = `${product.title} — ${BRAND}`;
+  const title = `${seo.title || product.title} — ${BRAND}`;
 
   const offers = variants.map(v => ({
     '@type': 'Offer',
@@ -283,7 +296,7 @@ async function renderProductPage(request, env, url) {
     '@type': 'Product',
     name: product.title,
     description: plainDesc,
-    image: product.images || [],
+    image: (product.images || []).map(i => i.src || i),
     sku: String(product.id),
     brand: { '@type': 'Brand', name: BRAND },
     offers: {
