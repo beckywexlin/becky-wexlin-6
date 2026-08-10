@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(perl -pi -e 's{\\(href=\"\\(?:\\\\.\\\\./\\)?css/style\\\\.css\\)\"}{$1?v=2\"}g' *.html collections/*.html blog/*.html)",
+      "Bash(perl -pi -e 's{\\(css/style\\\\.css\\\\?v=\\)2\"}{${1}3\"}g' *.html collections/*.html blog/*.html)",
+      "Bash(md5 old.jpg new.jpg)",
+      "Bash(md5 old.jpg new.jpg bogus.jpg other.jpg)",
+      "Bash(sed -i '' \"s/image='eye_glitch_shirt',/image='cracked-out-eye-record-shop',/\" make_posts.py)",
+      "Bash(sed -i '' \"s/alt='Glitch-eye meme graphic tee',/alt='Meme graphic tee worn in a record shop',/\" make_posts.py)",
+      "WebFetch(domain:www.nordstrom.com)",
+      "Bash(cd /Users/smash/Desktop/becky-wexlin-6 *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  }
+}

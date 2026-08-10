@@ -7,3 +7,6 @@
 .env*
 !.env.example
 .DS_Store
+
+# Claude Code — machine-local permissions, not shared
+.claude/settings.local.json
