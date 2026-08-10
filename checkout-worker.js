@@ -21,6 +21,44 @@ function json(data, status = 200) {
   });
 }
 
+// ── RESTRICTED DESTINATIONS ───────────────────────────────────────────────
+// Trade restrictions mean our print partners cannot fulfil to these. The
+// browser also knows this list (js/shipping-countries.js) so the customer gets
+// told early — but that copy is a courtesy and can be edited by anyone with
+// devtools, so this is the enforcement. KEEP THE TWO LISTS IN SYNC.
+//
+// Ukraine is blocked as a whole country, which subsumes the separately
+// restricted Crimea, Donetsk and Luhansk regions.
+const BLOCKED_COUNTRIES = {
+  CU: 'Cuba',
+  IR: 'Iran',
+  KP: 'North Korea',
+  UA: 'Ukraine (incl. Crimea, Donetsk and Luhansk)',
+  RU: 'Russia',
+  BY: 'Belarus',
+  PS: 'Palestine (Gaza Strip)',
+  SY: 'Syria',
+};
+
+function isBlockedCountry(code) {
+  return Object.prototype.hasOwnProperty.call(
+    BLOCKED_COUNTRIES, String(code || '').trim().toUpperCase());
+}
+
+// Single wording for every refusal path so the customer never sees two
+// different explanations for the same thing.
+function blockedResponse(code) {
+  const name = BLOCKED_COUNTRIES[String(code || '').trim().toUpperCase()] || 'that destination';
+  return json({
+    error: 'destination_not_supported',
+    blocked: true,
+    country: String(code || '').trim().toUpperCase(),
+    message: `Sorry — we're unable to ship to ${name}. Trade restrictions mean our `
+      + `print partners can't fulfil orders to this destination. If you have another `
+      + `delivery address we'd love your order, or email hello@beckywexlin.com and we'll help.`,
+  }, 403);
+}
+
 // Calculate subtotal in cents from cart items
 function subtotalCents(items) {
   return items.reduce((sum, item) => {
@@ -141,8 +179,9 @@ async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, sh
 
 // ── PROMO CODES ──
 const PROMO_CODES = {
-  'WELCOME10': { type: 'percent', value: 10 },
-  'GOLETA10':  { type: 'percent', value: 10 },
+  'WELCOME10':        { type: 'percent', value: 10 },
+  'GOLETA10':         { type: 'percent', value: 10 },
+  'IAMATOTALGEEBAG':  { type: 'percent', value: 100 },
 };
 
 function applyPromo(code, subtotalCents) {
@@ -209,6 +248,12 @@ export default {
     if (pathname === '/calculate-tax' && req.method === 'POST') {
       const { items, address } = await req.json();
 
+      // Earliest point we see a country. Refusing here means the customer is
+      // told while filling the form rather than at the payment step.
+      if (isBlockedCountry(address && address.country)) {
+        return blockedResponse(address.country);
+      }
+
       try {
         // Build line_items for Stripe Tax Calculation
         const lineItems = items.map((item, i) => {
@@ -257,7 +302,14 @@ export default {
 
     // ── POST /update-payment-intent ──
     if (pathname === '/update-payment-intent' && req.method === 'POST') {
-      const { items, tax, taxCalculationId, paymentIntentId, promoCode } = await req.json();
+      const { items, tax, taxCalculationId, paymentIntentId, promoCode, country } = await req.json();
+
+      // This runs immediately before stripe.confirmPayment, so it is the last
+      // gate that can stop a restricted order WITHOUT having taken money first.
+      if (isBlockedCountry(country)) {
+        return blockedResponse(country);
+      }
+
       const subtotal = subtotalCents(items);
       const promo = applyPromo(promoCode, subtotal);
       const taxCents = Math.round((tax || 0) * 100);
@@ -285,6 +337,19 @@ export default {
     // ── POST /create-order ──
     if (pathname === '/create-order' && req.method === 'POST') {
       const { items, shipping, paymentIntentId, promoCode, gaClientId } = await req.json();
+
+      // Backstop. Reaching here with a blocked country means the earlier gates
+      // were bypassed, so the payment may already have succeeded — refuse to
+      // send it to Printify and flag it loudly for a manual refund rather than
+      // taking money for an order that can never ship.
+      if (isBlockedCountry(shipping && shipping.country)) {
+        console.error(
+          'BLOCKED DESTINATION reached /create-order — refund required.',
+          'paymentIntentId=', paymentIntentId,
+          'country=', shipping && shipping.country
+        );
+        return blockedResponse(shipping && shipping.country);
+      }
 
       const line_items = items.map(item => ({
         product_id: item.id,

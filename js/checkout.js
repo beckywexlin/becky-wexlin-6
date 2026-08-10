@@ -40,6 +40,68 @@ async function mountPaymentElement(clientSecret) {
   paymentElement.mount('#payment-element');
 }
 
+// ── SHIPPING ELIGIBILITY ──────────────────────────────────────────
+// Restricted destinations are absent from the country <select>, so this path
+// is reached two ways: the address autocomplete resolving to one, or someone
+// editing the form value. Either way the customer gets a plain explanation
+// instead of a failed charge. The checkout worker enforces the same list
+// server-side — this is the courtesy layer, not the control.
+function showBlockedCountryNotice(code) {
+  const box = document.getElementById('blocked-country-notice');
+  const msg = document.getElementById('blocked-country-message');
+  if (!box || !msg || !window.BW_SHIPPING) return;
+
+  msg.textContent = window.BW_SHIPPING.message(code);
+  box.hidden = false;
+  box.style.display = '';
+  box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const btn = document.getElementById('checkout-submit');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Unable to ship to this address';
+  }
+}
+
+function clearBlockedCountryNotice() {
+  const box = document.getElementById('blocked-country-notice');
+  if (box && !box.hidden) {
+    box.hidden = true;
+    box.style.display = 'none';
+    const btn = document.getElementById('checkout-submit');
+    if (btn) { btn.disabled = false; btn.textContent = 'Place order'; }
+  }
+}
+
+// Not every country has states or postal codes. Marking both hard-required
+// made checkout impossible from places like Hong Kong, Ireland or the UAE.
+function applyAddressRulesFor(country) {
+  const S = window.BW_SHIPPING;
+  if (!S) return;
+
+  const zip = document.getElementById('zip');
+  const state = document.getElementById('state');
+  const zipLabel = document.querySelector('label[for="zip"]');
+  const stateLabel = document.querySelector('label[for="state"]');
+
+  const zipNeeded = S.needsPostal(country);
+  const regionNeeded = country === 'US' || S.needsRegion(country);
+
+  if (zip) {
+    zip.required = zipNeeded;
+    zip.placeholder = zipNeeded ? 'ZIP / Postal code' : 'Not used in this country';
+  }
+  if (zipLabel) zipLabel.textContent = zipNeeded ? 'ZIP / Postal code' : 'Postal code (optional)';
+
+  if (state) {
+    state.required = regionNeeded;
+    state.placeholder = country === 'US' ? 'e.g. CA' : 'State / Province / Region';
+  }
+  if (stateLabel) {
+    stateLabel.textContent = regionNeeded ? 'State / Province' : 'State / Province (optional)';
+  }
+}
+
 // ── CALCULATE TAX ──
 async function calculateTax() {
   const state = document.getElementById('state').value.trim();
@@ -48,7 +110,26 @@ async function calculateTax() {
   const country = document.getElementById('country').value || 'US';
   const address1 = document.getElementById('address1').value.trim();
 
-  // Need at least state + zip to calculate tax
+  // Restricted destination — surface it as soon as the country is known,
+  // which for most people is while they're still filling in the address.
+  if (window.BW_SHIPPING && window.BW_SHIPPING.isBlocked(country)) {
+    showBlockedCountryNotice(country);
+    document.getElementById('checkout-tax').textContent = '—';
+    return;
+  }
+  clearBlockedCountryNotice();
+
+  // Only calculate tax for US customers (Stripe Tax only supports US)
+  // International customers will have $0 tax
+  if (country !== 'US') {
+    document.getElementById('checkout-tax').textContent = '$0.00';
+    document.getElementById('checkout-tax').style.color = 'var(--lime)';
+    currentTaxAmount = 0;
+    updateTotal();
+    return;
+  }
+
+  // Need at least state + zip to calculate tax for US
   if (!state || !zip || zip.length < 5) return;
 
   const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
@@ -67,6 +148,19 @@ async function calculateTax() {
         address: { line1: address1, city, state, postal_code: zip, country }
       })
     });
+    // The worker refuses restricted destinations here too, which is usually
+    // the first time a customer finds out.
+    if (res.status === 403) {
+      const body = await res.json().catch(() => ({}));
+      if (body.blocked) {
+        const msg = document.getElementById('blocked-country-message');
+        if (msg && body.message) msg.textContent = body.message;
+        showBlockedCountryNotice(country);
+        taxEl.textContent = '—';
+        return;
+      }
+    }
+
     const data = await res.json();
 
     if (data.tax_amount !== undefined) {
@@ -144,7 +238,7 @@ async function submitOrder(shipping) {
     }
   } catch (e) {}
 
-  await fetch(CHECKOUT_WORKER + '/create-order', {
+  const orderRes = await fetch(CHECKOUT_WORKER + '/create-order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -155,6 +249,22 @@ async function submitOrder(shipping) {
       gaClientId
     })
   });
+
+  // Should be unreachable — the destination was already checked before payment.
+  // If it happens, the card has been charged for an order that can't ship, so
+  // say so plainly and keep the cart rather than showing a success page.
+  if (orderRes && orderRes.status === 403) {
+    const body = await orderRes.json().catch(() => ({}));
+    if (body.blocked) {
+      const msg = document.getElementById('blocked-country-message');
+      if (msg) {
+        msg.textContent = (body.message || window.BW_SHIPPING.message(shipping.country))
+          + ' Your payment was authorised before we could stop it — email us and we will refund it in full straight away.';
+      }
+      showBlockedCountryNotice(shipping.country);
+      return false;
+    }
+  }
 
   // GA4 purchase payload — stashed here, fired once on the order-success page
   // so a refresh can't re-send and there's a single source of truth.
@@ -250,6 +360,23 @@ async function initCheckout() {
       el.addEventListener('blur', debounceTax);
     }
   });
+
+  // Relabel the state and postal fields for whatever country is selected, so
+  // people from countries without postcodes aren't blocked by a required field
+  // they can't legitimately fill in.
+  const countryEl = document.getElementById('country');
+  if (countryEl) {
+    countryEl.addEventListener('change', () => {
+      const c = countryEl.value || 'US';
+      if (window.BW_SHIPPING && window.BW_SHIPPING.isBlocked(c)) {
+        showBlockedCountryNotice(c);
+      } else {
+        clearBlockedCountryNotice();
+      }
+      applyAddressRulesFor(c);
+    });
+    applyAddressRulesFor(countryEl.value || 'US');
+  }
 
   // Auto-fill promo code from landing page (stored via ?code= param)
   const savedPromo = localStorage.getItem('bw-promo');
@@ -391,28 +518,42 @@ document.querySelectorAll('#checkout-form [required]').forEach(field => {
   }
 });
 
-const zip = document.getElementById('zip');
-const zipVal = zip.value.trim();
-const zipGroup = zip.closest('.checkout-form-group') || zip.closest('.field');
-if (!/^\d{5}(-\d{4})?$/.test(zipVal)) {
-  if (zipGroup) zipGroup.classList.add('has-error');
-  zip.style.borderColor = 'var(--pink)';
-  valid = false;
-} else {
-  if (zipGroup) zipGroup.classList.remove('has-error');
-  zip.style.borderColor = '';
+const country = document.getElementById('country').value || 'US';
+
+// Restricted destination — stop before any charge is attempted.
+if (window.BW_SHIPPING && window.BW_SHIPPING.isBlocked(country)) {
+  showBlockedCountryNotice(country);
+  return;
 }
 
+const mark = (el, ok) => {
+  const group = el.closest('.checkout-form-group') || el.closest('.field');
+  if (group) group.classList.toggle('has-error', !ok);
+  el.style.borderColor = ok ? '' : 'var(--pink)';
+  if (!ok) valid = false;
+};
+
+// ZIP: strict format for the US, any non-empty value elsewhere, and skipped
+// entirely for the ~60 countries that have no postal code system.
+const zip = document.getElementById('zip');
+const zipVal = zip.value.trim();
+if (country === 'US') {
+  mark(zip, /^\d{5}(-\d{4})?$/.test(zipVal));
+} else if (window.BW_SHIPPING && !window.BW_SHIPPING.needsPostal(country)) {
+  mark(zip, true);
+} else {
+  mark(zip, !!zipVal);
+}
+
+// State / province: required only where carriers actually demand one.
 const state = document.getElementById('state');
 const stateVal = state.value.trim();
-const stateGroup = state.closest('.checkout-form-group') || state.closest('.field');
-if (!/^[A-Za-z]{2}$/.test(stateVal)) {
-  if (stateGroup) stateGroup.classList.add('has-error');
-  state.style.borderColor = 'var(--pink)';
-  valid = false;
+if (country === 'US') {
+  mark(state, /^[A-Za-z]{2}$/.test(stateVal));
+} else if (window.BW_SHIPPING && window.BW_SHIPPING.needsRegion(country)) {
+  mark(state, !!stateVal);
 } else {
-  if (stateGroup) stateGroup.classList.remove('has-error');
-  state.style.borderColor = '';
+  mark(state, true);
 }
 
       if (!valid) return;
@@ -426,8 +567,10 @@ if (!/^[A-Za-z]{2}$/.test(stateVal)) {
       // Ensure tax is calculated before payment
       await calculateTax();
 
-      // Update payment intent with final amount including tax
-      await fetch(CHECKOUT_WORKER + '/update-payment-intent', {
+      // Update payment intent with final amount including tax. The worker
+      // re-checks the destination here — the last point a restricted order can
+      // be refused before the card is charged.
+      const piRes = await fetch(CHECKOUT_WORKER + '/update-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -435,9 +578,20 @@ if (!/^[A-Za-z]{2}$/.test(stateVal)) {
           tax: currentTaxAmount,
           taxCalculationId,
           paymentIntentId: currentPaymentIntentId,
-          promoCode: currentPromoCode
+          promoCode: currentPromoCode,
+          country: shipping.country
         })
       });
+
+      if (piRes.status === 403) {
+        const body = await piRes.json().catch(() => ({}));
+        if (body.blocked) {
+          const msg = document.getElementById('blocked-country-message');
+          if (msg && body.message) msg.textContent = body.message;
+          showBlockedCountryNotice(shipping.country);
+          return;
+        }
+      }
 
       const success = await submitOrder(shipping);
       if (!success) {
