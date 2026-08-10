@@ -11,3 +11,15 @@ package-lock.json
 .assetsignore
 .gitignore
 *.log
+# Source and config that must never be served as static assets. The assets
+# directory is the repo root, so anything absent from this list is downloadable
+# at https://www.beckywexlin.com/<path>. checkout-worker.js was public until
+# 2026-08-10, which exposed the PROMO_CODES table.
+checkout-worker.js
+wrangler.checkout.jsonc
+wrangler.api.jsonc
+.wranglerignore
+*.bak
+README.md
+competitor-profiles
+scripts

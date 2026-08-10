@@ -178,15 +178,27 @@ async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, sh
 }
 
 // ── PROMO CODES ──
+// This file was served publicly at /checkout-worker.js until 2026-08-10 —
+// the assets directory is the repo root and this file wasn't in .assetsignore,
+// so anything in this table was readable by anyone. It's shielded now, but
+// treat every code below as already public and give high-value ones an expiry.
 const PROMO_CODES = {
   'WELCOME10':        { type: 'percent', value: 10 },
   'GOLETA10':         { type: 'percent', value: 10 },
-  'IAMATOTALGEEBAG':  { type: 'percent', value: 100 },
+  // Contest winners. 100% off, and it was in the publicly readable copy of this
+  // file, so it's dated to bound the exposure rather than left open-ended.
+  // CHANGE THIS DATE (or delete the field) once the winners have redeemed.
+  'IAMATOTALGEEBAG':  { type: 'percent', value: 100, expires: '2026-09-07' },
 };
 
 function applyPromo(code, subtotalCents) {
   const promo = PROMO_CODES[(code || '').toUpperCase().trim()];
   if (!promo) return { valid: false, discount: 0 };
+  // Inclusive of the final day — a code dated 2026-09-07 stops working at
+  // midnight UTC that night.
+  if (promo.expires && Date.now() > Date.parse(promo.expires + 'T23:59:59Z')) {
+    return { valid: false, discount: 0, expired: true };
+  }
   if (promo.type === 'percent') {
     const discount = Math.round(subtotalCents * promo.value / 100);
     return { valid: true, discount, label: `${promo.value}% off` };
