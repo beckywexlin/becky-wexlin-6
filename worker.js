@@ -351,6 +351,9 @@ function isProductPhoto(u) {
 function imageRank(u) {
   const m = /camera_label(?:=|%3D)([a-z0-9-]+)/i.exec(String(u || ''));
   const label = (m ? m[1] : '').toLowerCase();
+  // Checked before the front- prefix: "front-collar-closeup" is a front shot
+  // that shows none of the design, which is exactly what Google penalises.
+  if (label.includes('closeup') || label.includes('close-up')) return 8;
   if (label === 'front') return 0;
   if (label.startsWith('front')) return 1;
   if (label.startsWith('person')) return 2;
