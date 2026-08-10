@@ -164,6 +164,11 @@ export default {
       return await renderMerchantFeed(url);
     }
 
+    // Pinterest catalog feed — one pin per design, not per variant.
+    if (url.pathname === '/pinterest-feed.xml') {
+      return await renderPinterestFeed();
+    }
+
     // Image proxy — cache Printify images at the edge
     if (url.pathname.startsWith('/img/')) {
       return await proxyImage(url);
@@ -483,6 +488,67 @@ function feedItem(product, variant, slug) {
   ].filter(Boolean);
 
   return `<item>${parts.join('')}</item>`;
+}
+
+// --- Pinterest catalog feed ---------------------------------------------------
+//
+// Pinterest accepts the same Google-namespace RSS format as Merchant Center,
+// but it must NOT be the same feed. Google needs one item per size/colour
+// combination — 592 of them. On Pinterest that would post ten near-identical
+// pins of every shirt, which reads as spam and is exactly how accounts get
+// buried. Pinterest wants one pin per design.
+//
+// Dropping variants also means only the catalog list endpoint is needed: one
+// subrequest, so this fits in a single URL with no chunking.
+//
+// Pinterest's required set is id, title, description, link, image_link, price
+// and availability. Colour and size are optional here, unlike Google's apparel
+// rules. Availability uses Pinterest's spelling ("in stock"), not Google's.
+async function renderPinterestFeed() {
+  const products = await fetchCatalog();
+  if (!products.length) return new Response('Catalog unavailable', { status: 503 });
+
+  const items = products.map(p => {
+    const title = sanitizeForFeed(FEED_TITLE_OVERRIDES[p.slug] || String(p.title || '')).trim();
+    const img = (Array.isArray(p.images) && p.images.length ? p.images : [p.image])
+      .filter(Boolean).filter(isProductPhoto)
+      .sort((a, b) => imageRank(a) - imageRank(b))[0];
+    const price = Number(p.price);
+
+    return '<item>'
+      + `<g:id>${feedEsc(p.id)}</g:id>`
+      + `<title>${feedEsc(plainText(title, 100))}</title>`
+      + `<description>${feedEsc(sanitizeForFeed(feedDescription(p.description, title)))}</description>`
+      + `<link>${feedEsc(`${SITE}/${p.slug}`)}</link>`
+      + (img ? `<g:image_link>${feedEsc(`${SITE}/img/${encodeURIComponent(img)}`)}</g:image_link>` : '')
+      + `<g:price>${feedEsc(isNaN(price) ? p.price : price.toFixed(2))} USD</g:price>`
+      + `<g:availability>in stock</g:availability>`
+      + `<g:condition>new</g:condition>`
+      + `<g:brand>${feedEsc(BRAND)}</g:brand>`
+      + `<g:google_product_category>${feedEsc(FEED_CATEGORY)}</g:google_product_category>`
+      + `<g:product_type>Apparel &gt; T-Shirts &gt; Graphic Tees</g:product_type>`
+      + '</item>';
+  });
+
+  const body = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+<channel>
+<title>${xmlEscape(BRAND)}</title>
+<link>${SITE}</link>
+<description>Original weird, funny and meme graphic tees designed in Santa Barbara, California.</description>
+<!-- ${items.length} products, one pin each (Google's feed is per-variant; Pinterest's is not) -->
+${items.join('\n')}
+</channel>
+</rss>
+`;
+
+  return new Response(body, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=600',
+      'X-Feed-Items': String(items.length),
+    },
+  });
 }
 
 async function renderMerchantFeed(url) {
