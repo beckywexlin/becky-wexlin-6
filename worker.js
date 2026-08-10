@@ -420,7 +420,9 @@ async function renderMerchantFeed(url) {
   const detailed = await Promise.all(slice.map(async p => {
     try {
       const r = await fetch(`${API_BASE}/api/products/${p.id}`, {
-        cf: { cacheTtl: 3600, cacheEverything: true }
+        // 15 min, not an hour: a price or stock change should reach Merchant
+        // Center on the next fetch, not the one after.
+        cf: { cacheTtl: 900, cacheEverything: true }
       });
       if (!r.ok) return null;
       const full = await r.json();
@@ -454,9 +456,10 @@ ${items.join('\n')}
   return new Response(body, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      // Merchant Center pulls at most daily; an hour of edge cache keeps repeat
-      // fetches cheap without letting stock state go stale.
-      'Cache-Control': 'public, max-age=3600',
+      // Merchant Center pulls once a day, so a long edge cache saves nothing —
+      // but it WOULD make a manual "Fetch now" return yesterday's catalog right
+      // after adding a product. Ten minutes is enough to absorb retries.
+      'Cache-Control': 'public, max-age=600',
       'X-Feed-Chunk': `${chunk + 1}/${chunks}`,
       'X-Feed-Items': String(items.length),
     },
