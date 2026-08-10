@@ -49,7 +49,9 @@
     }
   }
   </script>
-  <script type="application/ld+json">
+  <!-- Placeholder breadcrumb. When the worker resolves a real product it removes
+       this and emits one naming the actual product (see renderProductPage). -->
+  <script type="application/ld+json" id="breadcrumb-schema">
   {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -158,6 +160,45 @@
       position: sticky;
       top: calc(var(--nav-h) + 24px);
     }
+    /* ── SERVER-RENDERED SHELL ─────────────────────────────────
+       The worker fills #product-page with a real, crawlable version of the
+       product (breadcrumb, H1, price, description, sizes) before the page ever
+       reaches the browser; loadProduct() then swaps in the interactive build.
+       These two classes only ever appear in that server-rendered pass. */
+    .pd-breadcrumb {
+      max-width: 1200px;
+      margin: 0 auto 20px;
+      font-size: 13px;
+      color: #666;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pd-breadcrumb a { color: #888; text-decoration: none; }
+    .pd-breadcrumb a:hover { color: var(--lime); }
+    .pd-variant-line { font-size: 14px; color: #aaa; margin: 10px 0; line-height: 1.7; }
+    .pd-variant-line strong { color: #ddd; font-weight: 500; }
+    .pd-variant-line a { color: #c8f135; }
+    .product-description .desc-heading,
+    .product-description h3.desc-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 14px 0 6px;
+    }
+
+    /* Semantic heading above the Printify copy — gives the unique per-product
+       text an h2 to sit under instead of floating unlabelled next to the price. */
+    .pd-desc-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #777;
+      margin: 0 0 8px;
+    }
     .product-description {
       max-height: 240px;
       overflow-y: auto;
@@ -214,6 +255,60 @@
     .variant-btn.selected { background: #c8f135; color: #000; border-color: #c8f135; font-weight: 600; }
     .variant-btn.unavailable { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
     .variant-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    /* The Style switch renders its alternates as links, not buttons — same look,
+       but they navigate to the sibling listing instead of selecting a variant. */
+    a.variant-btn { text-decoration: none; display: inline-block; }
+    a.variant-btn .variant-btn-price { opacity: 0.6; font-size: 13px; }
+    a.variant-btn:hover .variant-btn-price { opacity: 1; }
+    #style-switch { margin-bottom: 18px; }
+    #style-switch .variant-btn.selected { cursor: default; }
+
+    /* ── BUYER-INTENT DETAIL SECTIONS ──────────────────────────
+       Static markup (not injected by loadProduct) so crawlers and AI bots see
+       the headings, bullets and FAQ without executing JS. The few per-product
+       values are stamped in by the worker / fillProductDetails. */
+    .product-detail {
+      max-width: 1100px;
+      margin: 56px auto 0;
+      padding: 0 40px;
+    }
+    .product-detail-inner {
+      border-top: 1px solid #2A2A2A;
+      padding-top: 44px;
+      max-width: 780px;
+    }
+    .product-detail h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(21px, 2.6vw, 26px);
+      line-height: 1.2;
+      color: #fff;
+      margin: 44px 0 14px;
+    }
+    .product-detail h2:first-child { margin-top: 0; }
+    .product-detail h3 {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      margin: 24px 0 8px;
+    }
+    .product-detail p { color: #9A9A9A; font-size: 15.5px; line-height: 1.8; margin: 0 0 14px; }
+    .product-detail ul { list-style: none; padding: 0; margin: 0 0 16px; }
+    .product-detail li {
+      position: relative;
+      padding-left: 18px;
+      color: #9A9A9A;
+      font-size: 15.5px;
+      line-height: 1.75;
+      margin-bottom: 9px;
+    }
+    .product-detail li::before { content: "—"; position: absolute; left: 0; color: #c8f135; }
+    .product-detail li strong { color: #DDD; font-weight: 500; }
+    .product-detail a { color: #c8f135; text-decoration: none; border-bottom: 1px solid rgba(200,241,53,.35); }
+    .product-detail a:hover { border-bottom-color: #c8f135; }
+    @media (max-width: 700px) {
+      .product-detail { padding: 0 16px; margin-top: 36px; }
+      .product-detail-inner { padding-top: 32px; }
+    }
 
     /* ── YOU MIGHT ALSO LIKE ───────────────────────────────── */
     .related-section {
@@ -409,6 +504,66 @@
   <main class="product-page" id="product-page">
     <div class="product-page-loading">Loading...</div>
   </main>
+
+  <!-- ── BUYER-INTENT DETAIL + FAQ ─────────────────────────────
+       Deliberately static: the product layout above is client-rendered, so this
+       is the only part of the page a non-JS crawler can read. `data-pd` spans
+       are stamped with real values by the worker (name) and by
+       fillProductDetails() (sizes, colours, price) once the catalog loads. -->
+  <section class="product-detail" id="product-detail" aria-label="Product details and FAQ">
+    <div class="product-detail-inner">
+
+      <h2>Why this tee is worth buying</h2>
+      <ul>
+        <li><strong>The design is original.</strong> <span data-pd="name">This design</span> was drawn in-house in Santa Barbara, California. It isn't licensed clip art and it isn't on a print-on-demand marketplace, so nobody else at the party is wearing it.</li>
+        <li><strong>The blank is chosen, not defaulted.</strong> We print on premium heavyweight blanks — Comfort Colors, Bella + Canvas, AS Colour, Gildan Softstyle — picked per design rather than per invoice.</li>
+        <li><strong>The print outlives the joke.</strong> Direct-to-garment ink sits <em>in</em> the cotton instead of on top of it, so it doesn't crack across the chest after a month.</li>
+        <li><strong>Free shipping, every order.</strong> No minimum spend, no threshold games, no surprise line item at checkout.</li>
+        <li><strong>Nothing is printed until you buy it.</strong> No warehouse stock going yellow at the folds, and no landfill run at the end of a season.</li>
+      </ul>
+
+      <h2>Who this tee is for</h2>
+      <p>People who would rather be asked about their outfit than complimented on it. <span data-pd="name">This design</span> is drawn with the same care you'd give a poster — real typography, intentional negative space, a composition that still reads from across a room — and then spent entirely on a joke that didn't deserve it. That's the whole brand.</p>
+      <p>It also makes an unreasonably good gift, because a well-chosen graphic tee proves you were paying attention. If this one isn't quite right, the rest of the catalogue is close by: <a href="/collections/funny-t-shirts">funny t-shirts</a>, <a href="/collections/meme-t-shirts">meme t-shirts</a>, <a href="/collections/skull-t-shirts">skull &amp; skeleton tees</a>, <a href="/collections/animal-t-shirts">animal t-shirts</a> and <a href="/collections/santa-barbara-t-shirts">Santa Barbara t-shirts</a>.</p>
+
+      <h2>Product details</h2>
+      <ul>
+        <li><strong>Price:</strong> <span data-pd="price">see above</span> — free shipping included.</li>
+        <li><strong>Sizes:</strong> <span data-pd="sizes">full unisex size run</span>. True to size for a normal fit, one size up for the boxy vintage drape. Exact chest and length measurements are on the <a href="/size-guide">size guide</a>.</li>
+        <li><strong>Colours:</strong> <span data-pd="colors">as shown in the gallery</span>.</li>
+        <li><strong>Fabric:</strong> premium ring-spun or garment-dyed cotton depending on the blank; the specific blank for this design is named in the description above and detailed on the <a href="/shirts">shirt guide</a>.</li>
+        <li><strong>Print:</strong> direct-to-garment, soft-hand finish, printed to order in the US.</li>
+        <li><strong>Fit:</strong> unisex regular fit, crew neck, printed neck label instead of a scratchy sewn-in tag.</li>
+      </ul>
+
+      <h2>Shipping &amp; care</h2>
+      <ul>
+        <li><strong>Free shipping on every order</strong> within the US, with no minimum spend.</li>
+        <li><strong>Production takes about 2–5 business days</strong>, then 3–5 business days in transit. Tracking is emailed the moment it ships. Full details on the <a href="/shipping">shipping page</a>.</li>
+        <li><strong>Wrong or damaged? We fix it within 14 days</strong> — replacement or refund, your call. See <a href="/refunds">returns</a>.</li>
+        <li><strong>Wash cold, inside out, tumble low or hang dry.</strong> Heat is what kills prints, not water.</li>
+        <li><strong>Skip the fabric softener and don't iron the graphic.</strong> The long version lives in the <a href="/care-guide">care guide</a>.</li>
+      </ul>
+
+      <h2>Questions people ask before buying</h2>
+
+      <h3>What size should I order?</h3>
+      <p>Order your usual size for a standard fit, or go up one for the relaxed, slightly oversized drape most people want from a graphic tee. Every blank we use publishes real chest and body-length measurements — compare them against a shirt you already like on the <a href="/size-guide">size guide</a> rather than guessing from a letter.</p>
+
+      <h3>How long will it take to arrive?</h3>
+      <p>This tee is printed to order, so allow roughly 2–5 business days for production plus 3–5 business days for delivery inside the United States. Shipping is free on every order with no minimum, and tracking is emailed as soon as the parcel leaves the print facility.</p>
+
+      <h3>Will the print crack or fade?</h3>
+      <p>Not if you keep it out of high heat. We print direct-to-garment, so the ink bonds into the cotton fibres rather than sitting on the surface as a plastic transfer. Wash cold and inside out, hang dry or tumble on low, and the graphic will outlast the trend that inspired it.</p>
+
+      <h3>Can I return it if it doesn't fit?</h3>
+      <p>Because each shirt is made to order we can't restock returns, but anything that arrives damaged, misprinted or not what you ordered is replaced or refunded within 14 days — just email hello@beckywexlin.com with a photo. Checking the <a href="/size-guide">size guide</a> before ordering is the single best way to avoid the problem.</p>
+
+      <h3>Is this a real independent brand?</h3>
+      <p>Yes. Becky Wexlin Creative is a one-studio independent apparel label based in Santa Barbara, California. Every graphic is drawn in-house, and orders fund a person with strange ideas rather than a warehouse algorithm. More on that in <a href="/about">the story</a>.</p>
+
+    </div>
+  </section>
 
   <!-- ── YOU MIGHT ALSO LIKE ───────────────────────────────── -->
   <section class="related-section" id="related-section" style="display:none;">
@@ -657,6 +812,115 @@
       if (thumbs[currentImageIndex]) thumbs[currentImageIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
+    /* ── STYLE SWITCH (same design, other garments) ──────
+       A Printify product is bound to a single blueprint, so the tee and the
+       hoodie of one design are always two separate listings — they can't be
+       merged upstream. product-pairs.json maps them to each other and we
+       surface the sibling here as a pseudo-variant: it looks like picking a
+       size, but it navigates to the other listing. Fetched once and shared
+       with loadRelated so the sibling isn't also offered down in "you might
+       also like". */
+    let pairsPromise = null;
+    function getPairs() {
+      if (!pairsPromise) {
+        pairsPromise = fetch('/product-pairs.json')
+          .then(r => (r.ok ? r.json() : {}))
+          .catch(() => ({}));
+      }
+      return pairsPromise;
+    }
+
+    async function loadStyleSwitch(p) {
+      const host = document.getElementById('style-switch');
+      if (!host) return;
+
+      const entry = (await getPairs())[p.id];
+      const alternates = (entry && entry.alternates) || [];
+      if (!alternates.length) return;
+
+      // Resolve each sibling live rather than caching slug/price in the JSON —
+      // titles and prices change in Printify and stale copies would 404 or lie.
+      const siblings = (await Promise.all(alternates.map(async alt => {
+        try {
+          const r = await fetch(WORKER_URL + '/api/products/' + alt.id);
+          if (!r.ok) return null;
+          const sp = await r.json();
+          if (!sp || !sp.slug) return null;
+          const avail = (sp.variants || []).filter(v => v.available);
+          const prices = (avail.length ? avail : sp.variants || []).map(v => parseFloat(v.price));
+          return {
+            slug: sp.slug,
+            style: alt.style,
+            price: prices.length ? Math.min(...prices) : null,
+            soldOut: !avail.length
+          };
+        } catch { return null; }
+      }))).filter(Boolean);
+
+      if (!siblings.length) return;
+
+      host.innerHTML = '<p class="variant-label">Style</p><div class="variant-options">'
+        + '<button type="button" class="variant-btn selected" aria-current="true">'
+        + escapeHtml(entry.style || 'This one') + '</button>'
+        + siblings.map(s =>
+            '<a class="variant-btn" href="/' + encodeURI(s.slug) + '">'
+            + escapeHtml(s.style)
+            + (s.soldOut
+                ? ' <span class="variant-btn-price">sold out</span>'
+                : (s.price != null ? ' <span class="variant-btn-price">$' + s.price.toFixed(2) + '</span>' : ''))
+            + '</a>'
+          ).join('')
+        + '</div>';
+      host.style.display = '';
+    }
+
+    /* ── BUYER-INTENT DETAIL SECTION ─────────────────────
+       The section itself is static HTML so it survives a crawler that doesn't
+       run JS; this only swaps the generic `data-pd` placeholders for the real
+       title, size run, colours and price once the catalog has loaded. The
+       worker already stamps `name` server-side — we overwrite with the same
+       value, which is harmless and keeps the client path self-sufficient. */
+    function fillProductDetails(p, firstSorted) {
+      const host = document.getElementById('product-detail');
+      if (!host || !p) return;
+
+      const variants = p.variants || [];
+      const avail = variants.filter(v => v.available);
+      const pool = avail.length ? avail : variants;
+
+      // Variant titles are "Color / Size" (or just "Size" on single-colour products).
+      const colors = [...new Set(pool.map(v =>
+        v.title.includes(' / ') ? v.title.split(' / ')[0].trim() : null).filter(Boolean))];
+      const sizes = [...new Set(pool.map(v => {
+        const t = v.title.includes(' / ') ? v.title.split(' / ')[1] : v.title;
+        return (t || '').trim();
+      }).filter(Boolean))];
+      const rank = s => (SIZE_ORDER.indexOf(s) === -1 ? 99 : SIZE_ORDER.indexOf(s));
+      sizes.sort((a, b) => rank(a) - rank(b));
+
+      const prices = pool.map(v => parseFloat(v.price)).filter(n => !isNaN(n));
+      const lo = prices.length ? Math.min(...prices) : null;
+      const hi = prices.length ? Math.max(...prices) : null;
+
+      const values = {
+        name: p.title,
+        sizes: sizes.length
+          ? sizes.join(', ') + (sizes.length > 1 ? ' (unisex)' : '')
+          : 'full unisex size run',
+        colors: colors.length
+          ? colors.join(', ')
+          : 'as shown in the gallery',
+        price: lo == null
+          ? (firstSorted ? '$' + firstSorted.price : 'see above')
+          : (hi > lo ? '$' + lo.toFixed(2) + '–$' + hi.toFixed(2) : '$' + lo.toFixed(2))
+      };
+
+      host.querySelectorAll('[data-pd]').forEach(el => {
+        const v = values[el.getAttribute('data-pd')];
+        if (v) el.textContent = v;
+      });
+    }
+
     /* ── RELATED PRODUCTS ───────────────────────────── */
     async function loadRelated() {
       try {
@@ -670,7 +934,10 @@
           all = (data.products || data).map(p => ({ slug: p.slug, title: p.title, img: p.images?.[0] || '', price: p.variants?.[0]?.price || '', id: p.id }));
           try { sessionStorage.setItem('bw_products', JSON.stringify(all)); } catch {}
         }
-        const others = all.filter(p => String(p.id) !== String(productId));
+        // Skip the paired garment — it's already offered as a Style switch above.
+        const pairEntry = (await getPairs())[productId] || {};
+        const sibIds = new Set(((pairEntry.alternates) || []).map(a => String(a.id)));
+        const others = all.filter(p => String(p.id) !== String(productId) && !sibIds.has(String(p.id)));
         const shuffled = others.sort(() => Math.random() - 0.5).slice(0, 4);
         if (!shuffled.length) return;
 
@@ -927,7 +1194,9 @@
               <a href="/shop" class="product-back">Back to shop</a>
               <h1 class="product-title">${p.title}</h1>
               <p class="product-price-large" id="product-price">$${firstSorted ? firstSorted.price : ''}</p>
+              <h2 class="pd-desc-label">What makes this design unique</h2>
               <div class="product-description">${formatDescription(p.description)}</div>
+              <div class="product-variants" id="style-switch" style="display:none;"></div>
               <div class="product-variants" id="variant-selectors">
                 ${buildVariantSelectors(p)}
               </div>
@@ -983,6 +1252,8 @@
           Price: firstSorted ? parseFloat(firstSorted.price) : 0
         }]);
 
+        fillProductDetails(p, firstSorted);
+        loadStyleSwitch(p);
         loadRelated();
 
       } catch (err) {

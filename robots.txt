@@ -1,4 +1,111 @@
+# beckywexlin.com — robots.txt
+#
+# POLICY: allow everything that can SEND US TRAFFIC OR CITE US.
+#         block only crawlers whose sole purpose is model training.
+#
+# This mirrors the Content-Signal stance already declared for this site
+# (search=yes, ai-train=no, use=reference): AI assistants may read and cite
+# our pages, they may not train on them.
+#
+# WARNING: Cloudflare's "managed robots.txt" / AI Crawl Control feature
+# PREPENDS its own block to this file at the edge, and its block disallows
+# GPTBot, ClaudeBot, Google-Extended, Amazonbot, Applebot-Extended and others.
+# A more specific user-agent group beats `User-agent: *`, so those rules win
+# over anything written here. This file is only fully in effect once the
+# managed feature is switched off in the Cloudflare dashboard
+# (Scrape Shield / AI Crawl Control → managed robots.txt → off).
+
+# ── Traditional search ───────────────────────────────────────────────
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# ── AI search & answer engines (these are how we get cited) ──────────
+# OpenAI: OAI-SearchBot indexes for ChatGPT search; ChatGPT-User fetches a
+# page when a user asks about it. Neither trains models.
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic: Claude-SearchBot indexes for Claude's search; Claude-User
+# fetches on a user's behalf. Neither trains models.
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Google-Extended gates Gemini grounding and Vertex AI. It is NOT a crawler
+# in its own right and blocking it does not affect Google Search ranking —
+# it only removes us from Gemini's answers.
+User-agent: Google-Extended
+Allow: /
+
+# Microsoft Copilot
+User-agent: msnbot
+Allow: /
+
+# Amazon's Rufus / Alexa shopping answers
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# ── Training-only crawlers: blocked ──────────────────────────────────
+# These do not send traffic and do not cite. Blocking them costs nothing
+# in visibility.
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
+# GPTBot and ClaudeBot are the training crawlers for OpenAI and Anthropic.
+# Their search counterparts above are allowed, so citation is unaffected.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+# ── Everyone else ────────────────────────────────────────────────────
 User-agent: *
 Allow: /
+Disallow: /checkout
+Disallow: /order-success
+Disallow: /product?
+Disallow: /*?tag=
 
 Sitemap: https://www.beckywexlin.com/sitemap.xml

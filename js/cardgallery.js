@@ -24,14 +24,15 @@
 
   /* ── slug -> full image list ── */
   var bySlug = {};
-  function indexList(list) { (list || []).forEach(function (p) { if (p && p.slug) bySlug[p.slug] = p.images || []; }); }
+  function imgSrc(i) { return typeof i === 'string' ? i : (i && i.src) || ''; }
+  function indexList(list) { (list || []).forEach(function (p) { if (p && p.slug) bySlug[p.slug] = (p.images || []).map(imgSrc); }); }
   var ready = (function () {
     try {
       var c = sessionStorage.getItem('bw_gallery');
-      if (c) { var arr = JSON.parse(c); arr.forEach(function (p) { bySlug[p.slug] = p.images; }); return Promise.resolve(); }
+      if (c) { var arr = JSON.parse(c); arr.forEach(function (p) { bySlug[p.slug] = (p.images || []).map(imgSrc); }); return Promise.resolve(); }
     } catch (e) {}
     return fetch(API + '/api/products?view=full').then(function (r) { return r.json(); }).then(function (d) {
-      var list = (d.products || d).map(function (p) { return { slug: p.slug, images: p.images || [] }; });
+      var list = (d.products || d).map(function (p) { return { slug: p.slug, images: (p.images || []).map(imgSrc) }; });
       list.forEach(function (p) { bySlug[p.slug] = p.images; });
       try { sessionStorage.setItem('bw_gallery', JSON.stringify(list)); } catch (e) {}
     }).catch(function () {});

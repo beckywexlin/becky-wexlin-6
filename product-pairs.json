@@ -1,0 +1,21 @@
+{
+  "_comment": "Same design, different garment. A Printify product is bound to one blueprint, so a tee and a hoodie of the same artwork are always two listings — this maps them to each other so the product page can offer a Style switch. Keyed by Printify product id; keep both directions in sync when adding a pair.",
+
+  "6a72af09de119365820379f3": {
+    "style": "T-shirt",
+    "alternates": [{ "id": "6a72b2f832d20cf18a05e618", "style": "Hoodie" }]
+  },
+  "6a72b2f832d20cf18a05e618": {
+    "style": "Hoodie",
+    "alternates": [{ "id": "6a72af09de119365820379f3", "style": "T-shirt" }]
+  },
+
+  "69c6ee74a180856a0900ed8b": {
+    "style": "T-shirt",
+    "alternates": [{ "id": "69d29bc4a3b69de264033c38", "style": "Hoodie" }]
+  },
+  "69d29bc4a3b69de264033c38": {
+    "style": "Hoodie",
+    "alternates": [{ "id": "69c6ee74a180856a0900ed8b", "style": "T-shirt" }]
+  }
+}

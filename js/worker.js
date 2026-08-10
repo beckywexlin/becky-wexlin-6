@@ -138,7 +138,7 @@ async function buildProductsResponse(url, env) {
 }
 
 function slimProduct(p) {
-  const image = p.image ?? (p.images && p.images[0]) ?? null;
+  const image = p.image ?? (p.images && p.images[0]?.src) ?? null;
   return {
     id: p.id,
     slug: p.slug,
@@ -176,6 +176,48 @@ export default {
         visibleValues: prodsRes.ok
           ? (prodsRes.body.data || []).map(p => ({ title: p.title, visible: p.visible }))
           : null,
+      });
+    }
+
+    // /debug/catalog — explains the gap between "published in Printify" and
+    // "live on the site". Lists every product the shop returns alongside the
+    // three flags buildProductsResponse filters on, so a listing that looks
+    // published but never appears can be diagnosed instead of guessed at.
+    // Read-only and uncached.
+    if (pathname === "/debug/catalog") {
+      // ?shop= lets us look inside the OTHER connected shops (etsy, tiktok, …)
+      // when a product is published somewhere the site never reads.
+      const shopId = url.searchParams.get("shop") || SHOP_ID;
+      let raw = [];
+      for (let page = 1; page <= 20; page++) {
+        const { ok, body } = await printify(
+          `/shops/${shopId}/products.json?page=${page}&limit=50`, env
+        );
+        if (!ok) break;
+        const data = body.data || body.products || [];
+        raw = raw.concat(data);
+        if (data.length < 50) break;
+      }
+      const rows = raw.map(p => ({
+        id: p.id,
+        title: p.title,
+        visible: !!p.visible,
+        hasImage: !!(p.images && p.images.length > 0),
+        hasEnabledVariants: (p.variants || []).some(v => v.is_enabled),
+        variantCount: (p.variants || []).length,
+      }));
+      const passes = r => r.visible && r.hasImage && r.hasEnabledVariants;
+      // The shop list matters here too: the worker reads exactly one SHOP_ID, so
+      // a product created in a second connected shop is invisible to the site no
+      // matter how published it looks in Printify.
+      const shopsRes = await printify("/shops.json", env);
+      return json({
+        configuredShopId: SHOP_ID,
+        shops: shopsRes.ok ? shopsRes.body : null,
+        inShop: rows.length,
+        onSite: rows.filter(passes).length,
+        excluded: rows.filter(r => !passes(r)),
+        titles: rows.map(r => r.title),
       });
     }
 
@@ -323,7 +365,7 @@ function normalizeProduct(p) {
     title:       p.title,
     description: stripHtml(p.description),
     image,
-    images:      (p.images || []).map(i => i.src),
+    images:      (p.images || []).map(i => ({ src: i.src, variant_ids: i.variant_ids || [] })),
     price:       (minCents / 100).toFixed(2),
     category,
     variants:    enabledVariants.map(v => ({
