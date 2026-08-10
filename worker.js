@@ -1018,6 +1018,13 @@ async function renderProductPage(request, env, url) {
 <meta property="og:site_name" content="${esc(BRAND)}">
 <meta property="product:price:amount" content="${esc(price)}">
 <meta property="product:price:currency" content="USD">
+<!-- Pinterest Product Rich Pins read the og: namespace, not product:, and
+     require availability. With these, a pin of this page shows live price and
+     stock instead of being a plain image — and Pinterest is a search engine
+     with a far longer content half-life than any social feed. -->
+<meta property="og:price:amount" content="${esc(price)}">
+<meta property="og:price:currency" content="USD">
+<meta property="og:availability" content="${anyAvailable ? 'instock' : 'outofstock'}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(product.title)}">
 <meta name="twitter:description" content="${esc(shortDesc)}">
