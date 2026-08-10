@@ -149,6 +149,11 @@ export default {
       return await renderSitemap(request, env);
     }
 
+    // Google Merchant Center product feed (free Shopping listings).
+    if (url.pathname === '/feed.xml') {
+      return await renderMerchantFeed(url);
+    }
+
     // Image proxy — cache Printify images at the edge
     if (url.pathname.startsWith('/img/')) {
       return await proxyImage(url);
@@ -290,6 +295,174 @@ ${entries.map(sitemapUrl).join('\n')}
   });
 }
 
+// --- Google Merchant Center feed ---------------------------------------------
+//
+// RSS 2.0 + the Google namespace, generated from the live catalog so a new
+// product appears in Shopping without anyone exporting anything.
+//
+// Apparel is the strictest category Google has: items targeting the US are
+// disapproved without color, size, age_group and gender, and every size/colour
+// combination has to be its own <item> tied together by item_group_id. The
+// catalog LIST endpoint only returns `{price}` per variant, so the real variant
+// data has to come from one detail fetch per product.
+//
+// That's the reason for chunking. Workers allow 50 subrequests per request on
+// the free plan, so a 63-product catalog can't be done in one pass. CHUNK_SIZE
+// keeps each response under the ceiling; Merchant Center is happy to pull
+// several feed URLs, which is normal for larger catalogs anyway.
+const CHUNK_SIZE = 40;
+const FEED_CATEGORY = 'Apparel & Accessories > Clothing > Shirts & Tops';
+
+// Feed values go inside XML elements, so the five predefined entities are the
+// whole job — but unescaped control characters will also break a feed parse.
+function feedEsc(s) {
+  return xmlEscape(String(s ?? '')).replace(/[ --]/g, '');
+}
+
+function plainText(s, max) {
+  const t = String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  return t.length > max ? t.slice(0, max - 1).trimEnd() + '…' : t;
+}
+
+// The Printify copy carries a supplier-facing tail — a disclaimer naming other
+// print providers, and ".:" spec markers that render as line noise in a
+// Shopping listing. Neither belongs in front of a shopper.
+function feedDescription(raw, title) {
+  let s = String(raw || '').replace(/<[^>]+>/g, ' ');
+  s = s.split(/Disclaimer\s*:/i)[0];
+  s = s.replace(/\s*\.:\s*/g, ' • ').replace(/\s+/g, ' ').trim();
+  s = s.replace(/[•\s]+$/, '').trim();
+  return plainText(s, 5000)
+    || `${title} — an original graphic tee designed by ${BRAND} in Santa Barbara, California.`;
+}
+
+// Printify ships a size-chart mockup in the images array. Google treats charts
+// and other non-product graphics as promotional and disapproves items for them,
+// so it never goes in the feed.
+function isProductPhoto(u) {
+  return !/size[-_]chart/i.test(String(u || ''));
+}
+
+function feedItem(product, variant, slug) {
+  const title = String(product.title || '').trim();
+  const vTitle = String(variant.title || '').trim();
+  const hasColor = vTitle.includes(' / ');
+  const color = hasColor ? vTitle.split(' / ')[0].trim() : '';
+  const size = (hasColor ? vTitle.split(' / ')[1] : vTitle).trim();
+
+  // Google truncates titles at 150 characters. Several Printify titles are long
+  // enough that appending the variant would blow the limit, so trim the name
+  // rather than the variant — the variant is what distinguishes the item.
+  const suffix = [color, size].filter(Boolean).join(', ');
+  const room = 150 - (suffix ? suffix.length + 3 : 0);
+  const fullTitle = suffix
+    ? `${title.length > room ? title.slice(0, room - 1).trimEnd() + '…' : title} - ${suffix}`
+    : plainText(title, 150);
+
+  const url = `${SITE}/${slug}`;
+  const imgs = (product.images || []).map(i => i.src || i)
+    .filter(Boolean).filter(isProductPhoto);
+  const proxied = u => `${SITE}/img/${encodeURIComponent(u)}`;
+
+  const desc = feedDescription(product.description, title);
+
+  const parts = [
+    // Printify variant ids are blueprint-level — a given blank in a given
+    // colour and size carries the same id across every product printed on it.
+    // Google needs g:id globally unique or items silently overwrite each other,
+    // so scope it to the product.
+    `<g:id>${feedEsc(product.id)}-${feedEsc(variant.id)}</g:id>`,
+    `<g:item_group_id>${feedEsc(product.id)}</g:item_group_id>`,
+    `<title>${feedEsc(fullTitle)}</title>`,
+    `<description>${feedEsc(desc)}</description>`,
+    `<link>${feedEsc(url)}</link>`,
+    imgs[0] ? `<g:image_link>${feedEsc(proxied(imgs[0]))}</g:image_link>` : '',
+    // Up to 10 extra images allowed; more just get ignored.
+    ...imgs.slice(1, 11).map(i => `<g:additional_image_link>${feedEsc(proxied(i))}</g:additional_image_link>`),
+    `<g:availability>${variant.available ? 'in_stock' : 'out_of_stock'}</g:availability>`,
+    `<g:price>${feedEsc(Number(variant.price).toFixed(2))} USD</g:price>`,
+    `<g:brand>${feedEsc(BRAND)}</g:brand>`,
+    `<g:condition>new</g:condition>`,
+    // Print-on-demand originals carry no GTIN or manufacturer part number.
+    // Saying so explicitly is what stops Google demanding one.
+    `<g:identifier_exists>no</g:identifier_exists>`,
+    `<g:google_product_category>${feedEsc(FEED_CATEGORY)}</g:google_product_category>`,
+    `<g:product_type>Apparel &gt; T-Shirts &gt; Graphic Tees</g:product_type>`,
+    color ? `<g:color>${feedEsc(color)}</g:color>` : '',
+    size ? `<g:size>${feedEsc(size)}</g:size>` : '',
+    `<g:size_type>regular</g:size_type>`,
+    `<g:size_system>US</g:size_system>`,
+    `<g:age_group>adult</g:age_group>`,
+    `<g:gender>unisex</g:gender>`,
+    `<g:material>Cotton</g:material>`,
+    `<g:shipping><g:country>US</g:country><g:service>Standard</g:service>`
+      + `<g:price>0.00 USD</g:price></g:shipping>`,
+    `<g:shipping_label>free-shipping</g:shipping_label>`,
+  ].filter(Boolean);
+
+  return `<item>${parts.join('')}</item>`;
+}
+
+async function renderMerchantFeed(url) {
+  const chunk = Math.max(0, parseInt(url.searchParams.get('chunk') || '0', 10) || 0);
+
+  const catalog = await fetchCatalog();
+  if (!catalog.length) {
+    return new Response('Catalog unavailable', { status: 503 });
+  }
+
+  const chunks = Math.ceil(catalog.length / CHUNK_SIZE);
+  const slice = catalog.slice(chunk * CHUNK_SIZE, (chunk + 1) * CHUNK_SIZE);
+
+  // One detail fetch per product — the only place variant title, size, colour
+  // and stock state exist. Edge-cached so Merchant Center's daily pull almost
+  // never hits the origin API.
+  const detailed = await Promise.all(slice.map(async p => {
+    try {
+      const r = await fetch(`${API_BASE}/api/products/${p.id}`, {
+        cf: { cacheTtl: 3600, cacheEverything: true }
+      });
+      if (!r.ok) return null;
+      const full = await r.json();
+      return full && full.title ? { full, slug: p.slug } : null;
+    } catch { return null; }
+  }));
+
+  const items = [];
+  let skipped = 0;
+  for (const d of detailed) {
+    if (!d) { skipped++; continue; }
+    const { full, slug } = d;
+    for (const v of full.variants || []) {
+      // A variant with no price can't be a valid offer.
+      if (v && v.id != null && v.price != null) items.push(feedItem(full, v, slug));
+    }
+  }
+
+  const body = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
+<channel>
+<title>${xmlEscape(BRAND)}</title>
+<link>${SITE}</link>
+<description>Original weird, funny and meme graphic tees designed in Santa Barbara, California.</description>
+<!-- chunk ${chunk + 1} of ${chunks} | ${slice.length} products | ${items.length} variant items${skipped ? ` | ${skipped} products unavailable` : ''} -->
+${items.join('\n')}
+</channel>
+</rss>
+`;
+
+  return new Response(body, {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+      // Merchant Center pulls at most daily; an hour of edge cache keeps repeat
+      // fetches cheap without letting stock state go stale.
+      'Cache-Control': 'public, max-age=3600',
+      'X-Feed-Chunk': `${chunk + 1}/${chunks}`,
+      'X-Feed-Items': String(items.length),
+    },
+  });
+}
+
 // Printify-controlled image hosts we'll proxy. Printify migrated most mockups
 // from images-api.printify.com to its production S3 mockup buckets, so we must
 // allow those too or the extra gallery views 403 (broken images).
@@ -344,6 +517,16 @@ async function resolveSlug(slug) {
 }
 
 // Shared, edge-cached catalog fetch used by slug resolution + grid SSR.
+//
+// Slugs come from the Printify title, so two listings with the same title
+// collapse to one URL. When that happens only the first is reachable — the
+// second has no URL at all — but both were still rendering a card on /shop and
+// both would have been emitted to the product feed. Dedupe on the way in so
+// every consumer agrees on one product per slug, and keep the FIRST, which is
+// the one resolveSlug() serves.
+//
+// This is a workaround, not a fix. The real fix is renaming one of the
+// duplicates in Printify; until then the second listing is invisible.
 async function fetchCatalog() {
   try {
     const r = await fetch(`${API_BASE}/api/products`, {
@@ -351,7 +534,12 @@ async function fetchCatalog() {
     });
     if (!r.ok) return [];
     const data = await r.json();
-    return data.products || [];
+    const seen = new Set();
+    return (data.products || []).filter(p => {
+      if (!p || !p.slug || seen.has(p.slug)) return false;
+      seen.add(p.slug);
+      return true;
+    });
   } catch { return []; }
 }
 
