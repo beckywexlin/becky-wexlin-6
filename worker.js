@@ -343,6 +343,24 @@ function isProductPhoto(u) {
   return !/size[-_]chart/i.test(String(u || ''));
 }
 
+// Printify returns mockups in whatever order the product was configured, so the
+// first image is sometimes a folded shirt or a back view. Google judges the
+// main image on whether the product is clearly visible, and a folded tee hides
+// the graphic that is the entire product. Rank front-facing shots first — this
+// only reorders, so every mockup still ships as an additional image.
+function imageRank(u) {
+  const m = /camera_label(?:=|%3D)([a-z0-9-]+)/i.exec(String(u || ''));
+  const label = (m ? m[1] : '').toLowerCase();
+  if (label === 'front') return 0;
+  if (label.startsWith('front')) return 1;
+  if (label.startsWith('person')) return 2;
+  if (!label) return 3;                       // unlabelled: usually the primary mockup
+  if (label.startsWith('hanging')) return 4;
+  if (label.startsWith('back')) return 5;
+  if (label.startsWith('folded')) return 6;   // hides the graphic entirely
+  return 7;
+}
+
 function feedItem(product, variant, slug) {
   const title = String(product.title || '').trim();
   const vTitle = String(variant.title || '').trim();
@@ -361,7 +379,10 @@ function feedItem(product, variant, slug) {
 
   const url = `${SITE}/${slug}`;
   const imgs = (product.images || []).map(i => i.src || i)
-    .filter(Boolean).filter(isProductPhoto);
+    .filter(Boolean).filter(isProductPhoto)
+    .map((u, i) => ({ u, i }))
+    .sort((a, b) => imageRank(a.u) - imageRank(b.u) || a.i - b.i)
+    .map(x => x.u);
   const proxied = u => `${SITE}/img/${encodeURIComponent(u)}`;
 
   const desc = feedDescription(product.description, title);
