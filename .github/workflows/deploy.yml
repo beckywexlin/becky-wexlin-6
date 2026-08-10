@@ -1,8 +1,14 @@
 name: Deploy to Cloudflare
 
+# Manual only, on purpose. This repo is also the backup, so pushes need to be
+# cheap and frequent — and every push to main used to ship straight to
+# production, which meant "back up my work" and "put it live" were the same
+# action. Deploy from the Actions tab ("Run workflow"), or locally with
+# `npx wrangler deploy`.
+#
+# NOTE: this workflow only deploys the MAIN site worker. The checkout worker is
+# deployed separately: npx wrangler deploy --config wrangler.checkout.jsonc
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
