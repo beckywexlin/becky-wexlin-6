@@ -38,6 +38,16 @@ const SITEMAP_PAGES = [
   { path: '/refunds',               changefreq: 'yearly',  priority: '0.4' },
 ];
 
+// Date the product / collection / static page CONTENT last materially changed.
+// The catalog API exposes no per-product timestamp, and these pages are
+// template-driven, so the template's change date IS the content's change date.
+// Google uses lastmod to schedule crawls but discounts it when it looks
+// invented, so this is a real date, not today's.
+//
+// BUMP THIS whenever a change materially alters what these pages say —
+// server-rendered copy, schema, on-page sections. Don't bump it for CSS.
+const CONTENT_LASTMOD = '2026-08-10';   // product SSR + Product/ItemList schema
+
 const SITEMAP_COLLECTIONS = [
   'graphic-tees', 'funny-t-shirts', 'skull-t-shirts',
   'animal-t-shirts', 'santa-barbara-t-shirts', 'meme-t-shirts',
@@ -262,10 +272,10 @@ async function renderSitemap(request, env) {
     entries.push(e);
   };
 
-  for (const p of SITEMAP_PAGES) add(p);
+  for (const p of SITEMAP_PAGES) add({ ...p, lastmod: CONTENT_LASTMOD });
 
   for (const c of SITEMAP_COLLECTIONS) {
-    add({ path: `/collections/${c}`, changefreq: 'weekly', priority: '0.8' });
+    add({ path: `/collections/${c}`, lastmod: CONTENT_LASTMOD, changefreq: 'weekly', priority: '0.8' });
   }
 
   for (const slug of await blogSlugsFromIndex(env, origin)) {
@@ -278,7 +288,7 @@ async function renderSitemap(request, env) {
   }
 
   for (const p of products) {
-    add({ path: `/${p.slug}`, changefreq: 'weekly', priority: '0.8' });
+    add({ path: `/${p.slug}`, lastmod: CONTENT_LASTMOD, changefreq: 'weekly', priority: '0.8' });
   }
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
