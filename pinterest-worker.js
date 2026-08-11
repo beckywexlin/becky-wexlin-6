@@ -17,6 +17,7 @@
 
    SETUP
      1. developers.pinterest.com → create an app → note the App ID and secret.
+        Scopes needed: boards:read, pins:write (nothing else).
         Add this redirect URI to the app:
           https://<your-worker>.workers.dev/oauth/callback
      2. npx wrangler secret put PINTEREST_APP_ID     --config wrangler.pinterest.jsonc
@@ -56,7 +57,11 @@ const json = (data, status = 200) =>
 
 const KV_REFRESH = 'oauth:refresh_token';
 const KV_ACCESS = 'oauth:access_token';
-const OAUTH_SCOPES = 'boards:read,pins:read,pins:write';
+// Exactly what the worker uses and nothing more: it lists boards (boards:read)
+// and creates pins (pins:write). It never reads existing pins, so pins:read is
+// not requested — surplus scopes slow app review and widen the blast radius if
+// a token ever leaks.
+const OAUTH_SCOPES = 'boards:read,pins:write';
 
 // Access tokens last 30 days; refresh tokens are "continuous" — 60 days, and
 // Pinterest may hand back a new one on each exchange, so the new value has to
