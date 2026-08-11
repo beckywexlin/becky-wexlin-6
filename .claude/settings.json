@@ -8,7 +8,8 @@
       "Bash(sed -i '' \"s/image='eye_glitch_shirt',/image='cracked-out-eye-record-shop',/\" make_posts.py)",
       "Bash(sed -i '' \"s/alt='Glitch-eye meme graphic tee',/alt='Meme graphic tee worn in a record shop',/\" make_posts.py)",
       "WebFetch(domain:www.nordstrom.com)",
-      "Bash(cd /Users/smash/Desktop/becky-wexlin-6 *)"
+      "Bash(cd /Users/smash/Desktop/becky-wexlin-6 *)",
+      "Bash(echo \"baseline saved: $\\(python3 -c \"import json;print\\(len\\(json.load\\(open\\('/tmp/queue.round1.baseline.json'\\)\\)['pins']\\)\\)\"\\) pins\")"
     ],
     "additionalDirectories": [
       "/tmp"

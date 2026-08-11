@@ -38,6 +38,12 @@ const OUT = join(ROOT, 'pinterest-out');
 const argPer = process.argv.indexOf('--per-board');
 const PER_BOARD = argPer > -1 ? Number(process.argv[argPer + 1]) || 8 : 8;
 
+// Pins per product per board, each on a DIFFERENT photo. Round 1 is what
+// already exists; higher rounds extend the runway instead of reposting. At 3
+// pins a day, each extra round is roughly five more weeks of scheduled posting.
+const argRounds = process.argv.indexOf('--rounds');
+const ROUNDS = argRounds > -1 ? Math.max(1, Number(process.argv[argRounds + 1]) || 1) : 3;
+
 // Board names are written the way people SEARCH Pinterest, not the way the
 // shop is organised. "Weird Gift Ideas" earns a board; "New Arrivals" wouldn't
 // — nobody searches for that.
@@ -96,18 +102,43 @@ const pinDesc = (title, board) =>
 // local script (the Workers subrequest cap doesn't apply here).
 const label = u => (/camera_label(?:=|%3D)([a-z0-9-]+)/i.exec(u || '')?.[1] || '').toLowerCase();
 
-function secondaryImage(images) {
+// Ranked list of images worth pinning, best first. Successive rounds take
+// successive entries, so round 2 is a genuinely different photo rather than a
+// repost of round 1.
+//
+// Excluded outright: size charts, close-ups, and sleeve/wrist/neck-label detail
+// shots. Those show construction, not the design — nobody saves them, and weak
+// pins drag a board's engagement down. `back` and `folded` go too, for the same
+// reason: the design IS the product, so a pin that hides it is wasted.
+function pinnableImages(images) {
   const usable = (images || [])
-    .map(i => i.src || i)
+    .map(i => (i && i.src) || i)
     .filter(Boolean)
-    .filter(u => !/size[-_]chart/i.test(u) && !/closeup|close-up/i.test(label(u)));
-  // Worn shots perform best on Pinterest — they show scale and styling.
-  // No `back` fallback: the feed sometimes leads with a back shot too, and two
-  // products ended up with a pin identical to their catalog pin. A product with
-  // no worn or hanging shot simply gets no secondary pin — its feed pin stands.
-  return usable.find(u => /^person/.test(label(u)))
-    || usable.find(u => /^(lifestyle|hanging)/.test(label(u)))
-    || null;
+    .filter(u => !/size[-_]chart/i.test(u))
+    .filter(u => !/closeup|close-up|sleeve|wrist|neck-label|^back|^folded/.test(label(u)));
+
+  const rank = u => {
+    const l = label(u);
+    if (/^person.*front$/.test(l)) return 0;   // worn, facing camera — best performer
+    if (/^person[0-9]*$/.test(l)) return 1;    // worn, full shot
+    if (/^person/.test(l)) return 2;           // other worn angles
+    if (/^lifestyle/.test(l)) return 3;
+    if (/^hanging/.test(l)) return 4;
+    if (/^front/.test(l)) return 5;            // duplicates the catalog pin — last resort
+    return 6;
+  };
+
+  return [...new Set(usable)]
+    .map((u, i) => ({ u, i }))
+    .sort((a, b) => rank(a.u) - rank(b.u) || a.i - b.i)
+    .map(x => x.u);
+}
+
+// Round 1 must keep its original selection: the poster remembers what it has
+// published by pin id, and round-1 ids have to stay byte-for-byte identical or
+// every already-posted pin would look unposted and be published a second time.
+function secondaryImage(images) {
+  return pinnableImages(images)[0] || null;
 }
 
 // Fetch full galleries with a small concurrency cap so we don't hammer the API.
@@ -145,7 +176,7 @@ function blogPins() {
       // Style and gift posts belong on the topical boards; the rest are
       // general-interest and sit with the styling content.
       const board = /gift/.test(slug) ? GIFT_BOARD.name : STYLE_BOARD.name;
-      return { board, title, description: desc, image: img, link: `${SITE}/blog/${slug}`, kind: 'blog' };
+      return { board, title, description: desc, image: img, link: `${SITE}/blog/${slug}`, kind: 'blog', round: 1 };
     });
 }
 
@@ -172,16 +203,19 @@ for (const board of BOARDS) {
     if (added >= PER_BOARD) break;
     const p = bySlug.get(slug);
     if (!p) continue;
-    const img = secondaryImage(galleries.get(p.slug));
-    if (!img) continue;                       // no alternate angle => the feed pin is enough
-    pins.push({
-      board: board.name,
-      title: p.title.slice(0, 100),
-      description: pinDesc(p.title, board.name),
-      image: `${SITE}/img/${encodeURIComponent(img)}`,
-      link: `${SITE}/${p.slug}`,
-      kind: 'product',
-    });
+    const imgs = pinnableImages(galleries.get(p.slug));
+    if (!imgs.length) continue;               // no pinnable angle => the feed pin is enough
+    for (let r = 0; r < ROUNDS && r < imgs.length; r++) {
+      pins.push({
+        board: board.name,
+        title: p.title.slice(0, 100),
+        description: pinDesc(p.title, board.name),
+        image: `${SITE}/img/${encodeURIComponent(imgs[r])}`,
+        link: `${SITE}/${p.slug}`,
+        kind: 'product',
+        round: r + 1,
+      });
+    }
     added++;
   }
 }
@@ -193,16 +227,19 @@ const GIFT_PICKS = ['punky-memento-mori-tee', 'bad-ass-tee', 'the-cat-has-spoken
 for (const slug of GIFT_PICKS) {
   const p = bySlug.get(slug);
   if (!p) continue;
-  const img = secondaryImage(galleries.get(p.slug));
-  if (!img) continue;
-  pins.push({
-    board: GIFT_BOARD.name,
-    title: p.title.slice(0, 100),
-    description: pinDesc(p.title, GIFT_BOARD.name),
-    image: `${SITE}/img/${encodeURIComponent(img)}`,
-    link: `${SITE}/${p.slug}`,
-    kind: 'product',
-  });
+  const imgs = pinnableImages(galleries.get(p.slug));
+  if (!imgs.length) continue;
+  for (let r = 0; r < ROUNDS && r < imgs.length; r++) {
+    pins.push({
+      board: GIFT_BOARD.name,
+      title: p.title.slice(0, 100),
+      description: pinDesc(p.title, GIFT_BOARD.name),
+      image: `${SITE}/img/${encodeURIComponent(imgs[r])}`,
+      link: `${SITE}/${p.slug}`,
+      kind: 'product',
+      round: r + 1,
+    });
+  }
 }
 
 pins.push(...blogPins());
@@ -238,17 +275,48 @@ writeFileSync(join(OUT, 'pins.md'),
 // Machine-readable queue for the scheduled poster. Written into the repo (not
 // pinterest-out/) because pinterest-worker.js fetches it over HTTP — it holds
 // only public product data, so serving it costs nothing.
-writeFileSync(join(ROOT, 'pinterest-queue.json'), JSON.stringify({
-  generated: new Date().toISOString().slice(0, 10),
-  boards: allBoards.map(b => ({ name: b.name, description: b.desc })),
-  pins: pins.map(p => ({
+const queuePins = pins.map(p => ({
     board: p.board, title: p.title, description: p.description,
     image: p.image, link: p.link, kind: p.kind,
     // Stable id so the poster can tell what it has already published even if
     // the queue is regenerated and reordered.
-    id: `${p.kind}:${p.link.replace(/^https?:\/\//, '')}:${p.board.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-  })),
+    round: p.round || 1,
+    // Round 1 ids are UNCHANGED from the original scheme. The poster keys its
+    // KV records off this string, so altering it would make every already-
+    // posted pin look unposted and publish it a second time. Later rounds get
+    // a suffix instead.
+    id: `${p.kind}:${p.link.replace(/^https?:\/\//, '')}:${p.board.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+      + ((p.round || 1) > 1 ? `:r${p.round}` : ''),
+  }));
+
+writeFileSync(join(ROOT, 'pinterest-queue.json'), JSON.stringify({
+  generated: new Date().toISOString().slice(0, 10),
+  boards: allBoards.map(b => ({ name: b.name, description: b.desc })),
+  pins: queuePins,
 }, null, 2) + '\n');
+
+// ── round-1 drift guard ──────────────────────────────────────────────────
+// The poster records what it has published keyed on pin id. If a round-1 id
+// that already exists live disappears or changes here, that pin looks unposted
+// and gets published a second time. This compares against the deployed queue
+// and refuses to stay quiet about it.
+try {
+  const liveRes = await fetch(`${SITE}/pinterest-queue.json`, { cache: 'no-store' });
+  if (liveRes.ok) {
+    const live = await liveRes.json();
+    const liveR1 = new Set((live.pins || []).filter(p => (p.round || 1) === 1).map(p => p.id));
+    const nowIds = new Set(pins.map((p, i) => queuePins[i].id));
+    const lost = [...liveR1].filter(id => !nowIds.has(id));
+    if (lost.length) {
+      console.warn(`\n⚠️  ${lost.length} round-1 id(s) present live but missing here.`);
+      console.warn('   If those pins have already been published they WILL be posted again:');
+      lost.slice(0, 10).forEach(id => console.warn(`     ${id}`));
+      console.warn('   Check posted counts at /status before deploying this queue.\n');
+    } else {
+      console.log('round-1 ids: stable against the live queue');
+    }
+  }
+} catch { /* offline or not yet deployed — nothing to compare against */ }
 
 console.log(`queue  : pinterest-queue.json (${pins.length} pins)`);
 console.log(`boards : ${allBoards.length}`);
