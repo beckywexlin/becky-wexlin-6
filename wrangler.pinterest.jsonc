@@ -24,7 +24,12 @@
   }
 
   // Secrets (set with `npx wrangler secret put <NAME> --config wrangler.pinterest.jsonc`):
-  //   PINTEREST_ACCESS_TOKEN  — from developers.pinterest.com, scopes:
-  //                             boards:read, pins:read, pins:write
-  //   ADMIN_KEY               — any long random string; gates /status and /run
+  //   PINTEREST_APP_ID      — from developers.pinterest.com
+  //   PINTEREST_APP_SECRET  — same place
+  //   ADMIN_KEY             — any long random string; gates every endpoint
+  //
+  // No access token is stored anywhere: /oauth/start runs the handshake once
+  // and the worker keeps a refresh token in KV, minting short-lived access
+  // tokens as needed. Pinterest access tokens expire after 30 days, so a
+  // pasted one would leave this silently dead a month from now.
 }

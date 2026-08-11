@@ -16,10 +16,22 @@
    pins a day, which spreads the queue over about five weeks.
 
    SETUP
-     1. Create a Pinterest app:  developers.pinterest.com  →  generate an
-        access token with scopes: boards:read, pins:read, pins:write
-     2. npx wrangler secret put PINTEREST_ACCESS_TOKEN --config wrangler.pinterest.jsonc
+     1. developers.pinterest.com → create an app → note the App ID and secret.
+        Add this redirect URI to the app:
+          https://<your-worker>.workers.dev/oauth/callback
+     2. npx wrangler secret put PINTEREST_APP_ID     --config wrangler.pinterest.jsonc
+        npx wrangler secret put PINTEREST_APP_SECRET --config wrangler.pinterest.jsonc
+        npx wrangler secret put ADMIN_KEY            --config wrangler.pinterest.jsonc
      3. npx wrangler deploy --config wrangler.pinterest.jsonc
+     4. Visit  https://<your-worker>.workers.dev/oauth/start?key=<ADMIN_KEY>
+        Authorise once. The worker stores the refresh token itself — no token
+        ever gets pasted into a config file or this repo.
+
+   WHY THE OAUTH DANCE INSTEAD OF PASTING A TOKEN
+   Pinterest access tokens expire after 30 days. A pasted token would leave the
+   poster silently dead a month from now, which is the opposite of hands-off.
+   The worker holds a refresh token instead, mints a short-lived access token as
+   needed, and rotates the refresh token when Pinterest issues a new one.
 
    The boards must exist in Pinterest first — the API can create them, but
    board names and descriptions are keyword real estate and are better written
@@ -42,11 +54,54 @@ const json = (data, status = 200) =>
     headers: { 'Content-Type': 'application/json' },
   });
 
+const KV_REFRESH = 'oauth:refresh_token';
+const KV_ACCESS = 'oauth:access_token';
+const OAUTH_SCOPES = 'boards:read,pins:read,pins:write';
+
+// Access tokens last 30 days; refresh tokens are "continuous" — 60 days, and
+// Pinterest may hand back a new one on each exchange, so the new value has to
+// be persisted or the chain breaks. The access token is cached in KV with a
+// safety margin rather than re-minted on every single API call.
+async function accessToken(env) {
+  const cached = await env.PIN_STATE.get(KV_ACCESS, { type: 'json' });
+  if (cached?.token && cached.expires > Date.now() + 5 * 60_000) return cached.token;
+
+  const refresh = (await env.PIN_STATE.get(KV_REFRESH)) || env.PINTEREST_REFRESH_TOKEN;
+  if (!refresh) {
+    throw new Error('no refresh token — visit /oauth/start?key=<ADMIN_KEY> to authorise once');
+  }
+
+  const basic = btoa(`${env.PINTEREST_APP_ID}:${env.PINTEREST_APP_SECRET}`);
+  const res = await fetch(`${PIN_API}/oauth/token`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${basic}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refresh }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok || !body.access_token) {
+    throw new Error(`token refresh failed (HTTP ${res.status}): ${JSON.stringify(body)}`);
+  }
+
+  await env.PIN_STATE.put(KV_ACCESS, JSON.stringify({
+    token: body.access_token,
+    expires: Date.now() + (Number(body.expires_in) || 2592000) * 1000,
+  }));
+  // Rotate only when Pinterest actually issues a new refresh token.
+  if (body.refresh_token && body.refresh_token !== refresh) {
+    await env.PIN_STATE.put(KV_REFRESH, body.refresh_token);
+  }
+  return body.access_token;
+}
+
 async function pinterest(env, path, init = {}) {
+  const token = await accessToken(env);
   const res = await fetch(`${PIN_API}${path}`, {
     ...init,
     headers: {
-      Authorization: `Bearer ${env.PINTEREST_ACCESS_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       ...(init.headers || {}),
     },
@@ -197,6 +252,59 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
 
+    // ── one-time authorisation ──────────────────────────────────────
+    // Getting a refresh token normally means running an OAuth handshake by
+    // hand with curl. Doing it here instead means the only human step is
+    // clicking "Allow", and no token is ever copied into a terminal, a config
+    // file, or this repo — where, as of this morning, source was public.
+    if (url.pathname === '/oauth/start') {
+      if (!authorised(url, env)) return json({ error: 'unauthorised' }, 401);
+      const redirect = `${url.origin}/oauth/callback`;
+      const auth = new URL('https://www.pinterest.com/oauth/');
+      auth.searchParams.set('client_id', env.PINTEREST_APP_ID || '');
+      auth.searchParams.set('redirect_uri', redirect);
+      auth.searchParams.set('response_type', 'code');
+      auth.searchParams.set('scope', OAUTH_SCOPES);
+      // Round-trips the admin key so the callback can prove it came from here.
+      auth.searchParams.set('state', env.ADMIN_KEY || '');
+      return Response.redirect(auth.toString(), 302);
+    }
+
+    if (url.pathname === '/oauth/callback') {
+      if (url.searchParams.get('state') !== env.ADMIN_KEY) {
+        return json({ error: 'state mismatch — start again at /oauth/start' }, 401);
+      }
+      const code = url.searchParams.get('code');
+      if (!code) return json({ error: 'Pinterest returned no code', query: Object.fromEntries(url.searchParams) }, 400);
+
+      const basic = btoa(`${env.PINTEREST_APP_ID}:${env.PINTEREST_APP_SECRET}`);
+      const res = await fetch(`${PIN_API}/oauth/token`, {
+        method: 'POST',
+        headers: { Authorization: `Basic ${basic}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: `${url.origin}/oauth/callback`,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.refresh_token) {
+        return json({ error: 'token exchange failed', status: res.status, detail: body }, 502);
+      }
+      await env.PIN_STATE.put(KV_REFRESH, body.refresh_token);
+      if (body.access_token) {
+        await env.PIN_STATE.put(KV_ACCESS, JSON.stringify({
+          token: body.access_token,
+          expires: Date.now() + (Number(body.expires_in) || 2592000) * 1000,
+        }));
+      }
+      return new Response(
+        'Connected. The poster can now publish to Pinterest and will keep its own '
+        + 'token fresh — nothing else to do.\n\nNext: POST /run?key=<ADMIN_KEY>&dry=1 '
+        + 'to preview the first batch.',
+        { headers: { 'Content-Type': 'text/plain' } });
+    }
+
     if (url.pathname === '/status') {
       if (!authorised(url, env)) return json({ error: 'unauthorised' }, 401);
       try {
@@ -208,7 +316,9 @@ export default {
           byBoard[p.board].total++;
           if (done.has(p.id)) byBoard[p.board].posted++;
         }
+        const hasAuth = !!(await env.PIN_STATE.get(KV_REFRESH)) || !!env.PINTEREST_REFRESH_TOKEN;
         return json({
+          authorised: hasAuth || 'NO — visit /oauth/start?key=<ADMIN_KEY>',
           queueGenerated: queue.generated,
           total: queue.pins.length,
           posted: done.size,
@@ -226,6 +336,6 @@ export default {
       } catch (err) { return json({ error: err.message }, 500); }
     }
 
-    return json({ error: 'not found', endpoints: ['/status?key=', 'POST /run?key=[&dry=1]'] }, 404);
+    return json({ error: 'not found', endpoints: ['/oauth/start?key=', '/status?key=', 'POST /run?key=[&dry=1]'] }, 404);
   },
 };
