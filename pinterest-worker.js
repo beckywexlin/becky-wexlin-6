@@ -323,6 +323,75 @@ export default {
         { headers: { 'Content-Type': 'text/plain' } });
     }
 
+    // ── /demo — sandbox only ────────────────────────────────────────
+    // Standard access requires a video of the app calling the Pinterest API.
+    // The sandbox is a separate environment, so the real boards don't exist
+    // there and a normal /run would just report "waiting on missing boards" —
+    // a recording of the app doing nothing. This creates the board it needs,
+    // then posts one real pin to it, printing both API calls so a reviewer can
+    // see the whole exchange.
+    //
+    // Refuses to run against production: it is a demo, not a posting path.
+    if (url.pathname === '/demo' && req.method === 'POST') {
+      if (!authorised(url, env)) return json({ error: 'unauthorised' }, 401);
+      if (!env.PINTEREST_SANDBOX_TOKEN) {
+        return json({ error: 'sandbox only — set PINTEREST_SANDBOX_TOKEN first' }, 400);
+      }
+      const steps = [];
+      try {
+        const queue = await loadQueue();
+        const pin = queue.pins[0];
+
+        steps.push({ step: 1, action: 'GET /boards', note: 'list boards on the authenticated account' });
+        const list = await pinterest(env, '/boards?page_size=100');
+        steps[0].status = list.status;
+        steps[0].boardsFound = (list.body?.items || []).length;
+
+        let boardId = (list.body?.items || [])
+          .find(b => String(b.name).toLowerCase() === pin.board.toLowerCase())?.id;
+
+        if (!boardId) {
+          steps.push({ step: 2, action: 'POST /boards', note: `create "${pin.board}"` });
+          const made = await pinterest(env, '/boards', {
+            method: 'POST',
+            body: JSON.stringify({ name: pin.board, description: 'Demo board for API review.' }),
+          });
+          steps[1].status = made.status;
+          if (!made.ok) return json({ error: 'could not create board', steps, detail: made.body }, 502);
+          boardId = made.body.id;
+          steps[1].boardId = boardId;
+        }
+
+        steps.push({ step: steps.length + 1, action: 'POST /pins', note: `create a Pin on "${pin.board}"` });
+        const created = await pinterest(env, '/pins', {
+          method: 'POST',
+          body: JSON.stringify({
+            board_id: boardId,
+            title: pin.title.slice(0, 100),
+            description: pin.description.slice(0, 800),
+            link: pin.link,
+            alt_text: pin.title.slice(0, 500),
+            media_source: { source_type: 'image_url', url: pin.image },
+          }),
+        });
+        steps[steps.length - 1].status = created.status;
+        steps[steps.length - 1].pinId = created.body?.id;
+
+        return json({
+          environment: 'SANDBOX',
+          app: 'beckywexlin-poster',
+          summary: created.ok
+            ? `Created Pin ${created.body?.id} on board "${pin.board}"`
+            : `Pin creation returned HTTP ${created.status}`,
+          pin: { title: pin.title, link: pin.link, image: pin.image },
+          steps,
+          raw: created.body,
+        }, created.ok ? 200 : 502);
+      } catch (err) {
+        return json({ error: err.message, steps }, 500);
+      }
+    }
+
     if (url.pathname === '/status') {
       if (!authorised(url, env)) return json({ error: 'unauthorised' }, 401);
       try {
@@ -356,6 +425,6 @@ export default {
       } catch (err) { return json({ error: err.message }, 500); }
     }
 
-    return json({ error: 'not found', endpoints: ['/oauth/start?key=', '/status?key=', 'POST /run?key=[&dry=1]'] }, 404);
+    return json({ error: 'not found', endpoints: ['/oauth/start?key=', '/status?key=', 'POST /run?key=[&dry=1]', 'POST /demo?key= (sandbox only)'] }, 404);
   },
 };
