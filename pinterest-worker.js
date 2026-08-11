@@ -104,17 +104,44 @@ async function publishBatch(env, { dry = false, limit = PINS_PER_RUN } = {}) {
   }
 
   const boards = await boardMap(env);
-  const batch = pending.slice(0, limit);
+
+  // Only consider pins whose board actually exists. Taking the first N pending
+  // regardless would stall the whole queue: if the frontmost pins belong to a
+  // board that hasn't been created, they'd be skipped every single run and
+  // nothing would ever post. Filtering first means boards can be created
+  // gradually and the poster simply works with whatever is there.
+  const postable = pending.filter(p => boards.has(p.board.trim().toLowerCase()));
+  const waitingOnBoards = pending.length - postable.length;
+
+  if (!postable.length) {
+    return { posted: [], skipped: [], remaining: pending.length, waitingOnBoards,
+      note: 'nothing postable — none of the queued pins have a matching Pinterest board yet' };
+  }
+
+  // Round-robin across boards so a single run spreads over several boards
+  // instead of stacking three pins onto one, which reads as automated.
+  const byBoard = new Map();
+  for (const p of postable) {
+    const k = p.board.trim().toLowerCase();
+    if (!byBoard.has(k)) byBoard.set(k, []);
+    byBoard.get(k).push(p);
+  }
+  const batch = [];
+  const lists = [...byBoard.values()];
+  for (let round = 0; batch.length < limit; round++) {
+    let addedThisRound = false;
+    for (const list of lists) {
+      if (batch.length >= limit) break;
+      if (list[round]) { batch.push(list[round]); addedThisRound = true; }
+    }
+    if (!addedThisRound) break;
+  }
+
   const posted = [];
   const skipped = [];
 
   for (const pin of batch) {
     const boardId = boards.get(pin.board.trim().toLowerCase());
-    if (!boardId) {
-      // Don't burn the pin — leave it pending so it posts once the board exists.
-      skipped.push({ id: pin.id, reason: `no Pinterest board named "${pin.board}"` });
-      continue;
-    }
     if (dry) {
       posted.push({ id: pin.id, board: pin.board, title: pin.title, dryRun: true });
       continue;
@@ -144,7 +171,8 @@ async function publishBatch(env, { dry = false, limit = PINS_PER_RUN } = {}) {
     }
   }
 
-  return { posted, skipped, remaining: pending.length - posted.filter(p => !p.dryRun).length };
+  return { posted, skipped, waitingOnBoards,
+    remaining: pending.length - posted.filter(p => !p.dryRun).length };
 }
 
 function authorised(url, env) {
