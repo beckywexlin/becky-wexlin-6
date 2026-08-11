@@ -1175,7 +1175,7 @@
               <div class="img-nav-wrap">
                 <button class="arrow-btn" onclick="prevImage()" aria-label="Previous image">&#8592;</button>
                 <div class="product-main-img" id="main-img">
-                  ${initImages[0] ? `<img src="${proxyImg(initImages[0].src)}" alt="${p.title}" id="main-img-el" />` : ''}
+                  ${initImages[0] ? `<img src="${proxyImg(initImages[0].src)}" alt="${p.title} — graphic tee by Becky Wexlin Creative" data-pin-description="${p.title} — an original graphic tee by Becky Wexlin Creative, designed in Santa Barbara. Weird, funny, deadpan designs printed on premium heavyweight cotton. Free shipping." id="main-img-el" />` : ''}
                 </div>
                 <button class="arrow-btn" onclick="nextImage()" aria-label="Next image">&#8594;</button>
               </div>
@@ -1184,7 +1184,7 @@
               <div class="product-thumbs">
                 ${initImages.map((img, i) => `
                   <div class="product-thumb ${i === 0 ? 'active' : ''}" onclick="setMainImage(${i}, this)">
-                    <img src="${proxyImg(img.src)}" alt="${p.title} view ${i + 1}" loading="lazy" />
+                    <img src="${proxyImg(img.src)}" alt="${p.title} view ${i + 1}" data-pin-nopin="true" loading="lazy" />
                   </div>`).join('')}
               </div>
 

@@ -710,6 +710,17 @@ function htmlResponse(html, srcRes) {
   return new Response(html, { status: srcRes.status, headers });
 }
 
+// When someone saves an image from the site, Pinterest uses
+// data-pin-description if it's there and otherwise scrapes whatever text sits
+// near the image — which on a grid of cards is usually the price. This is the
+// copy that then gets indexed by Pinterest search, so it carries the terms
+// people actually search rather than just the product name.
+function pinDescription(title) {
+  const clean = sanitizeForFeed(String(title || '').trim());
+  return `${clean} — an original graphic tee by ${BRAND}, designed in Santa Barbara. `
+    + `Weird, funny, deadpan designs printed on premium heavyweight cotton. Free shipping.`;
+}
+
 // Product card markup mirroring the client-rendered cards, but linking to the
 // canonical root slug. Client JS re-renders identically after load; crawlers
 // (which often don't run JS) get real product links/names/images server-side.
@@ -721,7 +732,7 @@ function buildCardHTML(p) {
     + '<div class="shop-card-img">'
     // Intrinsic dimensions are required or the grid reflows as each mockup
     // loads — 66 of 68 images on /shop had none, which is pure CLS.
-    + `<img src="/img/${encodeURIComponent(p.image || '')}" alt="${esc(p.title)} — graphic tee by ${esc(BRAND)}" width="600" height="600" loading="lazy" decoding="async" onerror="this.src='/images/404.png'" />`
+    + `<img src="/img/${encodeURIComponent(p.image || '')}" alt="${esc(p.title)} — graphic tee by ${esc(BRAND)}" data-pin-description="${esc(pinDescription(p.title))}" width="600" height="600" loading="lazy" decoding="async" onerror="this.src='/images/404.png'" />`
     + '<div class="shop-card-overlay"><span>Shop now &rarr;</span></div>'
     + '</div>'
     + '<div class="shop-card-body">'
@@ -914,7 +925,7 @@ function buildProductSSR(product, canonical) {
     + `<span>${esc(product.title)}</span></nav>
 <div class="product-layout">
   <div class="product-images">
-    ${img ? `<div class="product-main-img"><img src="/img/${encodeURIComponent(img)}" alt="${esc(product.title)} — graphic tee by Becky Wexlin Creative" width="800" height="800" fetchpriority="high" /></div>` : ''}
+    ${img ? `<div class="product-main-img"><img src="/img/${encodeURIComponent(img)}" alt="${esc(product.title)} — graphic tee by Becky Wexlin Creative" data-pin-description="${esc(pinDescription(product.title))}" data-pin-url="${esc(canonical)}" width="800" height="800" fetchpriority="high" /></div>` : ''}
   </div>
   <div class="product-info">
     <a href="/shop" class="product-back">Back to shop</a>
