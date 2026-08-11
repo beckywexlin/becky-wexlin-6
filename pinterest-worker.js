@@ -46,7 +46,20 @@
    ============================================ */
 
 const QUEUE_URL = 'https://www.beckywexlin.com/pinterest-queue.json';
-const PIN_API = 'https://api.pinterest.com/v5';
+const PIN_API_PROD = 'https://api.pinterest.com/v5';
+const PIN_API_SANDBOX = 'https://api-sandbox.pinterest.com/v5';
+
+// Pinterest's Trial access tier is READ-ONLY — pins:write isn't available, so
+// production posting 401s until the app is granted Standard access. Standard
+// requires submitting a video of the app calling the API, and Pinterest
+// provides the sandbox precisely so that demo can be recorded without write
+// access in production.
+//
+// Set PINTEREST_SANDBOX_TOKEN (from the app dashboard, Environment: Sandbox) to
+// route everything at the sandbox. Unset it and the worker is back on
+// production with the normal OAuth flow. Nothing about the production path
+// changes.
+const apiBase = env => (env.PINTEREST_SANDBOX_TOKEN ? PIN_API_SANDBOX : PIN_API_PROD);
 const PINS_PER_RUN = 3;
 
 const json = (data, status = 200) =>
@@ -77,7 +90,7 @@ async function accessToken(env) {
   }
 
   const basic = btoa(`${env.PINTEREST_APP_ID}:${env.PINTEREST_APP_SECRET}`);
-  const res = await fetch(`${PIN_API}/oauth/token`, {
+  const res = await fetch(`${PIN_API_PROD}/oauth/token`, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${basic}`,
@@ -102,8 +115,8 @@ async function accessToken(env) {
 }
 
 async function pinterest(env, path, init = {}) {
-  const token = await accessToken(env);
-  const res = await fetch(`${PIN_API}${path}`, {
+  const token = env.PINTEREST_SANDBOX_TOKEN || await accessToken(env);
+  const res = await fetch(`${apiBase(env)}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -283,7 +296,7 @@ export default {
       if (!code) return json({ error: 'Pinterest returned no code', query: Object.fromEntries(url.searchParams) }, 400);
 
       const basic = btoa(`${env.PINTEREST_APP_ID}:${env.PINTEREST_APP_SECRET}`);
-      const res = await fetch(`${PIN_API}/oauth/token`, {
+      const res = await fetch(`${PIN_API_PROD}/oauth/token`, {
         method: 'POST',
         headers: { Authorization: `Basic ${basic}`, 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -323,7 +336,9 @@ export default {
         }
         const hasAuth = !!(await env.PIN_STATE.get(KV_REFRESH)) || !!env.PINTEREST_REFRESH_TOKEN;
         return json({
-          authorised: hasAuth || 'NO — visit /oauth/start?key=<ADMIN_KEY>',
+          environment: env.PINTEREST_SANDBOX_TOKEN ? 'SANDBOX (pins are not real)' : 'production',
+          authorised: env.PINTEREST_SANDBOX_TOKEN ? 'n/a — using sandbox token'
+            : (hasAuth || 'NO — visit /oauth/start?key=<ADMIN_KEY>'),
           queueGenerated: queue.generated,
           total: queue.pins.length,
           posted: done.size,
