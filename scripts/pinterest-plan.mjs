@@ -235,6 +235,22 @@ writeFileSync(join(OUT, 'pins.md'),
         `- **${p.title}**\n  - image: ${p.image}\n  - link: ${p.link}\n  - ${p.description}\n`
       ).join('\n')).join('\n'));
 
+// Machine-readable queue for the scheduled poster. Written into the repo (not
+// pinterest-out/) because pinterest-worker.js fetches it over HTTP — it holds
+// only public product data, so serving it costs nothing.
+writeFileSync(join(ROOT, 'pinterest-queue.json'), JSON.stringify({
+  generated: new Date().toISOString().slice(0, 10),
+  boards: allBoards.map(b => ({ name: b.name, description: b.desc })),
+  pins: pins.map(p => ({
+    board: p.board, title: p.title, description: p.description,
+    image: p.image, link: p.link, kind: p.kind,
+    // Stable id so the poster can tell what it has already published even if
+    // the queue is regenerated and reordered.
+    id: `${p.kind}:${p.link.replace(/^https?:\/\//, '')}:${p.board.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+  })),
+}, null, 2) + '\n');
+
+console.log(`queue  : pinterest-queue.json (${pins.length} pins)`);
 console.log(`boards : ${allBoards.length}`);
 console.log(`pins   : ${pins.length}  (${pins.filter(p => p.kind === 'product').length} product, ${pins.filter(p => p.kind === 'blog').length} blog)`);
 console.log(`written to ${OUT}/  — boards.md, pins.csv, pins.md`);

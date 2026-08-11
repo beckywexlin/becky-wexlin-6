@@ -1,0 +1,30 @@
+{
+  "name": "pinterest-poster",
+  "main": "pinterest-worker.js",
+  "compatibility_date": "2025-09-27",
+
+  // 15:07 UTC ≈ 8am Pacific. Off the hour on purpose — every scheduler in the
+  // world fires at :00, and Cloudflare queues cron triggers.
+  "triggers": {
+    "crons": ["7 15 * * *"]
+  },
+
+  // Tracks which pins have already been published, so a regenerated queue
+  // doesn't repost anything. One key per pin, written only after Pinterest
+  // confirms the pin was created.
+  "kv_namespaces": [
+    {
+      "binding": "PIN_STATE",
+      "id": "ba5b155bac0a413a859acac8bfd01bd8"
+    }
+  ],
+
+  "observability": {
+    "enabled": true
+  }
+
+  // Secrets (set with `npx wrangler secret put <NAME> --config wrangler.pinterest.jsonc`):
+  //   PINTEREST_ACCESS_TOKEN  — from developers.pinterest.com, scopes:
+  //                             boards:read, pins:read, pins:write
+  //   ADMIN_KEY               — any long random string; gates /status and /run
+}

@@ -24,3 +24,5 @@ README.md
 competitor-profiles
 scripts
 pinterest-out
+pinterest-worker.js
+wrangler.pinterest.jsonc
