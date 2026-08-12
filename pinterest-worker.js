@@ -342,27 +342,33 @@ export default {
         const queue = await loadQueue();
         const pin = queue.pins[0];
 
+        // Sandbox always returns an empty board list even when a name is
+        // already taken, so there's no point matching against it — the demo
+        // creates its own clearly-labelled board and posts there. Keeps the
+        // recording to three clean calls with no error to explain away.
+        // Unique per run. Sandbox board names must be unique and the listing
+        // endpoint always comes back empty there, so there's no way to detect a
+        // previous demo's board — a stamped name is the only thing that reliably
+        // gives a clean 201 every time, which is what the recording needs.
+        const stamp = new Date().toISOString().slice(5, 16).replace(/[-T:]/g, '');
+        const demoBoard = `${pin.board} (API demo ${stamp})`;
+
         steps.push({ step: 1, action: 'GET /boards', note: 'list boards on the authenticated account' });
         const list = await pinterest(env, '/boards?page_size=100');
         steps[0].status = list.status;
         steps[0].boardsFound = (list.body?.items || []).length;
 
-        let boardId = (list.body?.items || [])
-          .find(b => String(b.name).toLowerCase() === pin.board.toLowerCase())?.id;
+        steps.push({ step: 2, action: 'POST /boards', note: `create "${demoBoard}"` });
+        const made = await pinterest(env, '/boards', {
+          method: 'POST',
+          body: JSON.stringify({ name: demoBoard, description: 'Demo board for Pinterest API review.' }),
+        });
+        steps[1].status = made.status;
+        if (!made.ok) return json({ error: 'could not create board', steps, detail: made.body }, 502);
+        const boardId = made.body.id;
+        steps[1].boardId = boardId;
 
-        if (!boardId) {
-          steps.push({ step: 2, action: 'POST /boards', note: `create "${pin.board}"` });
-          const made = await pinterest(env, '/boards', {
-            method: 'POST',
-            body: JSON.stringify({ name: pin.board, description: 'Demo board for API review.' }),
-          });
-          steps[1].status = made.status;
-          if (!made.ok) return json({ error: 'could not create board', steps, detail: made.body }, 502);
-          boardId = made.body.id;
-          steps[1].boardId = boardId;
-        }
-
-        steps.push({ step: steps.length + 1, action: 'POST /pins', note: `create a Pin on "${pin.board}"` });
+        steps.push({ step: 3, action: 'POST /pins', note: `create a Pin on "${demoBoard}"` });
         const created = await pinterest(env, '/pins', {
           method: 'POST',
           body: JSON.stringify({
@@ -381,7 +387,7 @@ export default {
           environment: 'SANDBOX',
           app: 'beckywexlin-poster',
           summary: created.ok
-            ? `Created Pin ${created.body?.id} on board "${pin.board}"`
+            ? `Created Pin ${created.body?.id} on board "${demoBoard}"`
             : `Pin creation returned HTTP ${created.status}`,
           pin: { title: pin.title, link: pin.link, image: pin.image },
           steps,
