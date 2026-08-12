@@ -100,23 +100,37 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" /></noscript>
   <style>
-    /* Image-led collection cards. The hub was ten text blocks with no product
-       imagery — for a shop, the shirts should do the selling. The 2x2 is filled
-       server-side from the live catalog (see collectionPreviewHTML in
-       worker.js) so a renamed product can't leave a gap. */
-    .col-hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 26px; max-width: var(--max-w, 1200px); margin: 0 auto; padding: 8px 24px 56px; }
-    .col-hub-card { display: block; border: 1px solid #2A2A2A; border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; background: #141414; transition: transform .18s ease, border-color .18s ease; }
-    .col-hub-card:hover { transform: translateY(-3px); border-color: var(--lime, #AAEE00); }
-    .col-hub-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #2A2A2A; aspect-ratio: 1 / 1; }
-    .col-hub-preview span { display: block; overflow: hidden; background: #1A1A1A; }
-    .col-hub-preview img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
-    .col-hub-card:hover .col-hub-preview img { transform: scale(1.04); }
-    /* Until the worker fills it, collapse rather than showing an empty box. */
+    /* Image-led collection cards, following the pattern Uniqlo and Quince both
+       use for category tiles: a square image, a label centred directly beneath
+       it, tight spacing, no description.
+       The 2x2 is SEAMLESS (no gap) on purpose — with gaps it read as four
+       separate products rather than one collection, which is exactly the
+       complaint. Filled server-side from the live catalog. */
+    .col-hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 34px 24px; max-width: var(--max-w, 1200px); margin: 0 auto; padding: 8px 24px 64px; }
+    .col-hub-card { display: block; text-decoration: none; color: inherit; }
+    .col-hub-preview {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+      aspect-ratio: 1 / 1; overflow: hidden; border-radius: 10px;
+      background: #1A1A1A; border: 1px solid #2A2A2A;
+      transition: border-color .18s ease, transform .18s ease;
+    }
+    .col-hub-preview span { display: block; overflow: hidden; }
+    .col-hub-preview img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .45s ease; }
+    .col-hub-card:hover .col-hub-preview { border-color: var(--lime, #AAEE00); transform: translateY(-3px); }
+    .col-hub-card:hover .col-hub-preview img { transform: scale(1.05); }
     .col-hub-preview:empty { display: none; }
-    .col-hub-body { padding: 16px 18px 18px; }
-    .col-hub-card h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; line-height: 1.15; margin: 0 0 6px; color: var(--white, #F8F8F0); }
-    .col-hub-card p { font-size: 14px; line-height: 1.5; color: #8A8A8A; margin: 0; }
-    .col-hub-count { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--lime, #AAEE00); margin: 10px 0 0; }
+
+    /* The label is the fix. It was small, left-aligned and competing with a
+       sentence; now it's a proper category label — centred, uppercase, spaced,
+       sitting right under the image the way both reference sites do it. */
+    .col-hub-body { padding: 14px 6px 0; text-align: center; }
+    .col-hub-card h2 {
+      font-family: var(--font-body), 'DM Sans', system-ui, sans-serif;
+      font-size: 15px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase;
+      line-height: 1.3; margin: 0; color: var(--white, #F8F8F0);
+    }
+    .col-hub-card:hover h2 { color: var(--lime, #AAEE00); }
+    .col-hub-card p { font-size: 13px; line-height: 1.5; color: #7E7E7E; margin: 6px 0 0; }
   </style>
 </head>
 <body>
