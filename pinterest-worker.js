@@ -47,19 +47,12 @@
 
 const QUEUE_URL = 'https://www.beckywexlin.com/pinterest-queue.json';
 const PIN_API_PROD = 'https://api.pinterest.com/v5';
-const PIN_API_SANDBOX = 'https://api-sandbox.pinterest.com/v5';
 
-// Pinterest's Trial access tier is READ-ONLY — pins:write isn't available, so
-// production posting 401s until the app is granted Standard access. Standard
-// requires submitting a video of the app calling the API, and Pinterest
-// provides the sandbox precisely so that demo can be recorded without write
-// access in production.
-//
-// Set PINTEREST_SANDBOX_TOKEN (from the app dashboard, Environment: Sandbox) to
-// route everything at the sandbox. Unset it and the worker is back on
-// production with the normal OAuth flow. Nothing about the production path
-// changes.
-const apiBase = env => (env.PINTEREST_SANDBOX_TOKEN ? PIN_API_SANDBOX : PIN_API_PROD);
+// NO SANDBOX MODE. Pinterest's "sandbox" is not isolated — calls to
+// api-sandbox.pinterest.com with a sandbox token created real boards and real
+// Pins on the live account. A mode labelled safe that isn't is worse than no
+// mode at all, so it's gone. Everything here talks to production and is
+// treated as permanent.
 const PINS_PER_RUN = 3;
 
 const json = (data, status = 200) =>
@@ -115,8 +108,8 @@ async function accessToken(env) {
 }
 
 async function pinterest(env, path, init = {}) {
-  const token = env.PINTEREST_SANDBOX_TOKEN || await accessToken(env);
-  const res = await fetch(`${apiBase(env)}${path}`, {
+  const token = await accessToken(env);
+  const res = await fetch(`${PIN_API_PROD}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -258,16 +251,6 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
       try {
-        // Never let the daily run fire at the sandbox. A sandbox post still
-        // records posted:<id> in KV, so it would silently burn three real queue
-        // entries a day into a throwaway environment — they'd be marked done
-        // and never reach the actual account. Manual /run and /demo are
-        // explicit acts; the cron is not.
-        if (env.PINTEREST_SANDBOX_TOKEN) {
-          console.warn('pinterest cron: SKIPPED — sandbox token is set. '
-            + 'Delete PINTEREST_SANDBOX_TOKEN to resume posting for real.');
-          return;
-        }
         const result = await publishBatch(env);
         console.log('pinterest cron:', JSON.stringify(result));
       } catch (err) {
@@ -333,79 +316,22 @@ export default {
         { headers: { 'Content-Type': 'text/plain' } });
     }
 
-    // ── /demo — sandbox only ────────────────────────────────────────
-    // Standard access requires a video of the app calling the Pinterest API.
-    // The sandbox is a separate environment, so the real boards don't exist
-    // there and a normal /run would just report "waiting on missing boards" —
-    // a recording of the app doing nothing. This creates the board it needs,
-    // then posts one real pin to it, printing both API calls so a reviewer can
-    // see the whole exchange.
-    //
-    // Refuses to run against production: it is a demo, not a posting path.
-    if (url.pathname === '/demo' && req.method === 'POST') {
+    // Read-only diagnostic. Uses boards:read, which we already hold. Added to
+    // answer one question: did the sandbox /demo runs leak into the real
+    // account? The demo names its boards "<board> (API demo <stamp>)", so if
+    // any of those show up here, the sandbox was not isolated.
+    if (url.pathname === '/boards') {
       if (!authorised(url, env)) return json({ error: 'unauthorised' }, 401);
-      if (!env.PINTEREST_SANDBOX_TOKEN) {
-        return json({ error: 'sandbox only — set PINTEREST_SANDBOX_TOKEN first' }, 400);
-      }
-      const steps = [];
       try {
-        const queue = await loadQueue();
-        const pin = queue.pins[0];
-
-        // Sandbox always returns an empty board list even when a name is
-        // already taken, so there's no point matching against it — the demo
-        // creates its own clearly-labelled board and posts there. Keeps the
-        // recording to three clean calls with no error to explain away.
-        // Unique per run. Sandbox board names must be unique and the listing
-        // endpoint always comes back empty there, so there's no way to detect a
-        // previous demo's board — a stamped name is the only thing that reliably
-        // gives a clean 201 every time, which is what the recording needs.
-        const stamp = new Date().toISOString().slice(5, 16).replace(/[-T:]/g, '');
-        const demoBoard = `${pin.board} (API demo ${stamp})`;
-
-        steps.push({ step: 1, action: 'GET /boards', note: 'list boards on the authenticated account' });
-        const list = await pinterest(env, '/boards?page_size=100');
-        steps[0].status = list.status;
-        steps[0].boardsFound = (list.body?.items || []).length;
-
-        steps.push({ step: 2, action: 'POST /boards', note: `create "${demoBoard}"` });
-        const made = await pinterest(env, '/boards', {
-          method: 'POST',
-          body: JSON.stringify({ name: demoBoard, description: 'Demo board for Pinterest API review.' }),
-        });
-        steps[1].status = made.status;
-        if (!made.ok) return json({ error: 'could not create board', steps, detail: made.body }, 502);
-        const boardId = made.body.id;
-        steps[1].boardId = boardId;
-
-        steps.push({ step: 3, action: 'POST /pins', note: `create a Pin on "${demoBoard}"` });
-        const created = await pinterest(env, '/pins', {
-          method: 'POST',
-          body: JSON.stringify({
-            board_id: boardId,
-            title: pin.title.slice(0, 100),
-            description: pin.description.slice(0, 800),
-            link: pin.link,
-            alt_text: pin.title.slice(0, 500),
-            media_source: { source_type: 'image_url', url: pin.image },
-          }),
-        });
-        steps[steps.length - 1].status = created.status;
-        steps[steps.length - 1].pinId = created.body?.id;
-
+        const { ok, status, body } = await pinterest(env, '/boards?page_size=100');
+        if (!ok) return json({ error: `HTTP ${status}`, detail: body }, 502);
+        const names = (body.items || []).map(b => ({ name: b.name, id: b.id, pins: b.pin_count }));
         return json({
-          environment: 'SANDBOX',
-          app: 'beckywexlin-poster',
-          summary: created.ok
-            ? `Created Pin ${created.body?.id} on board "${demoBoard}"`
-            : `Pin creation returned HTTP ${created.status}`,
-          pin: { title: pin.title, link: pin.link, image: pin.image },
-          steps,
-          raw: created.body,
-        }, created.ok ? 200 : 502);
-      } catch (err) {
-        return json({ error: err.message, steps }, 500);
-      }
+            count: names.length,
+          demoBoardsPresent: names.filter(b => /API demo/i.test(b.name)),
+          boards: names,
+        });
+      } catch (err) { return json({ error: err.message }, 500); }
     }
 
     if (url.pathname === '/status') {
@@ -421,9 +347,7 @@ export default {
         }
         const hasAuth = !!(await env.PIN_STATE.get(KV_REFRESH)) || !!env.PINTEREST_REFRESH_TOKEN;
         return json({
-          environment: env.PINTEREST_SANDBOX_TOKEN ? 'SANDBOX (pins are not real)' : 'production',
-          authorised: env.PINTEREST_SANDBOX_TOKEN ? 'n/a — using sandbox token'
-            : (hasAuth || 'NO — visit /oauth/start?key=<ADMIN_KEY>'),
+          authorised: hasAuth || 'NO — visit /oauth/start?key=<ADMIN_KEY>',
           queueGenerated: queue.generated,
           total: queue.pins.length,
           posted: done.size,
@@ -441,6 +365,6 @@ export default {
       } catch (err) { return json({ error: err.message }, 500); }
     }
 
-    return json({ error: 'not found', endpoints: ['/oauth/start?key=', '/status?key=', 'POST /run?key=[&dry=1]', 'POST /demo?key= (sandbox only)'] }, 404);
+    return json({ error: 'not found', endpoints: ['/oauth/start?key=', '/status?key=', 'POST /run?key=[&dry=1]', '/boards?key='] }, 404);
   },
 };
