@@ -789,29 +789,64 @@ function pageTitleOf(html, fallback) {
   return m ? m[1].replace(/&amp;/g, '&').trim() : fallback;
 }
 
+// 2x2 of shirts for a card on the /collections/ hub. Built from the live
+// catalog rather than hardcoded <img> tags, so renaming a product in Printify
+// can't leave a hole in the grid. Renders only with a full set of four — a
+// three-up 2x2 reads as broken.
+function collectionPreviewHTML(slugs, bySlug) {
+  const picks = slugs.map(s => bySlug.get(s)).filter(Boolean).slice(0, 4);
+  if (picks.length < 4) return '';
+  return picks.map(p =>
+    `<span><img src="/img/${encodeURIComponent(p.image || '')}" `
+    + `alt="${esc(p.title)}" width="300" height="300" loading="lazy" decoding="async" `
+    + `onerror="this.parentNode.style.visibility='hidden'" /></span>`
+  ).join('');
+}
+
 async function renderCollection(request, env) {
   const assetRes = await env.ASSETS.fetch(request);
   if (!(assetRes.headers.get('content-type') || '').includes('text/html')) return assetRes;
   const html = await assetRes.text();
 
+  const hasPreviews = html.includes('data-preview=');
+
   const m = html.match(/COLLECTION_SLUGS\s*=\s*(\[[^\]]*\])/);
   let slugs = [];
   if (m) { try { slugs = JSON.parse(m[1]); } catch {} }
-  if (!slugs.length) return htmlResponse(html, assetRes);
+  // The hub has previews but no product grid, so absence of COLLECTION_SLUGS
+  // is no longer reason enough to bail.
+  if (!slugs.length && !hasPreviews) return htmlResponse(html, assetRes);
 
   const products = await fetchCatalog();
   const bySlug = new Map(products.map(p => [p.slug, p]));
   const ordered = slugs.map(s => bySlug.get(s)).filter(Boolean);
-  if (!ordered.length) return htmlResponse(html, assetRes);
+  if (!ordered.length && !hasPreviews) return htmlResponse(html, assetRes);
 
-  const cards = ordered.map(buildCardHTML).join('');
-  const pageUrl = SITE + new URL(request.url).pathname.replace(/\/$/, '');
-  const listLd = itemListScript(ordered, pageUrl, pageTitleOf(html, 'Collection'));
-  return new HTMLRewriter()
-    .on('[id="collection-grid"]', { element(el) { el.setInnerContent(cards, { html: true }); el.setAttribute('style', ''); } })
-    .on('[id="collection-loading"]', { element(el) { el.setAttribute('style', 'display:none'); } })
-    .on('head', { element(el) { el.append(listLd, { html: true }); } })
-    .transform(htmlResponse(html, assetRes));
+  let rewriter = new HTMLRewriter();
+
+  if (hasPreviews) {
+    // Each card carries its own slugs, so one selector handles all ten.
+    rewriter = rewriter.on('[data-preview]', {
+      element(el) {
+        let picks = [];
+        try { picks = JSON.parse(el.getAttribute('data-preview') || '[]'); } catch {}
+        const inner = collectionPreviewHTML(picks, bySlug);
+        if (inner) el.setInnerContent(inner, { html: true });
+      }
+    });
+  }
+
+  if (ordered.length) {
+    const cards = ordered.map(buildCardHTML).join('');
+    const pageUrl = SITE + new URL(request.url).pathname.replace(/\/$/, '');
+    const listLd = itemListScript(ordered, pageUrl, pageTitleOf(html, 'Collection'));
+    rewriter = rewriter
+      .on('[id="collection-grid"]', { element(el) { el.setInnerContent(cards, { html: true }); el.setAttribute('style', ''); } })
+      .on('[id="collection-loading"]', { element(el) { el.setAttribute('style', 'display:none'); } })
+      .on('head', { element(el) { el.append(listLd, { html: true }); } });
+  }
+
+  return rewriter.transform(htmlResponse(html, assetRes));
 }
 
 async function renderShop(request, env) {

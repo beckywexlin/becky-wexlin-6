@@ -100,14 +100,23 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" /></noscript>
   <style>
-    .col-hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; padding: 0 24px 64px; }
-    .col-hub-card { display: block; border: 1px solid #e6e6e6; border-radius: 14px; padding: 28px 26px; text-decoration: none; color: inherit; background: #fff; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
-    .col-hub-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,.08); border-color: var(--lime, #c6f135); }
-    .col-hub-kicker { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #999; margin: 0 0 10px; }
-    .col-hub-card h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 23px; line-height: 1.12; margin: 0 0 12px; color: #111; }
-    .col-hub-card p { font-size: 14.5px; line-height: 1.65; color: #666; margin: 0 0 16px; }
-    .col-hub-go { font-size: 14px; font-weight: 500; color: #111; }
-    .col-hub-go::after { content: " \2192"; }
+    /* Image-led collection cards. The hub was ten text blocks with no product
+       imagery — for a shop, the shirts should do the selling. The 2x2 is filled
+       server-side from the live catalog (see collectionPreviewHTML in
+       worker.js) so a renamed product can't leave a gap. */
+    .col-hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 26px; max-width: var(--max-w, 1200px); margin: 0 auto; padding: 8px 24px 56px; }
+    .col-hub-card { display: block; border: 1px solid #2A2A2A; border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; background: #141414; transition: transform .18s ease, border-color .18s ease; }
+    .col-hub-card:hover { transform: translateY(-3px); border-color: var(--lime, #AAEE00); }
+    .col-hub-preview { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: #2A2A2A; aspect-ratio: 1 / 1; }
+    .col-hub-preview span { display: block; overflow: hidden; background: #1A1A1A; }
+    .col-hub-preview img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+    .col-hub-card:hover .col-hub-preview img { transform: scale(1.04); }
+    /* Until the worker fills it, collapse rather than showing an empty box. */
+    .col-hub-preview:empty { display: none; }
+    .col-hub-body { padding: 16px 18px 18px; }
+    .col-hub-card h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; line-height: 1.15; margin: 0 0 6px; color: var(--white, #F8F8F0); }
+    .col-hub-card p { font-size: 14px; line-height: 1.5; color: #8A8A8A; margin: 0; }
+    .col-hub-count { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--lime, #AAEE00); margin: 10px 0 0; }
   </style>
 </head>
 <body>
@@ -168,7 +177,7 @@
         <a href="/" style="color: #666;">Home</a><span>/</span><a href="/shop" style="color: #666;">Shop</a><span>/</span><span>Collections</span>
       </nav>
       <h1 class="section-title" style="font-size: clamp(28px, 4vw, 44px); line-height: 1.05; margin-bottom: 16px;">Pick your particular flavor of weird</h1>
-      <p style="font-size: 16px; color: #999; line-height: 1.7; max-width: 700px;">The whole catalog is sorted into collections so you don't have to scroll past a skeleton on a skateboard to find a donkey with attitude. Funny, meme, skull, animal, Santa Barbara — every shirt is original art printed on premium heavyweight blanks. Start wherever your problems are.</p>
+      <p style="font-size: 16px; color: #999; line-height: 1.7; max-width: 700px;">Every shirt is original art on premium heavyweight blanks. Pick a lane below, or <a href="/shop" style="color:var(--lime);">see all of it at once</a>.</p>
     </div>
   </header>
 
@@ -176,75 +185,84 @@
     <div class="col-hub-grid">
 
       <a class="col-hub-card" href="/collections/graphic-tees">
-        <p class="col-hub-kicker">The whole catalog</p>
-        <h2>Weird graphic tees that are actually good</h2>
-        <p>The full lineup of high-concept, deadpan graphic tees — every design we make, in one place. Start here if you don't yet know what's wrong with you.</p>
-        <span class="col-hub-go">Browse weird graphic tees</span>
+        <div class="col-hub-preview" data-preview='["punky-memento-mori-tee", "bad-ass-tee", "santa-barbara-retro-script", "rick-roll-tee"]'></div>
+        <div class="col-hub-body">
+          <h2>All Graphic Tees</h2>
+          <p>Every design we make, in one place.</p>
+        </div>
       </a>
 
       <a class="col-hub-card" href="/collections/funny-t-shirts">
-        <p class="col-hub-kicker">For the unwell</p>
-        <h2>Funny t-shirts for people with questionable taste</h2>
-        <p>Funny that earns the word — not Impact font on a stock photo. The kind that makes a stranger exhale sharply through their nose in the Target checkout line.</p>
-        <span class="col-hub-go">Browse funny t-shirts</span>
+        <div class="col-hub-preview" data-preview='["bad-ass-tee", "hot-mess-express-tee", "no-comment", "gutter-rat-bowling-tee"]'></div>
+        <div class="col-hub-body">
+          <h2>Funny T-Shirts</h2>
+          <p>Deadpan humour that earns the word.</p>
+        </div>
       </a>
 
       <a class="col-hub-card" href="/collections/meme-t-shirts">
-        <p class="col-hub-kicker">Chronically online</p>
-        <h2>Meme t-shirts for people who were online too early</h2>
-        <p>Rick Roll, Harambe, Kilroy, aliens, robots, and the slow existential dread of modern life. For people whose personality was downloaded, not developed.</p>
-        <span class="col-hub-go">Browse meme t-shirts</span>
+        <div class="col-hub-preview" data-preview='["rick-roll-tee", "harambe-warhol", "dicks-out-for-harambe", "free-the-aliens"]'></div>
+        <div class="col-hub-body">
+          <h2>Meme T-Shirts</h2>
+          <p>Internet folklore that actually lasts.</p>
+        </div>
       </a>
 
       <a class="col-hub-card" href="/collections/skull-t-shirts">
-        <p class="col-hub-kicker">Memento mori, kind of</p>
-        <h2>Skull t-shirts &amp; skeleton tees for the morbidly stylish</h2>
-        <p>Cowboys, skaters, surfers, and stacks of the dearly departed — skulls with actual design behind them. Not the Hot Topic clearance rack.</p>
-        <span class="col-hub-go">Browse skull t-shirts</span>
+        <div class="col-hub-preview" data-preview='["punky-memento-mori-tee", "bless-your-skull", "skating-skelly-idgaf", "cowboy-skull-sketch-t-shirt"]'></div>
+        <div class="col-hub-body">
+          <h2>Skull & Skeleton</h2>
+          <p>Memento mori with real design behind it.</p>
+        </div>
       </a>
 
       <a class="col-hub-card" href="/collections/animal-t-shirts">
-        <p class="col-hub-kicker">Beasts, mostly</p>
-        <h2>Animal t-shirts weirder than the animals on them</h2>
-        <p>Cats with crowns, dogs with day jobs, dinosaurs in sunglasses. Original animal art for people who like their fauna with a little attitude.</p>
-        <span class="col-hub-go">Browse animal t-shirts</span>
+        <div class="col-hub-preview" data-preview='["the-cat-has-spoken-tee", "t-rexcellent-shirt", "retro-raptor-tee", "crowned-kitten-tee"]'></div>
+        <div class="col-hub-body">
+          <h2>Animal T-Shirts</h2>
+          <p>Cats, dinosaurs and other menaces.</p>
+        </div>
       </a>
 
       <a class="col-hub-card" href="/collections/santa-barbara-t-shirts">
-        <p class="col-hub-kicker">805 forever</p>
-        <h2>Santa Barbara t-shirts for locals, not tourists</h2>
-        <p>SB and Goleta tees designed by an actual local — funny, weird, and several rungs above anything on the State Street souvenir wall.</p>
-        <span class="col-hub-go">Browse Santa Barbara t-shirts</span>
+        <div class="col-hub-preview" data-preview='["santa-barbara-retro-script", "santa-freakin-barbara-tee", "santa-barbara-retro-palm-trees-tee", "normal-person-sb-tee"]'></div>
+        <div class="col-hub-body">
+          <h2>Santa Barbara</h2>
+          <p>SB and Goleta tees by an actual local.</p>
+        </div>
       </a>
 
       <a class="col-hub-card" href="/collections/mens-graphic-tees">
-        <p class="col-hub-kicker">For him</p>
-        <h2>Men&rsquo;s graphic tees for men who hate shopping for graphic tees</h2>
-        <p>The alternative to three band shirts for bands you don&rsquo;t like and a pun about fishing. Deadpan text, skulls, dinosaurs &mdash; S through 3XL with real measurements.</p>
-        <span class="col-hub-go">Browse men&rsquo;s graphic tees</span>
+        <div class="col-hub-preview" data-preview='["punky-memento-mori-tee", "no-comment", "gutter-rat-bowling-tee", "rick-roll-tee"]'></div>
+        <div class="col-hub-body">
+          <h2>Men's Graphic Tees</h2>
+          <p>S to 3XL, with real measurements.</p>
+        </div>
       </a>
 
       <a class="col-hub-card" href="/collections/womens-graphic-tees">
-        <p class="col-hub-kicker">For her</p>
-        <h2>Women&rsquo;s graphic tees that aren&rsquo;t about wine or being tired</h2>
-        <p>Pastel goth, pop-art cowgirl, disco-ball glam and retro smiley. Unisex cuts you can size down for a closer fit or wear straight for the oversized look.</p>
-        <span class="col-hub-go">Browse women&rsquo;s graphic tees</span>
+        <div class="col-hub-preview" data-preview='["pink-skull-t-shirt-pastel-goth-tee-soft-grunge-alt-style-top", "pink-pop-cowgirl", "haters-gon-hate-tee-disco-ball-galaxy-graphic-tee", "delusional-but-thriving"]'></div>
+        <div class="col-hub-body">
+          <h2>Women's Graphic Tees</h2>
+          <p>Pastel goth to pop-art cowgirl.</p>
+        </div>
       </a>
 
       <a class="col-hub-card" href="/collections/alien-t-shirts">
-        <p class="col-hub-kicker">Disclosure now</p>
-        <h2>Alien t-shirts for people who are pretty sure about all this</h2>
-        <p>The whole Free the Aliens series &mdash; glitchy kitty visitors, typewriter text, bubble letters &mdash; plus a cherub who has been judging you from a flowerbed for fifty years.</p>
-        <span class="col-hub-go">Browse alien t-shirts</span>
+        <div class="col-hub-preview" data-preview='["free-the-aliens", "free-the-aliens-glitchy-kitty", "alien-cherub-tee", "free-the-aliens-tee-trippy-bubble-letter-graphic-shirt"]'></div>
+        <div class="col-hub-body">
+          <h2>Alien & UFO Tees</h2>
+          <p>The whole Free the Aliens series.</p>
+        </div>
       </a>
 
       <a class="col-hub-card" href="/collections/cowboy-t-shirts">
-        <p class="col-hub-kicker">Outlaw hours</p>
-        <h2>Cowboy t-shirts for outlaws with a desk job</h2>
-        <p>Western without the rope font. Skeleton cowboys who did something, pop-art cowgirls in heart-shaped shades, and exactly zero distressed horseshoes.</p>
-        <span class="col-hub-go">Browse cowboy t-shirts</span>
+        <div class="col-hub-preview" data-preview='["yeehaw-fuck-the-law-cowboy-skeleton-tee-outlaw-western-graphic-shirt", "cowboy-skull-sketch-t-shirt", "pink-pop-cowgirl", "surfing-skelly-retro-tee"]'></div>
+        <div class="col-hub-body">
+          <h2>Cowboy & Western</h2>
+          <p>Outlaw skeletons, zero rope font.</p>
+        </div>
       </a>
-
 
     </div>
 
