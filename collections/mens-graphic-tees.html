@@ -91,6 +91,31 @@
   }
   </script>
   <style>
+    /* Collection hero — 2x2 of representative shirts, filled by the worker.
+       Sits beside the heading on desktop, above the copy on mobile, so a
+       visitor sees product before prose either way. */
+    .collection-head { display: grid; grid-template-columns: 1fr; gap: 26px; align-items: center; }
+    @media (min-width: 900px) { .collection-head { grid-template-columns: 1.05fr 0.95fr; gap: 40px; } }
+    .collection-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .collection-hero a {
+      display: block; position: relative; aspect-ratio: 1 / 1; overflow: hidden;
+      border-radius: 6px; background: #1A1A1A; border: 1px solid #2A2A2A;
+    }
+    .collection-hero img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform .35s ease;
+    }
+    .collection-hero a:hover img { transform: scale(1.05); }
+    .collection-hero a::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.45), transparent 55%);
+      opacity: 0; transition: opacity .3s;
+    }
+    .collection-hero a:hover::after { opacity: 1; }
+    /* Empty until the worker fills it — never show a broken 2x2 of nothing. */
+    .collection-hero:empty { display: none; }
+    @media (max-width: 899px) { .collection-hero { order: -1; } }
+
     /* Collection long-form copy (SEO + buyer intent) */
     .collection-copy { max-width: 860px; margin: 0 auto; padding: 8px 24px 0; }
     .collection-copy-inner { border-top: 1px solid #2A2A2A; padding-top: 44px; }
@@ -173,9 +198,14 @@
       <nav aria-label="Breadcrumb" style="font-size: 13px; color: #555; margin-bottom: 20px; display: flex; gap: 8px;">
         <a href="/" style="color: #666;">Home</a><span>/</span><a href="/shop" style="color: #666;">Shop</a><span>/</span><span>Men's Graphic Tees</span>
       </nav>
-      <h1 class="section-title" style="font-size: clamp(28px, 4vw, 44px); line-height: 1.05; margin-bottom: 16px;">Men&rsquo;s graphic tees for men who hate shopping for graphic tees</h1>
-      <p style="font-size: 16px; color: #999; line-height: 1.7; max-width: 700px;">The men&rsquo;s graphic tee aisle is a hard place: three band shirts for bands you don&rsquo;t like, a fishing pun, and something about coffee. This is the alternative — original artwork, drawn by hand, printed heavyweight, sized properly.</p>
-      <p style="font-size: 15px; color: #777; line-height: 1.7; max-width: 700px; margin-top: 12px;">Every design here is cut unisex, which for most men means order your normal size. Comfort Colors, Bella + Canvas and Gildan Softstyle blanks. Designed in Santa Barbara, shipped free.</p>
+      <div class="collection-head">
+        <div>
+        <h1 class="section-title" style="font-size: clamp(28px, 4vw, 44px); line-height: 1.05; margin-bottom: 16px;">Men&rsquo;s graphic tees for men who hate shopping for graphic tees</h1>
+        <p style="font-size: 16px; color: #999; line-height: 1.7; max-width: 700px;">The men&rsquo;s graphic tee aisle is a hard place: three band shirts for bands you don&rsquo;t like, a fishing pun, and something about coffee. This is the alternative — original artwork, drawn by hand, printed heavyweight, sized properly.</p>
+        <p style="font-size: 15px; color: #777; line-height: 1.7; max-width: 700px; margin-top: 12px;">Every design here is cut unisex, which for most men means order your normal size. Comfort Colors, Bella + Canvas and Gildan Softstyle blanks. Designed in Santa Barbara, shipped free.</p>
+        </div>
+        <div class="collection-hero" id="collection-hero" data-hero='["punky-memento-mori-tee", "no-comment", "gutter-rat-bowling-tee", "rick-roll-tee"]'></div>
+      </div>
     </div>
   </header>
 

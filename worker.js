@@ -789,29 +789,62 @@ function pageTitleOf(html, fallback) {
   return m ? m[1].replace(/&amp;/g, '&').trim() : fallback;
 }
 
+// The 2x2 of representative shirts at the top of a collection page. Built from
+// the live catalog rather than hardcoded <img> tags so a renamed or retired
+// product can't leave a 404 sitting above the fold. Which four appear is
+// curated per collection via data-hero — "representative" is an editorial call,
+// not something to derive from list order.
+function collectionHeroHTML(slugs, bySlug) {
+  const cards = slugs.map(s => bySlug.get(s)).filter(Boolean).slice(0, 4);
+  if (cards.length < 4) return '';        // a lopsided 2x2 looks broken
+  return cards.map(p =>
+    `<a href="/${esc(p.slug)}" aria-label="${esc(p.title)}">`
+    + `<img src="/img/${encodeURIComponent(p.image || '')}" `
+    + `alt="${esc(p.title)} — graphic tee by ${esc(BRAND)}" `
+    + `width="400" height="400" loading="eager" decoding="async" `
+    + `onerror="this.closest('a').style.display='none'" /></a>`
+  ).join('');
+}
+
 async function renderCollection(request, env) {
   const assetRes = await env.ASSETS.fetch(request);
   if (!(assetRes.headers.get('content-type') || '').includes('text/html')) return assetRes;
   const html = await assetRes.text();
 
+  const heroMatch = html.match(/data-hero='(\[[^\]]*\])'/);
+  let heroSlugs = [];
+  if (heroMatch) { try { heroSlugs = JSON.parse(heroMatch[1]); } catch {} }
+
   const m = html.match(/COLLECTION_SLUGS\s*=\s*(\[[^\]]*\])/);
   let slugs = [];
   if (m) { try { slugs = JSON.parse(m[1]); } catch {} }
-  if (!slugs.length) return htmlResponse(html, assetRes);
+
+  // graphic-tees has a hero but no product grid, so the early return has to
+  // account for both being absent rather than just the grid.
+  if (!slugs.length && !heroSlugs.length) return htmlResponse(html, assetRes);
 
   const products = await fetchCatalog();
   const bySlug = new Map(products.map(p => [p.slug, p]));
   const ordered = slugs.map(s => bySlug.get(s)).filter(Boolean);
-  if (!ordered.length) return htmlResponse(html, assetRes);
+  const hero = collectionHeroHTML(heroSlugs, bySlug);
+  if (!ordered.length && !hero) return htmlResponse(html, assetRes);
 
-  const cards = ordered.map(buildCardHTML).join('');
-  const pageUrl = SITE + new URL(request.url).pathname.replace(/\/$/, '');
-  const listLd = itemListScript(ordered, pageUrl, pageTitleOf(html, 'Collection'));
-  return new HTMLRewriter()
-    .on('[id="collection-grid"]', { element(el) { el.setInnerContent(cards, { html: true }); el.setAttribute('style', ''); } })
-    .on('[id="collection-loading"]', { element(el) { el.setAttribute('style', 'display:none'); } })
-    .on('head', { element(el) { el.append(listLd, { html: true }); } })
-    .transform(htmlResponse(html, assetRes));
+  let rewriter = new HTMLRewriter();
+  if (hero) {
+    rewriter = rewriter.on('[id="collection-hero"]', {
+      element(el) { el.setInnerContent(hero, { html: true }); }
+    });
+  }
+  if (ordered.length) {
+    const cards = ordered.map(buildCardHTML).join('');
+    const pageUrl = SITE + new URL(request.url).pathname.replace(/\/$/, '');
+    const listLd = itemListScript(ordered, pageUrl, pageTitleOf(html, 'Collection'));
+    rewriter = rewriter
+      .on('[id="collection-grid"]', { element(el) { el.setInnerContent(cards, { html: true }); el.setAttribute('style', ''); } })
+      .on('[id="collection-loading"]', { element(el) { el.setAttribute('style', 'display:none'); } })
+      .on('head', { element(el) { el.append(listLd, { html: true }); } });
+  }
+  return rewriter.transform(htmlResponse(html, assetRes));
 }
 
 async function renderShop(request, env) {
