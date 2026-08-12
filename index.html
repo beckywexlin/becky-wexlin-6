@@ -153,36 +153,6 @@
   <!-- MAIN CONTENT -->
   <main id="main-content">
 
-    <!-- SEO INTRO — commercial-intent copy, above the fold-ish, crawlable without JS -->
-    <section class="section" aria-labelledby="intro-heading" style="padding-top:28px; padding-bottom:0;">
-      <div style="max-width:900px; margin:0 auto; padding:0 40px;">
-        <h2 id="intro-heading" class="section-title" style="font-size:clamp(24px,3.2vw,34px); line-height:1.15; margin-bottom:18px;">Funny graphic tees, meme t-shirts and other <span class="text-lime">deeply unnecessary</span> apparel</h2>
-        <p style="color:#aaa; font-size:16.5px; line-height:1.8; margin-bottom:14px;">
-          Becky Wexlin Creative is an independent apparel brand making <strong>funny graphic tees</strong>,
-          <strong>meme t-shirts</strong> and genuinely <strong>weird shirts</strong> for people who would rather be
-          asked about their outfit than complimented on it. Every design is original — drawn here, not scraped off a
-          print-on-demand marketplace — and printed on premium heavyweight blanks like Comfort Colors and Bella + Canvas,
-          because a good joke shouldn't crack and peel after three washes.
-        </p>
-        <p style="color:#888; font-size:16px; line-height:1.8; margin-bottom:14px;">
-          We're based in Santa Barbara, California, which means the catalog includes a real stack of
-          <a href="/collections/santa-barbara-t-shirts" style="color:var(--lime);">Santa Barbara graphic tees</a>
-          made by an actual local rather than a souvenir shop — the full local lineup lives on the
-          <a href="/santa-barbara-shirts" style="color:var(--lime);">Santa Barbara shirts</a> page. The rest is
-          <a href="/collections/funny-t-shirts" style="color:var(--lime);">funny t-shirts</a>,
-          <a href="/collections/meme-t-shirts" style="color:var(--lime);">meme t-shirts</a>,
-          <a href="/collections/skull-t-shirts" style="color:var(--lime);">skull and skeleton tees</a> and
-          <a href="/collections/animal-t-shirts" style="color:var(--lime);">animal t-shirts</a> —
-          <a href="/collections/graphic-tees" style="color:var(--lime);">indie apparel</a> for the chronically
-          different, priced like clothing instead of like art.
-        </p>
-        <p style="color:#888; font-size:16px; line-height:1.8; margin:0;">
-          Free shipping on every order. Nothing here is available at a mall.
-          <a href="/shop" style="color:var(--lime); font-weight:500;">Browse all weird graphic tees &rarr;</a>
-        </p>
-      </div>
-    </section>
-
     <!-- Featured Products -->
     <div class="section" style="padding-top: 32px;">
       <div class="section-header" style="margin-bottom: 24px;">
@@ -217,6 +187,40 @@
         <span>Free shipping on all orders</span>
       </div>
     </div>
+
+    <!-- SEO INTRO — deliberately BELOW the product grid.
+         It was above it, which meant a first-time visitor met three paragraphs
+         of copy before seeing a single shirt. Position within the body is a
+         weak ranking signal at best; burying the products is not. Google reads
+         the whole page either way. -->
+    <section class="section" aria-labelledby="intro-heading" style="padding-top:28px; padding-bottom:0;">
+      <div style="max-width:900px; margin:0 auto; padding:0 40px;">
+        <h2 id="intro-heading" class="section-title" style="font-size:clamp(24px,3.2vw,34px); line-height:1.15; margin-bottom:18px;">Funny graphic tees, meme t-shirts and other <span class="text-lime">deeply unnecessary</span> apparel</h2>
+        <p style="color:#aaa; font-size:16.5px; line-height:1.8; margin-bottom:14px;">
+          Becky Wexlin Creative is an independent apparel brand making <strong>funny graphic tees</strong>,
+          <strong>meme t-shirts</strong> and genuinely <strong>weird shirts</strong> for people who would rather be
+          asked about their outfit than complimented on it. Every design is original — drawn here, not scraped off a
+          print-on-demand marketplace — and printed on premium heavyweight blanks like Comfort Colors and Bella + Canvas,
+          because a good joke shouldn't crack and peel after three washes.
+        </p>
+        <p style="color:#888; font-size:16px; line-height:1.8; margin-bottom:14px;">
+          We're based in Santa Barbara, California, which means the catalog includes a real stack of
+          <a href="/collections/santa-barbara-t-shirts" style="color:var(--lime);">Santa Barbara graphic tees</a>
+          made by an actual local rather than a souvenir shop — the full local lineup lives on the
+          <a href="/santa-barbara-shirts" style="color:var(--lime);">Santa Barbara shirts</a> page. The rest is
+          <a href="/collections/funny-t-shirts" style="color:var(--lime);">funny t-shirts</a>,
+          <a href="/collections/meme-t-shirts" style="color:var(--lime);">meme t-shirts</a>,
+          <a href="/collections/skull-t-shirts" style="color:var(--lime);">skull and skeleton tees</a> and
+          <a href="/collections/animal-t-shirts" style="color:var(--lime);">animal t-shirts</a> —
+          <a href="/collections/graphic-tees" style="color:var(--lime);">indie apparel</a> for the chronically
+          different, priced like clothing instead of like art.
+        </p>
+        <p style="color:#888; font-size:16px; line-height:1.8; margin:0;">
+          Free shipping on every order. Nothing here is available at a mall.
+          <a href="/shop" style="color:var(--lime); font-weight:500;">Browse all weird graphic tees &rarr;</a>
+        </p>
+      </div>
+    </section>
 
     <!-- WHY BUY FROM US -->
     <section class="section" aria-labelledby="why-buy-heading" style="padding-top:8px;">
