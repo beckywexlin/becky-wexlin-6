@@ -26,11 +26,38 @@
     '</div>';
   document.body.appendChild(popup);
 
-  // Show after 5 seconds
-  setTimeout(function () {
+  // A modal at 5 seconds that also locks scrolling interrupts people before
+  // they've seen anything, and 53% of sessions are mobile where a scroll lock
+  // feels like a dead page. Average session time and pages/session both fell
+  // sharply this period. Show it once the visitor has actually engaged —
+  // scrolled a bit, spent real time, or is leaving — and never freeze the page
+  // on touch devices.
+  var shown = false;
+  var isTouch = window.matchMedia('(hover: none)').matches;
+
+  function show() {
+    if (shown) return;
+    shown = true;
     popup.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }, 5000);
+    if (!isTouch) document.body.style.overflow = 'hidden';
+    if (typeof gtag === 'function') gtag('event', 'popup_shown', { method: 'popup' });
+  }
+
+  function onScroll() {
+    var d = document.documentElement;
+    var pct = (window.scrollY + window.innerHeight) / Math.max(d.scrollHeight, 1);
+    if (pct > 0.45) { show(); window.removeEventListener('scroll', onScroll); }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  setTimeout(show, 30000);
+
+  // Desktop exit intent — the one moment interrupting is genuinely warranted.
+  if (!isTouch) {
+    document.addEventListener('mouseout', function (e) {
+      if (!e.relatedTarget && e.clientY <= 0) show();
+    });
+  }
 
   function close() {
     popup.classList.remove('active');
@@ -56,7 +83,12 @@
 
     try {
       // Subscribe via Klaviyo client API
-      await fetch('https://a.klaviyo.com/client/subscriptions/?company_id=' + KLAVIYO_COMPANY_ID, {
+      // fetch() only rejects on network failure — a 400 from Klaviyo resolves
+      // normally. The response was never checked, so a rejected subscribe still
+      // showed "Check your inbox!" and nothing was ever logged. That is almost
+      // certainly why the list shows 0 new subscribers while the form appears
+      // to work.
+      var res = await fetch('https://a.klaviyo.com/client/subscriptions/?company_id=' + KLAVIYO_COMPANY_ID, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'revision': '2024-10-15' },
         body: JSON.stringify({
@@ -73,6 +105,15 @@
         }),
       });
 
+      if (!res.ok) {
+        var detail = await res.text().catch(function () { return ''; });
+        throw new Error('Klaviyo HTTP ' + res.status + ' ' + detail.slice(0, 200));
+      }
+
+      if (typeof gtag === 'function') {
+        gtag('event', 'generate_lead', { method: 'popup' });
+      }
+
       document.getElementById('email-popup-form').style.display = 'none';
       var msg = document.getElementById('popup-msg');
       msg.textContent = 'Check your inbox for your 10% off code!';
@@ -81,6 +122,11 @@
       localStorage.setItem('bw_popup_dismissed', '1');
       setTimeout(close, 3000);
     } catch (err) {
+      // Log it. A silent failure here is invisible in both Klaviyo and GA4.
+      console.error('popup subscribe failed:', err && err.message);
+      if (typeof gtag === 'function') {
+        gtag('event', 'exception', { description: 'popup_subscribe_failed', fatal: false });
+      }
       btn.textContent = 'Get my 10% off';
       btn.disabled = false;
       var msg = document.getElementById('popup-msg');
