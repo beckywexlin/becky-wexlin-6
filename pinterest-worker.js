@@ -258,6 +258,16 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
       try {
+        // Never let the daily run fire at the sandbox. A sandbox post still
+        // records posted:<id> in KV, so it would silently burn three real queue
+        // entries a day into a throwaway environment — they'd be marked done
+        // and never reach the actual account. Manual /run and /demo are
+        // explicit acts; the cron is not.
+        if (env.PINTEREST_SANDBOX_TOKEN) {
+          console.warn('pinterest cron: SKIPPED — sandbox token is set. '
+            + 'Delete PINTEREST_SANDBOX_TOKEN to resume posting for real.');
+          return;
+        }
         const result = await publishBatch(env);
         console.log('pinterest cron:', JSON.stringify(result));
       } catch (err) {
