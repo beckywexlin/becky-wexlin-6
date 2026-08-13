@@ -6,10 +6,254 @@ const BRAND = 'Becky Wexlin Creative';
 // search into the <title>/meta Google reads, WITHOUT changing the Printify title
 // (which would change the slug and break the ranking URL). Keyed by canonical slug.
 const SEO_OVERRIDES = {
+  'alien-cherub-tee': {
+    title: 'Alien Cherub Tee — Weird Angel Graphic T-Shirt',
+    description: 'A baby cherub that has been judging you from a flowerbed for fifty years. Heavy halftone print with photocopied-flyer energy on soft cotton.'
+  },
+  'bad-ass-tee': {
+    title: 'Bad Ass Tee — Funny Donkey Pun Graphic T-Shirt',
+    description: 'A bad ass. We are not going to explain the lifestyle choices that got him here. Funny animal pun graphic tee on soft cotton, free US shipping.'
+  },
+  'becky-wexlin-authentic-tee': {
+    title: 'Becky Wexlin Authentic Tee — Skull Graphic T-Shirt',
+    description: 'Nothing says trust me like a dead guy with a cigarette. Established 2025, either deeply meaningful or arbitrary. Skull graphic tee, soft cotton.'
+  },
+  'blah-blah-blah-retro-tee': {
+    title: 'Blah Blah Blah Tee — Retro Sarcastic Graphic Shirt',
+    description: 'Said three times, because once did not land. A retro sarcastic graphic tee for the chronically unbothered and emotionally checked-out.'
+  },
+  'bless-your-skull': {
+    title: 'Bless Your Skull Tee — Funny Southern Skull Shirt',
+    description: 'The passive-aggressive Southern farewell, upgraded for people fully out of patience. Halftone skull graphic tee on soft heavyweight cotton.'
+  },
+  'cowboy-skull-sketch-t-shirt': {
+    title: 'Cowboy Skull Tee — Howdy Western Graphic T-Shirt',
+    description: 'He is dead. He is wearing a hat. Howdy. A hand-drawn cowboy skull graphic tee for anyone who rode into the sunset and never came back.'
+  },
+  'cracked-out-eye': {
+    title: 'Cracked Out Eye Tee — Glitch Halftone Graphic Shirt',
+    description: 'A halftone eye in full CMYK meltdown, staring back. Either the universe making contact or a TV dying mid-blink in 1998. Glitch art graphic tee.'
+  },
+  'crowned-kitten-tee': {
+    title: 'Crowned Kitten Tee — Cute Party Cat Graphic Shirt',
+    description: 'A kitten with a crown, star eyes, and no intention of letting things wind down. The most powerful cat in the room. Cute cat graphic tee.'
+  },
+  'deez-mutts-dog-groomers': {
+    title: 'Deez Mutts Tee — Funny Dog Groomer Graphic Shirt',
+    description: 'For everyone who appreciates a great pun, a well-groomed dog, and a bulldog who did not come here to be messed with. Funny dog graphic tee.'
+  },
+  'delusional-but-thriving': {
+    title: 'Delusional But Thriving Tee — Funny Sarcastic Shirt',
+    description: 'Both things are true at once and you have made peace with it. A funny sarcastic graphic tee on ultra-soft Gildan Softstyle cotton.'
+  },
   'dicks-out-for-harambe': {
-    title: 'Dicks Out for Harambe Shirt',
-    description: 'The "Dicks Out for Harambe" shirt — a meme graphic tee for people who never let it go. Soft cotton, bold print, free shipping.'
-  }
+    title: 'Dicks Out for Harambe Shirt — Meme Graphic Tee',
+    description: 'The Dicks Out for Harambe shirt, for people who never let it go. Cincinnati legend, 1999 to 2016. Soft cotton meme tee, free US shipping.'
+  },
+  'dont-worry-be-hoppy': {
+    title: 'Don\'t Worry Be Hoppy Tee — Funny Beer Graphic Shirt',
+    description: 'A retro cartoon beer mug frankly doing better than most of us. Life is too short for bad beer and bad vibes. Funny beer graphic tee, soft cotton.'
+  },
+  'equal-opportunity-menace': {
+    title: 'Equal Opportunity Menace Tee — Feminist Graphic Shirt',
+    description: 'Equal rights and equal wrongs. Groovy lettering that makes the demand look deceptively cheerful. Feminist graphic tee on soft cotton.'
+  },
+  'free-the-aliens': {
+    title: 'Free The Aliens Tee — Chromatic UFO Graphic Shirt',
+    description: 'You have done the research, you have seen the skies, and you are not staying quiet. A chromatic UFO conspiracy graphic tee on soft cotton.'
+  },
+  'free-the-aliens-glitchy-kitty': {
+    title: 'Free the Aliens Glitchy Kitty Tee — Alien Cat Shirt',
+    description: 'A glitched-out alien cat on a FREE THE ALIENS badge. Conspiracy-core graphic tee on soft heavyweight cotton. Printed to order, free US shipping.'
+  },
+  'free-the-aliens-tee-alien-text-graphic-t-shirt': {
+    title: 'Free the Aliens Tee — Typewriter Alien Graphic Shirt',
+    description: 'Four words in a clean typewriter font, no illustration, no explanation. A quiet alien conspiracy graphic tee on lightweight cotton.'
+  },
+  'free-the-aliens-tee-trippy-bubble-letter-graphic-shirt': {
+    title: 'Free the Aliens Tee — Trippy Bubble Letter Shirt',
+    description: 'Bubble letters, bad intentions, one clear demand. A trippy alien conspiracy graphic tee on soft cotton. Printed to order, free US shipping.'
+  },
+  'fuck-you-for-shopping': {
+    title: 'Fuck You For Shopping Tee — Shopping Bag Parody Shirt',
+    description: 'A dead-on parody of the most passive-aggressive object in human history. You have thought it every time. Now you can wear it. Soft cotton tee.'
+  },
+  'german-auto-repair': {
+    title: 'German Auto Repair Tee — Goleta Mechanic Shirt',
+    description: 'A tribute to one of Old Town Goleta’s most badass institutions since 1986. For people who know the difference between a BMW and a reason to cry.'
+  },
+  'get-mad-tee': {
+    title: 'Get Mad Tee — Political Protest Graphic T-Shirt',
+    description: 'For everyone who checks the news and immediately needs to sit back down. A protest graphic tee that says the quiet part at normal volume.'
+  },
+  'goleta-the-goodland-tee-retro-sunshine-graphic-tee': {
+    title: 'Goleta The Goodland Tee — Retro Sunshine Graphic Tee',
+    description: 'A vintage cartoon sun grinning like it knows something. Goleta graphic tee for people who claim the Goodland on purpose. Free US shipping.'
+  },
+  'gutter-rat-bowling-tee': {
+    title: 'Gutter Rat Bowling Tee — Retro Bowling Graphic Shirt',
+    description: 'Merch for a bowling alley that absolutely reeks of nacho cheese and cigarettes. Retro mascot bowling graphic tee. Please return your shoes.'
+  },
+  'harambe-warhol': {
+    title: 'Harambe Warhol Tee — Pop Art Meme Graphic T-Shirt',
+    description: 'Four neon Warhol-style portraits of the internet’s favourite silverback. A pop art meme graphic tee. Never forget. Free US shipping.'
+  },
+  'haters-gon-hate-tee-disco-ball-galaxy-graphic-tee': {
+    title: 'Haters Gon\' Hate Tee — Disco Ball Graphic T-Shirt',
+    description: 'The haters are going to hate. It is closer to physics than opinion. A disco ball galaxy graphic tee for people who stopped explaining themselves.'
+  },
+  'hot-mess-express-tee': {
+    title: 'Hot Mess Express Tee — Funny Retro Mascot Shirt',
+    description: 'Arched lettering with stay toasty and get crispy tucked alongside, like a fast food mascot the health department shut down. Funny retro graphic tee.'
+  },
+  'hotdogs-help-tee': {
+    title: 'Hotdogs Help Tee — Funny Hot Dog Graphic T-Shirt',
+    description: 'No further explanation required. A life philosophy disguised as a shirt. Funny hot dog graphic tee on soft cotton. Therapy is great, but still.'
+  },
+  'its-an-attitude': {
+    title: 'It\'s An Attitude Tee — Punk Graphic T-Shirt',
+    description: 'A girl kicks over a bin. That is punk. A boy does it. That is littering. A punk graphic tee that explains the whole thing in four words.'
+  },
+  'jimothy-is-my-religion': {
+    title: 'Jimothy Is My Religion Tee — Funny Meme Graphic Shirt',
+    description: 'If you know, you know, and if you do not, go look him up. A funny meme graphic tee for the devout. Soft heavyweight cotton, free US shipping.'
+  },
+  'just-stay-calm-shirt': {
+    title: 'Just Stay Calm Shirt — Funny Bold Text Graphic Tee',
+    description: 'Oversized block letters delivering advice nobody has ever successfully taken. Funny text graphic tee on a soft heather ash base.'
+  },
+  'kilroy-was-here-tee': {
+    title: 'Kilroy Was Here Tee — Vintage WWII Meme Shirt',
+    description: 'The first meme, decades before the internet. A big nose over a wall, scratched into history. Vintage Kilroy graphic tee on soft cotton.'
+  },
+  'majestic-jimothy-tee': {
+    title: 'Majestic Jimothy Tee — Seattle Meme Graphic Shirt',
+    description: 'Jimothy under a silver moon, patron saint of the internet. A meme graphic tee for people who were there early. Soft cotton, free US shipping.'
+  },
+  'metallica-fan-girl-tee': {
+    title: 'Metallica Fan Girl Tee — Metal Band Graphic Tee',
+    description: 'They are not your emergency contacts. If you have to ask, the shirt is not for you. A metal fan graphic tee on soft heavyweight cotton.'
+  },
+  'minimalist-jimothy-tee': {
+    title: 'Minimalist Jimothy Tee — Seattle Meme Graphic Shirt',
+    description: 'Jimothy, stripped to the essentials. A quiet meme graphic tee about getting through it anyway. Soft cotton, printed to order, free US shipping.'
+  },
+  'neon-drip-street-art': {
+    title: 'Neon Drip Skull Tee — Street Art Graphic T-Shirt',
+    description: 'Dripping neon skulls that are either a cry for help or a lifestyle. Street art graphic tee on soft cotton. Nobody will ask, they will just step back.'
+  },
+  'no-comment': {
+    title: 'No Comment Tee — Funny Sarcastic Black Graphic Shirt',
+    description: 'Clean, black, and absolutely done with the conversation. The politest way to say you will not be elaborating. Sarcastic graphic tee, soft cotton.'
+  },
+  'normal-person-sb-tee': {
+    title: 'Normal Person Santa Barbara Tee — Vintage Badge Shirt',
+    description: 'A clean vintage badge, rising sun, rolling waves, the whole American Riviera package on crisp white. Santa Barbara graphic tee, free US shipping.'
+  },
+  'pink-pop-cowgirl': {
+    title: 'Pink Pop Cowgirl Tee — Retro Western Graphic Tee',
+    description: 'A cowpoke in heart-shaped shades who already knows how this ends. Part outlaw, part lovestruck, fully unbothered. Retro western graphic tee.'
+  },
+  'pink-skull-t-shirt-pastel-goth-tee-soft-grunge-alt-style-top': {
+    title: 'Pink Skull Tee — Pastel Goth Soft Grunge T-Shirt',
+    description: 'Three pink skulls across the chest of a slightly oversized tee. Pastel goth soft grunge graphic tee that feels lived-in from the first wear.'
+  },
+  'punky-memento-mori-tee': {
+    title: 'Punky Memento Mori Tee — Skull Grid Graphic T-Shirt',
+    description: 'Eighty small skulls in a tidy grid, quietly reminding you about mortality. A memento mori graphic tee that reads as a pattern until it does not.'
+  },
+  'retro-ca-license-plate-tee': {
+    title: 'Retro CA License Plate Tee — California Graphic Shirt',
+    description: 'The most iconic rectangle in the Golden State, reimagined on crisp white. Retro California license plate graphic tee. Free US shipping.'
+  },
+  'retro-raptor-tee': {
+    title: 'Retro Raptor Tee — Funny Dinosaur Graphic T-Shirt',
+    description: 'Cherry blossoms, storm clouds, a rising sun, and a screaming dinosaur holding it together on vibes alone. Funny dinosaur graphic tee, soft cotton.'
+  },
+  'rick-roll-tee': {
+    title: 'Rick Roll Tee — Funny Internet Meme Graphic Shirt',
+    description: 'It is 2026 and people are still falling for it. A small innocent-looking code on the front, complete dedication to the bit. Funny meme graphic tee.'
+  },
+  'robot-takeover-protective-gear': {
+    title: 'Robot Takeover Tee — Funny AI Graphic T-Shirt',
+    description: 'A preemptive act of submission to the mainframe, soft and boxy and perfectly calibrated. Funny AI graphic tee for the inevitable. Free shipping.'
+  },
+  'rule-62': {
+    title: 'Rule 62 Tee — Sobriety Recovery Graphic T-Shirt',
+    description: 'Do not take yourself so seriously. If you know, you know. A minimal recovery graphic tee that says it without saying it. Soft cotton, free shipping.'
+  },
+  'santa-barbara-neon-lion-tee-retro-pink-roar-graphic-t-shirt-black': {
+    title: 'Santa Barbara Lion Tee — Neon Varsity Graphic Shirt',
+    description: 'A varsity crest for people who never made the team and never wanted to. Hand-lettered arch type and lime stars on a black Santa Barbara tee.'
+  },
+  'santa-barbara-retro-palm-trees-hoodie': {
+    title: 'Santa Barbara Palm Trees Hoodie — Retro Graphic Hoodie',
+    description: 'The Cabrillo Blvd palms as a vintage pink-and-green poster, on a heavyweight hoodie. A Santa Barbara souvenir you will actually keep wearing.'
+  },
+  'santa-barbara-retro-palm-trees-tee': {
+    title: 'Santa Barbara Palm Trees Tee — Retro Graphic T-Shirt',
+    description: 'Vintage poster art of the Cabrillo Blvd palms, printed pink and green on soft cotton. Santa Barbara graphic tee designed by an actual local.'
+  },
+  'santa-barbara-retro-script': {
+    title: 'Santa Barbara Retro Script Tee — Vintage Graphic Tee',
+    description: 'Bold vintage typography in warm gold and orange on deep heather navy. A Santa Barbara graphic tee with genuine worn-in texture. Free US shipping.'
+  },
+  'santa-freakin-barbara-hoodie': {
+    title: 'Santa Freakin\' Barbara Hoodie — Neon 805 Hoodie',
+    description: 'Because some nights on the coast get cold and you are not compromising. Same neon green, same attitude, warmer. Santa Barbara 805 hoodie.'
+  },
+  'santa-freakin-barbara-tee': {
+    title: 'Santa Freakin\' Barbara Tee — Neon 805 Graphic Shirt',
+    description: 'Neon green on black, sharp as a set break and unapologetic as the 805. Santa Barbara graphic tee with exactly the right amount of attitude.'
+  },
+  'skating-skelly-idgaf': {
+    title: 'Skating Skelly Tee — Skateboard Skeleton Graphic Shirt',
+    description: 'He died in the nineties and he is still out here shredding. Go ahead, call the cops. Skateboard skeleton graphic tee on soft heavyweight cotton.'
+  },
+  'skeleton-grid-tee': {
+    title: 'Skeleton Grid Tee — Skull Pattern Graphic T-Shirt',
+    description: 'A grid of faded skull motifs that reads as texture from across the room and as a warning up close. Lightweight skull graphic tee in soft cotton.'
+  },
+  'smiley-face-sunshine-tee-retro-happy-face-shirt': {
+    title: 'Smiley Face Sunshine Tee — Retro Happy Face Shirt',
+    description: 'A retro smiley for people who still rewind the tape. Vintage happy face graphic tee on soft cotton, printed to order with free US shipping.'
+  },
+  'stack-of-sorrow-skulls': {
+    title: 'Stack of Sorrow Skulls Tee — Skull Graphic T-Shirt',
+    description: 'A pyramid of skulls stacked with no regard for the afterlife, under scratched lettering. Skull graphic tee on soft heavyweight cotton.'
+  },
+  'support-your-local-library-shirt': {
+    title: 'Support Your Local Library Shirt — Book Lover Tee',
+    description: 'A wholesome sentiment backed by a quiet threat of world domination. Book lover graphic tee for the civic-minded. Soft cotton, free US shipping.'
+  },
+  'surfing-skelly-retro-tee': {
+    title: 'Surfing Skelly Tee — Santa Barbara Surf Skull Shirt',
+    description: 'A sun-bleached skull clutching a surfboard, palms reflected in the lenses. Equal parts coastal dream and surfer reality. Surf skull graphic tee.'
+  },
+  't-rexcellent-shirt': {
+    title: 'T-Rexcellent Shirt — Funny Dinosaur Graphic Tee',
+    description: 'Vintage botanical print, the motto Eat Roar Repeat, and a tragically perfect pun. Funny dinosaur graphic tee on soft cotton, free US shipping.'
+  },
+  'the-cat-has-spoken-tee': {
+    title: 'The Cat Has Spoken Tee — Funny Cat Lover Graphic Tee',
+    description: 'The cat said it. We printed it. A funny cat graphic tee rendered with the dewy sincerity of a Lisa Frank fever dream. Soft cotton, free shipping.'
+  },
+  'the-daily-grindcore': {
+    title: 'The Daily Grindcore Tee — Funny Metal Coffee Shirt',
+    description: 'For everyone who clocks in and privately fantasises about a much louder existence. Metal meets your morning ritual. Funny coffee graphic tee.'
+  },
+  'total-geebags-only': {
+    title: 'Total Geebags Only Tee — Funny Irish Slang Shirt',
+    description: 'A members-only club with one entry requirement. Funny Irish slang graphic tee on 100% cotton, no side seams, printed to order in the US.'
+  },
+  'we-blame-society-but-we-are-society-t-shirt': {
+    title: 'We Blame Society Tee — Sarcastic Philosophy Shirt',
+    description: 'A brief philosophy lecture admitting the call is coming from inside the house. Sarcastic graphic tee for brunch or your city council meeting.'
+  },
+  'yeehaw-fuck-the-law-cowboy-skeleton-tee-outlaw-western-graphic-shirt': {
+    title: 'Yeehaw Outlaw Cowboy Skeleton Tee — Western Shirt',
+    description: 'A skeleton in a cowboy hat who decided the rules were a suggestion. Outlaw western graphic tee on soft heavyweight cotton, printed to order.'
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -46,7 +290,7 @@ const SITEMAP_PAGES = [
 //
 // BUMP THIS whenever a change materially alters what these pages say —
 // server-rendered copy, schema, on-page sections. Don't bump it for CSS.
-const CONTENT_LASTMOD = '2026-08-10';   // product SSR + Product/ItemList schema
+const CONTENT_LASTMOD = '2026-08-12';   // keyword-rich <title>/meta on all 62 products
 
 const SITEMAP_COLLECTIONS = [
   'graphic-tees', 'funny-t-shirts', 'skull-t-shirts',
@@ -1012,7 +1256,10 @@ async function renderProductPage(request, env, url) {
   const firstAvail = variants.find(v => v.available) || variants[0];
   const price = firstAvail ? String(firstAvail.price) : '';
   const anyAvailable = variants.some(v => v.available);
-  const title = `${seo.title || product.title} — ${BRAND}`;
+  // An override is a complete title, used verbatim. Appending " — Becky Wexlin
+  // Creative" (24 chars) to it would push past the ~60 Google renders and
+  // truncate the keywords the override exists to add.
+  const title = seo.title || `${product.title} — ${BRAND}`;
 
   // Google's merchant listing rich results treat free shipping and a stated
   // return window as strongly-recommended fields — without them the listing is
