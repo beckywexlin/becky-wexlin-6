@@ -723,9 +723,19 @@ ul {
   max-width: var(--max-w);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 48px;
+  /* Five columns since Collections was added: logo block, then Collections,
+     Shop, Info, Help. The gap comes down from 48px because five columns at 48
+     leaves the link text wrapping mid-phrase on 1280px screens. */
+  grid-template-columns: 1.6fr repeat(4, 1fr);
+  gap: 36px;
   margin-bottom: 48px;
+}
+
+/* Below ~1080px five columns crush the two-word collection names onto three
+   lines each. Drop to three before the existing 768px two-column rule. */
+@media (max-width: 1080px) {
+  .footer-grid { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .footer-logo { grid-column: 1 / -1; }
 }
 
 .footer-logo img {
