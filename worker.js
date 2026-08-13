@@ -290,7 +290,7 @@ const SITEMAP_PAGES = [
 //
 // BUMP THIS whenever a change materially alters what these pages say —
 // server-rendered copy, schema, on-page sections. Don't bump it for CSS.
-const CONTENT_LASTMOD = '2026-08-12';   // keyword-rich <title>/meta on all 62 products
+const CONTENT_LASTMOD = '2026-08-12';   // product titles + blog answer blocks & product strip
 
 const SITEMAP_COLLECTIONS = [
   'graphic-tees', 'funny-t-shirts', 'skull-t-shirts',
@@ -429,6 +429,10 @@ export default {
     }
     if (url.pathname.startsWith('/collections/')) {
       return await renderCollection(request, env);
+    }
+    // Individual posts only — /blog/ is the index and has no strip.
+    if (url.pathname.startsWith('/blog/') && url.pathname !== '/blog/') {
+      return await renderBlogPost(request, env);
     }
 
     const slug = url.pathname.slice(1);
@@ -1045,6 +1049,59 @@ function collectionPreviewHTML(slugs, bySlug) {
     + `alt="${esc(p.title)}" width="300" height="300" loading="lazy" decoding="async" `
     + `onerror="this.parentNode.style.visibility='hidden'" /></span>`
   ).join('');
+}
+
+// The blog carries 947 of the site's 969 organic impressions and passes almost
+// none of it to anything for sale: the top post links to one product, and the
+// marquee that was supposed to link to more has been shipping empty since it
+// was built — the CSS exists, nothing ever filled the track. Google saw no
+// links there at all.
+//
+// Each post names its own products via data-products, matching the data-preview
+// pattern on the /collections/ hub. Filled from the live catalog so a renamed
+// product can't leave a dead link in the one place with traffic to spend.
+function blogStripHTML(slugs, bySlug) {
+  const picks = slugs.map(s => bySlug.get(s)).filter(Boolean);
+  if (!picks.length) return '';
+  const item = p =>
+    `<a class="product-strip-item" href="/${esc(p.slug)}">`
+    + `<span class="product-strip-thumb"><img src="/img/${encodeURIComponent(p.image || '')}" `
+    + `alt="${esc(p.title)}" width="36" height="36" loading="lazy" decoding="async" /></span>`
+    + `<span class="product-strip-name">${esc(p.title)}</span>`
+    + `<span class="product-strip-price">$${esc(p.price)}</span>`
+    + '</a><span class="product-strip-divider">&bull;</span>';
+  const run = picks.map(item).join('');
+  // The marquee animates to translateX(-50%), so the track has to hold the run
+  // twice or it jumps at the loop point. The copy is aria-hidden — it's the same
+  // links again, and a screen reader shouldn't read the list twice.
+  return run + `<span aria-hidden="true">${run}</span>`;
+}
+
+// Blog posts are static assets; only the strip needs the catalog. Bail back to
+// the raw asset whenever there's nothing to fill, so a catalog outage costs the
+// strip and never the article.
+async function renderBlogPost(request, env) {
+  const assetRes = await env.ASSETS.fetch(request);
+  if (!(assetRes.headers.get('content-type') || '').includes('text/html')) return assetRes;
+  const html = await assetRes.text();
+  if (!html.includes('data-products=')) return htmlResponse(html, assetRes);
+
+  const products = await fetchCatalog();
+  if (!products.length) return htmlResponse(html, assetRes);
+  const bySlug = new Map(products.map(p => [p.slug, p]));
+
+  const out = new HTMLRewriter()
+    .on('[data-products]', {
+      element(el) {
+        let picks = [];
+        try { picks = JSON.parse(el.getAttribute('data-products') || '[]'); } catch {}
+        const inner = blogStripHTML(picks, bySlug);
+        if (inner) el.setInnerContent(inner, { html: true });
+      }
+    })
+    .transform(new Response(html, assetRes));
+
+  return htmlResponse(await out.text(), assetRes);
 }
 
 async function renderCollection(request, env) {
