@@ -3,8 +3,8 @@ const SHOP_ID = "26790889";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Admin-Key",
 };
 
 function json(data, status = 200) {
@@ -241,67 +241,82 @@ export default {
       }, ctx);
     }
 
-    // Printify webhook — shipment events
+    // ── Printify webhook: shipment events ────────────────────────────────
+    // Fires when a shipment is created (tracking exists) or delivered. The
+    // payload carries no email and no product names — only SKUs — so the order
+    // has to be fetched to build anything a customer would want to read.
     if (pathname === "/webhooks/printify" && req.method === "POST") {
-      try {
-        const payload = await req.json();
-        const topic = payload.topic || payload.type || '';
+      // The signature is over the exact bytes Printify sent, so the raw text has
+      // to be read before parsing.
+      const raw = await req.text();
 
-        if (topic === 'order:shipment:delivered' || topic === 'order:shipment:ready') {
-          const shipment = payload.resource || payload;
-          const orderId = shipment.order_id || shipment.id || '';
-          const tracking = shipment.carrier?.tracking_number || shipment.tracking?.number || '';
-          const carrier = shipment.carrier?.name || shipment.tracking?.carrier || '';
-          const trackingUrl = shipment.carrier?.tracking_url || shipment.tracking?.url || '';
-          const items = shipment.line_items || shipment.items || [];
-
-          // Look up the original order to get the customer email
-          let email = shipment.address?.email || '';
-          if (!email && orderId) {
-            const orderRes = await printify(`/shops/${SHOP_ID}/orders/${orderId}.json`, env);
-            if (orderRes.ok) {
-              email = orderRes.body.address_to?.email || '';
-            }
-          }
-
-          if (email) {
-            // Send "Order Shipped" event to Klaviyo
-            const klaviyoPayload = {
-              data: {
-                type: 'event',
-                attributes: {
-                  metric: { data: { type: 'metric', attributes: { name: 'Order Shipped' } } },
-                  profile: { data: { type: 'profile', attributes: { email } } },
-                  properties: {
-                    order_id: orderId,
-                    tracking_number: tracking,
-                    carrier,
-                    tracking_url: trackingUrl,
-                    items: items.map(i => ({
-                      name: i.title || i.name || '',
-                      quantity: i.quantity || 1,
-                    })),
-                  },
-                },
-              },
-            };
-
-            await fetch('https://a.klaviyo.com/api/events', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Klaviyo-API-Key ${env.KLAVIYO_API_KEY}`,
-                'Content-Type': 'application/json',
-                'revision': '2024-10-15',
-              },
-              body: JSON.stringify(klaviyoPayload),
-            });
-          }
-        }
-
-        return json({ received: true });
-      } catch (e) {
-        return json({ error: e.message }, 500);
+      if (env.PRINTIFY_WEBHOOK_SECRET) {
+        const ok = await verifyPrintifySignature(raw, req.headers.get('X-Pfy-Signature'), env.PRINTIFY_WEBHOOK_SECRET);
+        if (!ok) return json({ error: "bad signature" }, 401);
       }
+
+      let payload;
+      try { payload = JSON.parse(raw); }
+      catch { return json({ error: "bad json" }, 400); }
+
+      const topic = payload.type || payload.topic || '';
+      const SHIPMENT_TOPICS = {
+        'order:shipment:created': 'Order Shipped',
+        'order:shipment:delivered': 'Order Delivered',
+      };
+      const metricName = SHIPMENT_TOPICS[topic];
+
+      // Anything else is acknowledged, not an error — Printify retries on a
+      // non-2xx, and retrying a topic we don't act on achieves nothing.
+      if (!metricName) return json({ received: true, ignored: topic });
+
+      // Printify retries, and a duplicate would send a second "it shipped"
+      // email. Klaviyo dedupes on $event_id, so pass its event id straight
+      // through rather than inventing one.
+      const eventId = payload.id || '';
+
+      // Do the slow part after responding. Printify times these out, and a
+      // timeout is recorded as a delivery failure that triggers another retry.
+      ctx.waitUntil(handleShipment(payload, topic, metricName, eventId, env));
+      return json({ received: true });
+    }
+
+    // ── Webhook administration ───────────────────────────────────────────
+    // Registering a webhook needs the Printify key, which lives here as a
+    // secret. Exposing these behind ADMIN_KEY beats copying the key onto a
+    // laptop to run curl once.
+    if (pathname === "/admin/webhooks") {
+      if (!env.ADMIN_KEY) return json({ error: "ADMIN_KEY not configured" }, 503);
+      const given = req.headers.get('X-Admin-Key') || url.searchParams.get('key') || '';
+      if (given !== env.ADMIN_KEY) return json({ error: "unauthorized" }, 401);
+
+      if (req.method === "GET") {
+        const r = await printify(`/shops/${SHOP_ID}/webhooks.json`, env);
+        return json(r.body, r.ok ? 200 : r.status);
+      }
+
+      if (req.method === "POST") {
+        const { topic, url: target } = await req.json().catch(() => ({}));
+        if (!topic || !target) return json({ error: "topic and url required" }, 400);
+        const body = { topic, url: target };
+        // Register with the same secret the receiver verifies against, read
+        // from the worker's own environment. The value never has to be typed,
+        // pasted or transported anywhere to get the two sides matching.
+        if (env.PRINTIFY_WEBHOOK_SECRET) body.secret = env.PRINTIFY_WEBHOOK_SECRET;
+        const r = await printify(`/shops/${SHOP_ID}/webhooks.json`, env, {
+          method: 'POST', body: JSON.stringify(body),
+        });
+        return json(r.body, r.ok ? 200 : r.status);
+      }
+
+      if (req.method === "DELETE") {
+        const id = url.searchParams.get('id');
+        if (!id) return json({ error: "id required" }, 400);
+        const r = await printify(`/shops/${SHOP_ID}/webhooks/${id}.json`, env, { method: 'DELETE' });
+        return json(r.body, r.ok ? 200 : r.status);
+      }
+
+      return json({ error: "method not allowed" }, 405);
     }
 
     return json({ error: "Not found" }, 404);
@@ -317,6 +332,96 @@ export default {
     );
   },
 };
+
+// Printify signs the raw body with HMAC-SHA256 and sends the hex digest in
+// X-Pfy-Signature, usually prefixed "sha256=". Without the secret set, the
+// endpoint is an open door: anyone who guesses the URL could fake a shipment
+// and send a customer a bogus tracking email.
+async function verifyPrintifySignature(raw, header, secret) {
+  if (!header) return false;
+  const sent = header.trim().replace(/^sha256=/i, '').toLowerCase();
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(raw));
+  const want = [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('');
+  if (want.length !== sent.length) return false;
+  // Constant-time compare — a length-agnostic === leaks the digest byte by byte.
+  let diff = 0;
+  for (let i = 0; i < want.length; i++) diff |= want.charCodeAt(i) ^ sent.charCodeAt(i);
+  return diff === 0;
+}
+
+async function handleShipment(payload, topic, metricName, eventId, env) {
+  const resource = payload.resource || {};
+  const data = resource.data || {};
+  const orderId = resource.id || '';
+  // carrier lives at resource.data.carrier, NOT resource.carrier.
+  const carrier = data.carrier || {};
+  const shippedSkus = new Set((data.skus || []).map(String));
+
+  if (!orderId) return;
+
+  const orderRes = await printify(`/shops/${SHOP_ID}/orders/${orderId}.json`, env);
+  if (!orderRes.ok) return;
+  const order = orderRes.body || {};
+  const to = order.address_to || {};
+  const email = to.email || '';
+  if (!email) return;
+
+  // A split shipment only covers some line items, so report what actually
+  // shipped. If the SKUs don't line up, fall back to the whole order rather
+  // than sending an email with an empty item list.
+  const all = order.line_items || [];
+  const matched = all.filter(li => shippedSkus.has(String(li.metadata?.sku || '')));
+  const items = (matched.length ? matched : all).map(li => ({
+    name: li.metadata?.title || '',
+    variant: li.metadata?.variant_label || '',
+    quantity: li.quantity || 1,
+    // Printify prices are integer cents.
+    price: ((li.metadata?.price || 0) / 100).toFixed(2),
+  }));
+
+  const properties = {
+    order_id: orderId,
+    carrier: carrier.code || '',
+    tracking_number: carrier.tracking_number || '',
+    tracking_url: carrier.tracking_url || '',
+    shipped_at: data.shipped_at || '',
+    partial_shipment: matched.length > 0 && matched.length < all.length,
+    items,
+  };
+  if (eventId) properties.$event_id = eventId;
+
+  await fetch('https://a.klaviyo.com/api/events/', {
+    method: 'POST',
+    headers: {
+      Authorization: `Klaviyo-API-Key ${env.KLAVIYO_API_KEY}`,
+      'Content-Type': 'application/json',
+      revision: '2024-10-15',
+    },
+    body: JSON.stringify({
+      data: {
+        type: 'event',
+        attributes: {
+          metric: { data: { type: 'metric', attributes: { name: metricName } } },
+          profile: {
+            data: {
+              type: 'profile',
+              attributes: {
+                email,
+                first_name: to.first_name || '',
+                last_name: to.last_name || '',
+              },
+            },
+          },
+          properties,
+        },
+      },
+    }),
+  });
+}
 
 function stripHtml(html) {
   if (!html) return '';
