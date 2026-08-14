@@ -26,3 +26,7 @@ scripts
 pinterest-out
 pinterest-worker.js
 wrangler.pinterest.jsonc
+
+# Klaviyo template backups taken before an edit. Not secret, but they are not
+# site content and the assets directory is the repo root.
+.klaviyo-backups
