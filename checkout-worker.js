@@ -421,7 +421,16 @@ export default {
       // GA4 Measurement Protocol — server-side purchase event (survives closed
       // tabs, ad blockers, and redirect-based payment methods). Requires
       // GA4_API_SECRET set via `wrangler secret put GA4_API_SECRET`.
-      if (env.GA4_API_SECRET && gaClientId) {
+      // Both purchase paths used to depend on GA4 being loaded in the browser:
+      // an ad blocker means no gtag, which means no _ga cookie, which meant no
+      // gaClientId and this server-side event was skipped as well. They failed
+      // together, which is why Klaviyo recorded more orders than GA4.
+      //
+      // A synthesized id loses campaign attribution for that order but records
+      // the revenue, which is the part you cannot reconstruct later. GA4
+      // deduplicates purchases by transaction_id, so this is safe alongside the
+      // client-side event on /order-success.
+      if (env.GA4_API_SECRET) {
         try {
           const subtotal = items.reduce((sum, item) => {
             const price = typeof item.price === 'string'
@@ -438,8 +447,16 @@ export default {
               : item.price,
             quantity: item.quantity || 1,
           }));
+          // GA4 wants "<random>.<timestamp>". Derived from the payment intent
+          // so a retry of the same order reuses the same pseudo-user.
+          let hash = 0;
+          for (let i = 0; i < paymentIntentId.length; i++) {
+            hash = (hash * 31 + paymentIntentId.charCodeAt(i)) >>> 0;
+          }
+          const fallbackClientId = `${hash}.${Math.floor(Date.now() / 1000)}`;
+
           const mp = {
-            client_id: gaClientId,
+            client_id: gaClientId || fallbackClientId,
             events: [{
               name: 'purchase',
               params: {
@@ -447,6 +464,10 @@ export default {
                 value: subtotal - promo.discount / 100,
                 currency: 'USD',
                 shipping: 0,
+                // Measurement Protocol events without this are recorded but
+                // dropped from most session-scoped reports, which reads as the
+                // event never arriving.
+                engagement_time_msec: 1,
                 items: ga4Items,
               },
             }],

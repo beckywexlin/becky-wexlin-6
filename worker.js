@@ -447,10 +447,28 @@ export default {
 
     const response = await env.ASSETS.fetch(request);
     const ext = url.pathname.split('.').pop();
-    const immutable = ['js', 'css', 'woff2', 'woff', 'ttf'];
-    const longCache = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico', 'avif'];
+    // `immutable` is a promise that the bytes at this URL will never change, and
+    // it is only safe when the filename carries a hash or version. These don't:
+    // the script tags point at plain /js/checkout.js. Marking those immutable
+    // for a year told every browser and the Cloudflare edge never to revalidate,
+    // so a fix to checkout.js or popup.js reached nobody who had visited before
+    // — the edge kept serving the old file on a cf-cache-status: HIT while the
+    // origin had the new one.
+    //
+    // Fonts and images are genuinely content-addressed in practice (a new logo
+    // gets a new filename), so they keep the long immutable cache. JS and CSS
+    // revalidate instead: Workers Assets already sends strong ETags, so the
+    // common case is a 304 with no body, which costs almost nothing.
+    const revalidate = ['js', 'css'];
+    const immutable = ['woff2', 'woff', 'ttf', 'jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'ico', 'avif'];
 
-    if (immutable.includes(ext) || longCache.includes(ext)) {
+    if (revalidate.includes(ext)) {
+      const headers = new Headers(response.headers);
+      headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
+      return new Response(response.body, { status: response.status, headers });
+    }
+
+    if (immutable.includes(ext)) {
       const headers = new Headers(response.headers);
       headers.set('Cache-Control', 'public, max-age=31536000, immutable');
       return new Response(response.body, { status: response.status, headers });

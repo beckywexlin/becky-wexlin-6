@@ -196,6 +196,31 @@ function debounceTax() {
   taxDebounce = setTimeout(calculateTax, 500);
 }
 
+
+// checkout.html has shipped a styled #checkout-error box since launch and
+// nothing ever wrote to it. Every Stripe failure — declined card, failed 3-D
+// Secure, expired card — was swallowed and the button simply un-greyed itself,
+// so a shopper was told nothing and had no idea what to correct. 13 checkouts
+// reached payment in 30 days and none completed.
+function showCheckoutError(message) {
+  const el = document.getElementById('checkout-error');
+  if (el) {
+    el.textContent = message;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  // Without this a payment failure is invisible in analytics too, so the
+  // funnel looks like abandonment rather than breakage.
+  if (typeof gtag === 'function') {
+    gtag('event', 'checkout_error', { description: String(message).slice(0, 120) });
+  }
+}
+
+function clearCheckoutError() {
+  const el = document.getElementById('checkout-error');
+  if (el) { el.textContent = ''; el.style.display = 'none'; }
+}
+
 // ── SUBMIT ORDER ──
 async function submitOrder(shipping) {
   const { error, paymentIntent } = await stripe.confirmPayment({
@@ -221,6 +246,16 @@ async function submitOrder(shipping) {
   });
 
   if (error) {
+    // Stripe's own copy is customer-facing and specific ("Your card was
+    // declined", "Your card has expired"). Only card_error/validation_error
+    // carry a message meant for shoppers; anything else gets a plain fallback
+    // rather than leaking an internal string.
+    const shopperFacing = error.type === 'card_error' || error.type === 'validation_error';
+    showCheckoutError(
+      shopperFacing && error.message
+        ? error.message
+        : 'We could not process that payment. Please check your card details or try another card.'
+    );
     return false;
   }
 
@@ -264,6 +299,25 @@ async function submitOrder(shipping) {
       showBlockedCountryNotice(shipping.country);
       return false;
     }
+  }
+
+  // The card is charged by this point. Redirecting to /order-success on a
+  // failed create-order would clear the cart and tell the customer everything
+  // worked while no order exists anywhere — the worst possible outcome, and
+  // the previous behaviour for any non-403 failure.
+  if (!orderRes || !orderRes.ok) {
+    let detail = '';
+    try { detail = (await orderRes.json()).error || ''; } catch (e) {}
+    showCheckoutError(
+      'Your payment went through, but we could not create the order'
+      + (detail ? ' (' + detail + ')' : '')
+      + '. Nothing has been lost — email hello@beckywexlin.com with this reference and we will sort it out or refund you: '
+      + paymentIntent.id
+    );
+    if (typeof gtag === 'function') {
+      gtag('event', 'exception', { description: 'create_order_failed_after_payment', fatal: true });
+    }
+    return false;
   }
 
   // GA4 purchase payload — stashed here, fired once on the order-success page
@@ -561,6 +615,7 @@ if (country === 'US') {
       localStorage.setItem('bw-shipping', JSON.stringify(shipping));
 
       const btn = document.getElementById('checkout-submit');
+      clearCheckoutError();
       btn.textContent = 'Processing...';
       btn.disabled = true;
 
@@ -589,8 +644,21 @@ if (country === 'US') {
           const msg = document.getElementById('blocked-country-message');
           if (msg && body.message) msg.textContent = body.message;
           showBlockedCountryNotice(shipping.country);
+          // Returning without restoring the button left it disabled on
+          // "Processing..." forever, so the page looked hung.
+          btn.textContent = 'Place order';
+          btn.disabled = false;
           return;
         }
+      }
+
+      // Any other non-OK response here means the amount was never updated, so
+      // charging would take the wrong total. Stop rather than proceed.
+      if (!piRes.ok) {
+        showCheckoutError('We could not finalise your total. Please try again in a moment.');
+        btn.textContent = 'Place order';
+        btn.disabled = false;
+        return;
       }
 
       const success = await submitOrder(shipping);
