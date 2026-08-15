@@ -1095,6 +1095,25 @@ function blogStripHTML(slugs, bySlug) {
   return run + `<span aria-hidden="true">${run}</span>`;
 }
 
+// The only buy-prompt in a post was the CTA at the very end, and these run
+// 1,000-2,900 words against 2.1 pages/session — most readers never reach it.
+// This sits mid-article, where someone who is still reading has already decided
+// the writing is worth their time.
+function blogInlineCardsHTML(slugs, bySlug) {
+  const picks = slugs.map(s => bySlug.get(s)).filter(Boolean).slice(0, 3);
+  if (picks.length < 3) return '';
+  const cards = picks.map(p =>
+    `<a class="post-shop-card" href="/${esc(p.slug)}">`
+    + `<span class="post-shop-img"><img src="/img/${encodeURIComponent(p.image || '')}" `
+    + `alt="${esc(p.title)}" width="240" height="240" loading="lazy" decoding="async" /></span>`
+    + `<span class="post-shop-name">${esc(p.title)}</span>`
+    + `<span class="post-shop-price">$${esc(p.price)}</span>`
+    + '</a>'
+  ).join('');
+  return '<p class="post-shop-label">While you’re here</p>'
+    + `<div class="post-shop-grid">${cards}</div>`;
+}
+
 // Blog posts are static assets; only the strip needs the catalog. Bail back to
 // the raw asset whenever there's nothing to fill, so a catalog outage costs the
 // strip and never the article.
@@ -1102,21 +1121,27 @@ async function renderBlogPost(request, env) {
   const assetRes = await env.ASSETS.fetch(request);
   if (!(assetRes.headers.get('content-type') || '').includes('text/html')) return assetRes;
   const html = await assetRes.text();
-  if (!html.includes('data-products=')) return htmlResponse(html, assetRes);
+  if (!html.includes('data-products=') && !html.includes('data-shop-cta=')) {
+    return htmlResponse(html, assetRes);
+  }
 
   const products = await fetchCatalog();
   if (!products.length) return htmlResponse(html, assetRes);
   const bySlug = new Map(products.map(p => [p.slug, p]));
 
+  const fill = (el, render) => {
+    let picks = [];
+    const attr = el.getAttribute('data-products') || el.getAttribute('data-shop-cta') || '[]';
+    try { picks = JSON.parse(attr); } catch {}
+    const inner = render(picks, bySlug);
+    // Leave the element empty rather than half-filled — both blocks collapse
+    // to nothing via :empty, which beats a broken row of gaps.
+    if (inner) el.setInnerContent(inner, { html: true });
+  };
+
   const out = new HTMLRewriter()
-    .on('[data-products]', {
-      element(el) {
-        let picks = [];
-        try { picks = JSON.parse(el.getAttribute('data-products') || '[]'); } catch {}
-        const inner = blogStripHTML(picks, bySlug);
-        if (inner) el.setInnerContent(inner, { html: true });
-      }
-    })
+    .on('[data-products]', { element(el) { fill(el, blogStripHTML); } })
+    .on('[data-shop-cta]', { element(el) { fill(el, blogInlineCardsHTML); } })
     .transform(new Response(html, assetRes));
 
   return htmlResponse(await out.text(), assetRes);

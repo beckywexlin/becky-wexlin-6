@@ -411,3 +411,19 @@
   color: var(--lime);
   margin-bottom: 8px;
 }
+
+/* ── MID-ARTICLE SHOP BLOCK ──
+   The only buy-prompt used to be the CTA at the very end of a 1,000-2,900 word
+   post, which almost nobody reached. Filled server-side from the live catalog
+   (blogInlineCardsHTML in worker.js) so a renamed product can't leave a gap. */
+.post-inline-shop { margin: 44px 0; padding: 24px 0; border-top: 1px solid #2A2A2A; border-bottom: 1px solid #2A2A2A; }
+.post-inline-shop:empty { display: none; }
+.post-shop-label { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--lime); margin: 0 0 16px; }
+.post-shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.post-shop-card { display: block; text-decoration: none; color: inherit; }
+.post-shop-img { display: block; aspect-ratio: 1 / 1; overflow: hidden; border-radius: 8px; background: #1A1A1A; border: 1px solid #2A2A2A; }
+.post-shop-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s ease; }
+.post-shop-card:hover .post-shop-img img { transform: scale(1.05); }
+.post-shop-name { display: block; font-size: 13.5px; line-height: 1.4; color: #ddd; margin: 10px 0 2px; }
+.post-shop-price { display: block; font-size: 13.5px; font-weight: 500; color: var(--lime); }
+@media (max-width: 560px) { .post-shop-grid { grid-template-columns: 1fr 1fr; } .post-shop-card:nth-child(3) { display: none; } }
