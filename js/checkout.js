@@ -197,6 +197,37 @@ function debounceTax() {
 }
 
 
+// A zero-total order: no card, no payment intent, straight to the worker. The
+// reference is only an idempotency key for Printify — there is no charge to
+// reconcile it against.
+async function submitFreeOrder(shipping) {
+  const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+  const orderRes = await fetch(CHECKOUT_WORKER + '/create-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      items: cart,
+      shipping,
+      paymentIntentId: null,
+      promoCode: currentPromoCode || '',
+      gaClientId: readGaClientId()
+    })
+  });
+
+  if (!orderRes || !orderRes.ok) {
+    let detail = '';
+    try { detail = (await orderRes.json()).error || ''; } catch (e) {}
+    showCheckoutError('We could not place that order' + (detail ? ' (' + detail + ')' : '')
+      + '. Please try again, or email hello@beckywexlin.com.');
+    return false;
+  }
+
+  localStorage.removeItem('bw-cart');
+  localStorage.removeItem('bw-shipping');
+  window.location.href = '/order-success';
+  return true;
+}
+
 // checkout.html has shipped a styled #checkout-error box since launch and
 // nothing ever wrote to it. Every Stripe failure — declined card, failed 3-D
 // Secure, expired card — was swallowed and the button simply un-greyed itself,
@@ -222,7 +253,28 @@ function clearCheckoutError() {
 }
 
 // ── SUBMIT ORDER ──
+// True when a promo has taken the total to zero. Stripe cannot charge $0, so
+// the amount used to be floored at 50 cents — a "100% off" code took real money
+// while the confirmation email said $0.00. A free order skips Stripe entirely;
+// the worker re-validates the promo server-side before it will accept one.
+// _ga=GA1.1.123456789.1234567890 -> "123456789.1234567890"
+function readGaClientId() {
+  try {
+    const c = document.cookie.split('; ').find(x => x.startsWith('_ga='));
+    return c ? c.split('.').slice(2).join('.') : '';
+  } catch (e) { return ''; }
+}
+
+function orderTotalCents() {
+  const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+  const subtotal = cart.reduce(
+    (sum, item) => sum + parseFloat(String(item.price).replace('$', '')) * (item.quantity || 1), 0);
+  return Math.round((subtotal - currentDiscount + currentTaxAmount) * 100);
+}
+
 async function submitOrder(shipping) {
+  if (orderTotalCents() <= 0) return submitFreeOrder(shipping);
+
   const { error, paymentIntent } = await stripe.confirmPayment({
     elements,
     confirmParams: {
@@ -262,16 +314,7 @@ async function submitOrder(shipping) {
   // Send order to Printify via worker
   const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
 
-  // Read GA4 client_id so the worker can attribute the server-side purchase event
-  let gaClientId = '';
-  try {
-    const gaCookie = document.cookie.split('; ').find(c => c.startsWith('_ga='));
-    if (gaCookie) {
-      // _ga=GA1.1.123456789.1234567890 → "123456789.1234567890"
-      const parts = gaCookie.split('.');
-      gaClientId = parts.slice(2).join('.');
-    }
-  } catch (e) {}
+  const gaClientId = readGaClientId();
 
   const orderRes = await fetch(CHECKOUT_WORKER + '/create-order', {
     method: 'POST',

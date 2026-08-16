@@ -60,6 +60,54 @@ function blockedResponse(code) {
 }
 
 // Calculate subtotal in cents from cart items
+// The catalog is the only trustworthy source of a price. Everything below used
+// to read item.price straight out of the request body, which meant the amount
+// charged was whatever the browser claimed — a shirt could be bought for a cent
+// by editing one number before submitting.
+const CATALOG_URL = 'https://becky-wexlin-api.beckywexlin.workers.dev/api/products';
+
+async function catalogPrices() {
+  // Cached at the edge by the API worker already; this second cache just keeps
+  // a checkout from paying that latency on every one of its three calls.
+  const cache = caches.default;
+  const key = new Request(CATALOG_URL, { method: 'GET' });
+  let res = await cache.match(key);
+  if (!res) {
+    res = await fetch(CATALOG_URL);
+    if (!res.ok) return null;
+    const store = new Response(res.clone().body, res);
+    store.headers.set('Cache-Control', 'public, max-age=300');
+    await cache.put(key, store);
+  }
+  const data = await res.json().catch(() => null);
+  if (!data || !Array.isArray(data.products)) return null;
+  const map = new Map();
+  for (const prod of data.products) {
+    const cents = Math.round(parseFloat(String(prod.price).replace('$', '')) * 100);
+    if (prod.id && Number.isFinite(cents)) map.set(String(prod.id), cents);
+  }
+  return map.size ? map : null;
+}
+
+// Returns { cents } or { error }. A missing product is refused rather than
+// priced at zero — silently dropping a line item is how you ship for free.
+function pricedSubtotal(items, priceMap) {
+  if (!Array.isArray(items) || !items.length) return { error: 'Cart is empty' };
+  let cents = 0;
+  for (const item of items) {
+    const unit = priceMap.get(String(item.id));
+    if (unit === undefined) return { error: `Unknown product: ${item.id}` };
+    const qty = Number(item.quantity) || 1;
+    if (!Number.isInteger(qty) || qty < 1 || qty > 25) {
+      return { error: 'Invalid quantity' };
+    }
+    cents += unit * qty;
+  }
+  return { cents };
+}
+
+// Kept for the Klaviyo payload, which reports what the shopper saw. Never used
+// to decide what to charge.
 function subtotalCents(items) {
   return items.reduce((sum, item) => {
     const price = typeof item.price === 'string'
@@ -239,7 +287,11 @@ export default {
     // ── POST /create-payment-intent ──
     if (pathname === '/create-payment-intent' && req.method === 'POST') {
       const { items, tax, promoCode } = await req.json();
-      const subtotal = subtotalCents(items);
+      const priceMap1 = await catalogPrices();
+      if (!priceMap1) return json({ error: 'Pricing unavailable, please retry' }, 503);
+      const priced1 = pricedSubtotal(items, priceMap1);
+      if (priced1.error) return json({ error: priced1.error }, 400);
+      const subtotal = priced1.cents;
       const promo = applyPromo(promoCode, subtotal);
       const taxCents = Math.round((tax || 0) * 100);
       const amount = Math.max(subtotal - promo.discount + taxCents, 50);
@@ -322,10 +374,15 @@ export default {
         return blockedResponse(country);
       }
 
-      const subtotal = subtotalCents(items);
+      const priceMap2 = await catalogPrices();
+      if (!priceMap2) return json({ error: 'Pricing unavailable, please retry' }, 503);
+      const priced2 = pricedSubtotal(items, priceMap2);
+      if (priced2.error) return json({ error: priced2.error }, 400);
+      const subtotal = priced2.cents;
       const promo = applyPromo(promoCode, subtotal);
       const taxCents = Math.round((tax || 0) * 100);
-      const amount = Math.max(subtotal - promo.discount + taxCents, 50);
+      const due = subtotal - promo.discount + taxCents;
+      const amount = Math.max(due, 50);
 
       try {
         const result = await stripeAPI(env, 'POST', `/payment_intents/${paymentIntentId}`, {
@@ -333,6 +390,9 @@ export default {
           metadata: {
             tax_amount_cents: String(taxCents),
             tax_calculation_id: taxCalculationId || '',
+            // Stamped on the intent so /create-order can check the charge
+            // against a figure Stripe holds, not one the browser resends.
+            expected_amount_cents: String(amount),
           },
         });
 
@@ -363,6 +423,50 @@ export default {
         return blockedResponse(shipping && shipping.country);
       }
 
+      // ── Payment verification ──────────────────────────────────────────
+      // Nothing here previously asked Stripe whether the money arrived. The
+      // browser supplied a paymentIntentId and this endpoint took it on trust,
+      // so a POST with any string and any cart printed and shipped real goods
+      // at our expense. Every order is now checked against Stripe before
+      // anything reaches Printify.
+      const priceMap = await catalogPrices();
+      if (!priceMap) return json({ error: 'Pricing unavailable, please retry' }, 503);
+      const priced = pricedSubtotal(items, priceMap);
+      if (priced.error) return json({ error: priced.error }, 400);
+      const orderPromo = applyPromo(promoCode, priced.cents);
+      const dueCents = priced.cents - orderPromo.discount;
+
+      if (dueCents > 0) {
+        if (!paymentIntentId || !/^pi_[A-Za-z0-9_]+$/.test(String(paymentIntentId))) {
+          return json({ error: 'Missing payment' }, 402);
+        }
+        const piRes = await stripeAPI(env, 'GET', `/payment_intents/${paymentIntentId}`);
+        if (piRes.error || !piRes.id) {
+          return json({ error: 'Payment could not be verified' }, 402);
+        }
+        if (piRes.status !== 'succeeded') {
+          return json({ error: `Payment not completed (${piRes.status})` }, 402);
+        }
+        // amount_received is what Stripe actually captured. Comparing against
+        // the amount we intended to charge stops a stale or tampered intent
+        // from covering a larger cart.
+        const received = Number(piRes.amount_received || 0);
+        const expected = Number(piRes.metadata?.expected_amount_cents || piRes.amount || 0);
+        if (received < expected || received < Math.max(dueCents, 50)) {
+          console.error('UNDERPAID ORDER refused', paymentIntentId, received, expected, dueCents);
+          return json({ error: 'Payment amount mismatch' }, 402);
+        }
+      } else {
+        // A genuinely free order. Stripe cannot charge zero, so this used to be
+        // floored at 50 cents: a "100% off" code quietly took real money and
+        // the confirmation email still said $0.00. With the promo validated
+        // server-side there is nothing to charge, so no intent is created.
+        console.log('FREE ORDER via promo', promoCode || '(none)', 'items', items.length);
+        if (!orderPromo.valid || orderPromo.discount < priced.cents) {
+          return json({ error: 'Order total could not be verified' }, 402);
+        }
+      }
+
       const line_items = items.map(item => ({
         product_id: item.id,
         variant_id: typeof item.variantId === 'number'
@@ -372,7 +476,9 @@ export default {
       }));
 
       const orderBody = {
-        external_id: paymentIntentId,
+        // Printify rejects a duplicate external_id, which doubles as the replay
+        // guard: the same payment intent cannot produce two orders.
+        external_id: paymentIntentId || `free_${promoCode || 'promo'}_${shipping.email}`,
         line_items,
         shipping_method: 1,
         address_to: {
