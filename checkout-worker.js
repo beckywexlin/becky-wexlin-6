@@ -233,10 +233,12 @@ async function klaviyoPlacedOrder(email, firstName, lastName, items, orderId, sh
 const PROMO_CODES = {
   'WELCOME10':        { type: 'percent', value: 10 },
   'GOLETA10':         { type: 'percent', value: 10 },
-  // Contest winners. 100% off, and it was in the publicly readable copy of this
-  // file, so it's dated to bound the exposure rather than left open-ended.
-  // CHANGE THIS DATE (or delete the field) once the winners have redeemed.
-  'IAMATOTALGEEBAG':  { type: 'percent', value: 100, expires: '2026-09-07' },
+  // IAMATOTALGEEBAG (100% off, contest winners) removed 2026-08-16 — all
+  // winners have redeemed. It was readable by anyone while this file was served
+  // publicly, so it is deleted rather than expired: an unknown number of people
+  // hold it, and free orders no longer cost a redeemer even the 50c Stripe
+  // floor. Do not re-add this string; issue a fresh code if another giveaway
+  // runs.
 };
 
 function applyPromo(code, subtotalCents) {
