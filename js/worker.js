@@ -290,6 +290,48 @@ export default {
       const given = req.headers.get('X-Admin-Key') || url.searchParams.get('key') || '';
       if (given !== env.ADMIN_KEY) return json({ error: "unauthorized" }, 401);
 
+      // Printify can fire a real, correctly-signed event at the registered URL,
+      // which tests the signature path and the Klaviyo send without waiting for
+      // an actual order to ship.
+      if (req.method === "POST" && url.searchParams.get('simulate')) {
+        const id = url.searchParams.get('simulate');
+        const r = await printify(`/shops/${SHOP_ID}/webhooks/${id}/simulate`, env, { method: 'POST' });
+        return json({ simulated: id, status: r.status, body: r.body }, r.ok ? 200 : r.status);
+      }
+
+      // Printify's own /simulate posts a payload referencing an order that does
+      // not exist, so it proves the signature and routing but stops at the email
+      // lookup. This runs the same handler against a REAL order id to exercise
+      // the Klaviyo leg. Admin-gated and read-only apart from the event it
+      // sends, which is the thing being tested.
+      if (req.method === "POST" && url.searchParams.get('test-shipment')) {
+        const orderId = url.searchParams.get('test-shipment');
+        const fake = {
+          id: `manual-test-${orderId}`,
+          type: 'order:shipment:created',
+          resource: {
+            id: orderId,
+            data: {
+              shipped_at: new Date().toISOString(),
+              carrier: { code: 'USPS', tracking_number: 'TEST0000000000', tracking_url: 'https://example.com/track/TEST' },
+              skus: [],
+            },
+          },
+        };
+        await handleShipment(fake, 'order:shipment:created', 'Order Shipped', fake.id, env);
+        return json({ tested: orderId });
+      }
+
+      // Recent orders, so a real id can be picked for the test above.
+      if (req.method === "GET" && url.searchParams.get('orders')) {
+        const r = await printify(`/shops/${SHOP_ID}/orders.json?limit=5`, env);
+        const rows = (r.body?.data || []).map(o => ({
+          id: o.id, external_id: o.external_id, status: o.status,
+          email: o.address_to?.email, created: o.created_at,
+        }));
+        return json(rows, r.ok ? 200 : r.status);
+      }
+
       if (req.method === "GET") {
         const r = await printify(`/shops/${SHOP_ID}/webhooks.json`, env);
         return json(r.body, r.ok ? 200 : r.status);
