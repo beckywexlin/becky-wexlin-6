@@ -318,8 +318,13 @@ export default {
             },
           },
         };
-        await handleShipment(fake, 'order:shipment:created', 'Order Shipped', fake.id, env);
-        return json({ tested: orderId });
+        // The flow is live now, so an untargeted test would send a real
+        // customer a fake tracking number. &email= redirects the event to a
+        // chosen address; without it the test still goes to whoever placed the
+        // order, which is only safe while no flow is listening.
+        const override = url.searchParams.get('email') || '';
+        await handleShipment(fake, 'order:shipment:created', 'Order Shipped', fake.id, env, override);
+        return json({ tested: orderId, sentTo: override || '(order email)' });
       }
 
       // Recent orders, so a real id can be picked for the test above.
@@ -395,7 +400,7 @@ async function verifyPrintifySignature(raw, header, secret) {
   return diff === 0;
 }
 
-async function handleShipment(payload, topic, metricName, eventId, env) {
+async function handleShipment(payload, topic, metricName, eventId, env, emailOverride) {
   const resource = payload.resource || {};
   const data = resource.data || {};
   const orderId = resource.id || '';
@@ -409,7 +414,7 @@ async function handleShipment(payload, topic, metricName, eventId, env) {
   if (!orderRes.ok) return;
   const order = orderRes.body || {};
   const to = order.address_to || {};
-  const email = to.email || '';
+  const email = emailOverride || to.email || '';
   if (!email) return;
 
   // A split shipment only covers some line items, so report what actually
