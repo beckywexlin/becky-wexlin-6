@@ -103,8 +103,10 @@ Disallow: /
 # ── Everyone else ────────────────────────────────────────────────────
 User-agent: *
 Allow: /
-Disallow: /checkout
-Disallow: /order-success
+# /checkout and /order-success are NOT disallowed here on purpose: they carry
+# <meta name="robots" content="noindex">, and a crawler blocked by robots.txt
+# can never read that. Blocking them was also ineffective against Googlebot,
+# which matches only its own group above and never reads this one.
 Disallow: /product?
 Disallow: /*?tag=
 
