@@ -11,6 +11,7 @@ let currentTaxAmount = 0;
 let taxCalculationId = null;
 let taxDebounce = null;
 let currentPaymentIntentId = null;
+let currentClientSecret = null;
 let currentPromoCode = '';
 let currentDiscount = 0;
 
@@ -30,6 +31,7 @@ async function createPaymentIntent(items, tax) {
   });
   const data = await res.json();
   currentPaymentIntentId = data.paymentIntentId;
+  currentClientSecret = data.clientSecret;
   return data.clientSecret;
 }
 
@@ -43,44 +45,54 @@ async function mountPaymentElement(clientSecret) {
 // ── EXPRESS (WALLET) CHECKOUT ─────────────────────────────────────
 // Apple Pay inside the Payment Element authorises a payment and nothing more —
 // it never populates the address form, so tapping it still left someone typing
-// their whole address. The Express Checkout Element asks the wallet for the
-// shipping address too, which is the behaviour people expect and the reason
-// wallets convert on mobile at all.
+// their whole address, which defeats the point of a wallet on a phone. The
+// Express Checkout Element asks the wallet for the shipping address too.
 //
-// This is strictly additive. It mounts above the form, hides itself when no
-// wallet is available, and any failure inside it leaves the card path exactly
-// as it was.
-async function mountExpressCheckout(clientSecret) {
+// It needs its OWN Elements instance created with mode/amount/currency. The
+// Payment Element's instance is built from a clientSecret, and mounting the
+// Express Checkout Element on that renders a button that does nothing at all
+// when tapped — no sheet, no error.
+//
+// Strictly additive: it hides itself unless a wallet is available and any
+// failure leaves the card form exactly as it was.
+let expressElements = null;
+
+async function mountExpressCheckout() {
   const wrap = document.getElementById('express-checkout-wrap');
   const mountPoint = document.getElementById('express-checkout');
-  if (!wrap || !mountPoint || !elements) return;
+  if (!wrap || !mountPoint || !stripe) return;
+
+  const totalCents = orderTotalCents();
+  // A fully discounted order never touches Stripe, so a wallet button would be
+  // a dead end. Stripe also rejects a zero amount here.
+  if (totalCents <= 0) return;
 
   const blocked = (window.BW_SHIPPING && window.BW_SHIPPING.BLOCKED) || {};
-  const express = elements.create('expressCheckout', {
-    emailRequired: true,
-    shippingAddressRequired: true,
-    // Shipping is free everywhere, so one rate covers it. The element requires
-    // at least one or it will not surface a shipping step at all.
-    shippingRates: [{ id: 'free', displayName: 'Free shipping', amount: 0 }],
+  const RATES = [{ id: 'free', displayName: 'Free shipping', amount: 0,
+                   deliveryEstimate: { minimum: { unit: 'day', value: 5 },
+                                       maximum: { unit: 'day', value: 10 } } }];
+
+  expressElements = stripe.elements({
+    mode: 'payment',
+    amount: totalCents,
+    currency: 'usd',
   });
 
-  // Stripe reports whether this device actually has a usable wallet. Showing an
-  // empty "or pay by card" divider to everyone else would just be noise.
+  const express = expressElements.create('expressCheckout', {
+    emailRequired: true,
+    shippingAddressRequired: true,
+    shippingRates: RATES,
+  });
+
+  // Stripe reports which wallets this device can actually use. Showing an "or
+  // pay by card" divider to everyone else would be noise.
   express.on('ready', (e) => {
     const available = e && e.availablePaymentMethods;
     if (available && Object.keys(available).length) wrap.style.display = '';
   });
 
-  express.on('click', (e) => {
-    e.resolve({
-      emailRequired: true,
-      shippingAddressRequired: true,
-      shippingRates: [{ id: 'free', displayName: 'Free shipping', amount: 0 }],
-    });
-  });
-
-  // The wallet hands over a partial address (city/state/postcode/country) at
-  // this stage, deliberately — enough to price tax, not enough to identify
+  // The wallet hands over a partial address here on purpose — in the US often
+  // just city, state and postcode. Enough to price tax, not enough to identify
   // anyone before they commit.
   express.on('shippingaddresschange', async (e) => {
     const addr = e.address || {};
@@ -109,15 +121,14 @@ async function mountExpressCheckout(clientSecret) {
         currentTaxAmount = t.tax || 0;
         taxCalculationId = t.taxCalculationId || null;
         updateTotal();
+        // The sheet shows this total, so it has to move with the tax.
+        expressElements.update({ amount: Math.max(orderTotalCents(), 50) });
       }
     } catch (err) {
-      // A tax lookup failure must not strand the wallet sheet. Worst case the
-      // customer is charged the pre-tax total, which the worker recomputes.
+      // A tax lookup failure must not strand the open wallet sheet.
       console.error('express tax lookup failed:', err && err.message);
     }
-    e.resolve({
-      shippingRates: [{ id: 'free', displayName: 'Free shipping', amount: 0 }],
-    });
+    e.resolve({ shippingRates: RATES });
   });
 
   express.on('confirm', async (e) => {
@@ -133,11 +144,19 @@ async function mountExpressCheckout(clientSecret) {
       return;
     }
 
+    // Required before confirming in the deferred-intent flow — it validates and
+    // collects everything the element gathered.
+    const { error: submitError } = await expressElements.submit();
+    if (submitError) {
+      showCheckoutError(submitError.message || 'That payment could not be completed.');
+      return;
+    }
+
     const parts = fullName.trim().split(/\s+/);
     const shipping = {
       firstName: parts[0] || '',
       lastName: parts.slice(1).join(' ') || '',
-      email: e.billingDetails && e.billingDetails.email ? e.billingDetails.email : '',
+      email: (e.billingDetails && e.billingDetails.email) || '',
       phone: (e.billingDetails && e.billingDetails.phone) || '',
       address1: a.line1 || '',
       address2: a.line2 || '',
@@ -147,8 +166,8 @@ async function mountExpressCheckout(clientSecret) {
       country: country,
     };
 
-    // The amount was set before the wallet knew where it was shipping, so the
-    // intent has to be brought up to the final total before confirming.
+    // The intent was created before the wallet knew the destination, so bring
+    // it up to the final total before charging.
     try {
       const piRes = await fetch(CHECKOUT_WORKER + '/update-payment-intent', {
         method: 'POST',
@@ -172,8 +191,8 @@ async function mountExpressCheckout(clientSecret) {
     }
 
     const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      clientSecret,
+      elements: expressElements,
+      clientSecret: currentClientSecret,
       confirmParams: { return_url: window.location.origin + '/order-success' },
       redirect: 'if_required',
     });
@@ -765,7 +784,7 @@ async function initCheckout() {
   // After the Payment Element, so `elements` exists. Wrapped because a wallet
   // failure must never take the card form down with it.
   try {
-    await mountExpressCheckout(clientSecret);
+    await mountExpressCheckout();
   } catch (e) {
     console.error('express checkout unavailable:', e && e.message);
   }
