@@ -11,7 +11,7 @@ const KLAVIYO_REVISION = '2024-10-15';
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Key',
 };
 
 function json(data, status = 200) {
@@ -275,6 +275,54 @@ export default {
     }
 
     // ── POST /validate-promo ──
+    // ── Apple Pay domain registration ────────────────────────────────────
+    // automatic_payment_methods is already on and the Payment Element shows
+    // wallets by default, so nothing in the checkout code was stopping Apple
+    // Pay — Stripe simply refuses to render it until the domain is registered
+    // and verified. That is an API call, not a dashboard-only action, so it can
+    // be done from here. Google Pay needs no domain step.
+    if (pathname === '/admin/payment-domains') {
+      if (!env.ADMIN_KEY) return json({ error: 'ADMIN_KEY not configured' }, 503);
+      const given = req.headers.get('X-Admin-Key') || url.searchParams.get('key') || '';
+      if (given !== env.ADMIN_KEY) return json({ error: 'unauthorized' }, 401);
+
+      if (req.method === 'GET') {
+        const r = await stripeAPI(env, 'GET', '/payment_method_domains');
+        const rows = (r.data || []).map(d => ({
+          id: d.id,
+          domain: d.domain_name,
+          enabled: d.enabled,
+          apple_pay: d.apple_pay && d.apple_pay.status,
+          google_pay: d.google_pay && d.google_pay.status,
+          link: d.link && d.link.status,
+        }));
+        return json(rows.length ? rows : { none_registered: true });
+      }
+
+      if (req.method === 'POST') {
+        const domain = url.searchParams.get('domain');
+        if (!domain) return json({ error: 'domain required' }, 400);
+        const created = await stripeAPI(env, 'POST', '/payment_method_domains', {
+          domain_name: domain,
+        });
+        if (created.error) return json({ error: created.error.message }, 400);
+        // Registration alone leaves it unvalidated; Stripe fetches the
+        // well-known file during validation and that is what flips Apple Pay on.
+        const checked = await stripeAPI(env, 'POST',
+          `/payment_method_domains/${created.id}/validate`);
+        return json({
+          id: created.id,
+          domain: created.domain_name,
+          apple_pay: checked.apple_pay || (created.apple_pay || null),
+          google_pay: checked.google_pay || (created.google_pay || null),
+          link: checked.link || (created.link || null),
+          error: checked.error ? checked.error.message : undefined,
+        });
+      }
+
+      return json({ error: 'method not allowed' }, 405);
+    }
+
     if (pathname === '/validate-promo' && req.method === 'POST') {
       const { code, items } = await req.json();
       const subtotal = subtotalCents(items);
