@@ -536,6 +536,7 @@ export default {
       if (priced.error) return json({ error: priced.error }, 400);
       const orderPromo = applyPromo(promoCode, priced.cents);
       const dueCents = priced.cents - orderPromo.discount;
+      let recordedTaxCalcId = '';
 
       if (dueCents > 0) {
         if (!paymentIntentId || !/^pi_[A-Za-z0-9_]+$/.test(String(paymentIntentId))) {
@@ -557,6 +558,10 @@ export default {
           console.error('UNDERPAID ORDER refused', paymentIntentId, received, expected, dueCents);
           return json({ error: 'Payment amount mismatch' }, 402);
         }
+        // Read from the intent rather than the request body: this is the
+        // calculation the customer was actually charged against, and the
+        // browser cannot substitute a cheaper one.
+        recordedTaxCalcId = (piRes.metadata && piRes.metadata.tax_calculation_id) || '';
       } else {
         // A genuinely free order. Stripe cannot charge zero, so this used to be
         // floored at 50 cents: a "100% off" code quietly took real money and
@@ -690,6 +695,28 @@ export default {
           );
         } catch (e) {
           console.error('GA4 Measurement Protocol error:', e.message);
+        }
+      }
+
+      // ── Record the tax transaction ────────────────────────────────────
+      // A tax calculation is only a quote. Until create_from_calculation books
+      // it against the payment, Stripe Tax has no record, the Tax dashboard
+      // shows nothing, and there is no report to file a CDTFA return from. Done
+      // after the Printify order so a tax failure can never cost a paid order,
+      // and the payment intent id is the reference, which makes Stripe reject a
+      // duplicate rather than double-book on a retry.
+      if (recordedTaxCalcId) {
+        try {
+          const tx = await stripeAPI(env, 'POST', '/tax/transactions/create_from_calculation', {
+            calculation: recordedTaxCalcId,
+            reference: paymentIntentId,
+          });
+          if (tx.error) {
+            console.error('TAX TRANSACTION NOT RECORDED', paymentIntentId,
+              recordedTaxCalcId, tx.error.message);
+          }
+        } catch (e) {
+          console.error('TAX TRANSACTION NOT RECORDED', paymentIntentId, e.message);
         }
       }
 
