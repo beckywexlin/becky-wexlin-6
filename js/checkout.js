@@ -40,6 +40,187 @@ async function mountPaymentElement(clientSecret) {
   paymentElement.mount('#payment-element');
 }
 
+// ── EXPRESS (WALLET) CHECKOUT ─────────────────────────────────────
+// Apple Pay inside the Payment Element authorises a payment and nothing more —
+// it never populates the address form, so tapping it still left someone typing
+// their whole address. The Express Checkout Element asks the wallet for the
+// shipping address too, which is the behaviour people expect and the reason
+// wallets convert on mobile at all.
+//
+// This is strictly additive. It mounts above the form, hides itself when no
+// wallet is available, and any failure inside it leaves the card path exactly
+// as it was.
+async function mountExpressCheckout(clientSecret) {
+  const wrap = document.getElementById('express-checkout-wrap');
+  const mountPoint = document.getElementById('express-checkout');
+  if (!wrap || !mountPoint || !elements) return;
+
+  const blocked = (window.BW_SHIPPING && window.BW_SHIPPING.BLOCKED) || {};
+  const express = elements.create('expressCheckout', {
+    emailRequired: true,
+    shippingAddressRequired: true,
+    // Shipping is free everywhere, so one rate covers it. The element requires
+    // at least one or it will not surface a shipping step at all.
+    shippingRates: [{ id: 'free', displayName: 'Free shipping', amount: 0 }],
+  });
+
+  // Stripe reports whether this device actually has a usable wallet. Showing an
+  // empty "or pay by card" divider to everyone else would just be noise.
+  express.on('ready', (e) => {
+    const available = e && e.availablePaymentMethods;
+    if (available && Object.keys(available).length) wrap.style.display = '';
+  });
+
+  express.on('click', (e) => {
+    e.resolve({
+      emailRequired: true,
+      shippingAddressRequired: true,
+      shippingRates: [{ id: 'free', displayName: 'Free shipping', amount: 0 }],
+    });
+  });
+
+  // The wallet hands over a partial address (city/state/postcode/country) at
+  // this stage, deliberately — enough to price tax, not enough to identify
+  // anyone before they commit.
+  express.on('shippingaddresschange', async (e) => {
+    const addr = e.address || {};
+    const country = (addr.country || 'US').toUpperCase();
+    if (Object.prototype.hasOwnProperty.call(blocked, country)) {
+      e.reject();
+      return;
+    }
+    try {
+      const res = await fetch(CHECKOUT_WORKER + '/calculate-tax', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: JSON.parse(localStorage.getItem('bw-cart') || '[]'),
+          address: {
+            line1: addr.line1 || '',
+            city: addr.city || '',
+            state: addr.state || '',
+            postal_code: addr.postal_code || '',
+            country: country,
+          },
+        }),
+      });
+      if (res.ok) {
+        const t = await res.json();
+        currentTaxAmount = t.tax || 0;
+        taxCalculationId = t.taxCalculationId || null;
+        updateTotal();
+      }
+    } catch (err) {
+      // A tax lookup failure must not strand the wallet sheet. Worst case the
+      // customer is charged the pre-tax total, which the worker recomputes.
+      console.error('express tax lookup failed:', err && err.message);
+    }
+    e.resolve({
+      shippingRates: [{ id: 'free', displayName: 'Free shipping', amount: 0 }],
+    });
+  });
+
+  express.on('confirm', async (e) => {
+    const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+    const a = (e.shippingAddress && e.shippingAddress.address) || {};
+    const fullName = (e.shippingAddress && e.shippingAddress.name) || '';
+    const country = (a.country || 'US').toUpperCase();
+
+    if (Object.prototype.hasOwnProperty.call(blocked, country)) {
+      showCheckoutError(window.BW_SHIPPING
+        ? window.BW_SHIPPING.message(country)
+        : 'We are unable to ship to that destination.');
+      return;
+    }
+
+    const parts = fullName.trim().split(/\s+/);
+    const shipping = {
+      firstName: parts[0] || '',
+      lastName: parts.slice(1).join(' ') || '',
+      email: e.billingDetails && e.billingDetails.email ? e.billingDetails.email : '',
+      phone: (e.billingDetails && e.billingDetails.phone) || '',
+      address1: a.line1 || '',
+      address2: a.line2 || '',
+      city: a.city || '',
+      state: a.state || '',
+      zip: a.postal_code || '',
+      country: country,
+    };
+
+    // The amount was set before the wallet knew where it was shipping, so the
+    // intent has to be brought up to the final total before confirming.
+    try {
+      const piRes = await fetch(CHECKOUT_WORKER + '/update-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart,
+          tax: currentTaxAmount,
+          taxCalculationId,
+          paymentIntentId: currentPaymentIntentId,
+          promoCode: currentPromoCode,
+          country: country,
+        }),
+      });
+      if (!piRes.ok) {
+        showCheckoutError('We could not finalise your total. Please try again.');
+        return;
+      }
+    } catch (err) {
+      showCheckoutError('We could not finalise your total. Please try again.');
+      return;
+    }
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      clientSecret,
+      confirmParams: { return_url: window.location.origin + '/order-success' },
+      redirect: 'if_required',
+    });
+
+    if (error) {
+      const shopperFacing = error.type === 'card_error' || error.type === 'validation_error';
+      showCheckoutError(shopperFacing && error.message
+        ? error.message
+        : 'That payment could not be completed. Please try again or use a card.');
+      return;
+    }
+
+    const orderRes = await fetch(CHECKOUT_WORKER + '/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: cart,
+        shipping,
+        paymentIntentId: paymentIntent.id,
+        promoCode: currentPromoCode || '',
+        gaClientId: readGaClientId(),
+      }),
+    });
+
+    if (!orderRes || !orderRes.ok) {
+      let detail = '';
+      try { detail = (await orderRes.json()).error || ''; } catch (err) {}
+      showCheckoutError(
+        'Your payment went through, but we could not create the order'
+        + (detail ? ' (' + detail + ')' : '')
+        + '. Email hello@beckywexlin.com with this reference and we will sort it out: '
+        + paymentIntent.id);
+      return;
+    }
+
+    localStorage.removeItem('bw-cart');
+    localStorage.removeItem('bw-shipping');
+    window.location.href = '/order-success';
+  });
+
+  try {
+    express.mount(mountPoint);
+  } catch (err) {
+    console.error('express checkout mount failed:', err && err.message);
+  }
+}
+
 // ── SHIPPING ELIGIBILITY ──────────────────────────────────────────
 // Restricted destinations are absent from the country <select>, so this path
 // is reached two ways: the address autocomplete resolving to one, or someone
@@ -581,6 +762,13 @@ async function initCheckout() {
   await initStripe();
   const clientSecret = await createPaymentIntent(cart, 0);
   await mountPaymentElement(clientSecret);
+  // After the Payment Element, so `elements` exists. Wrapped because a wallet
+  // failure must never take the card form down with it.
+  try {
+    await mountExpressCheckout(clientSecret);
+  } catch (e) {
+    console.error('express checkout unavailable:', e && e.message);
+  }
 
   // Handle form submit
   const form = document.getElementById('checkout-form');

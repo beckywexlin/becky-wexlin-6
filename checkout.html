@@ -20,7 +20,7 @@
   <link rel="canonical" href="https://www.beckywexlin.com/checkout" />
   <link rel="icon" type="image/png" href="images/logo-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
-  <link rel="stylesheet" href="css/style.css?v=5" />
+  <link rel="stylesheet" href="css/style.css?v=6" />
   <link rel="dns-prefetch" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -95,6 +95,17 @@
 
     #payment-element { margin-bottom: 24px; }
 
+
+    /* ── Express (wallet) checkout ── */
+    #express-checkout-wrap { margin-bottom: 26px; }
+    .express-divider {
+      display: flex; align-items: center; gap: 14px;
+      margin: 22px 0 4px; color: #666; font-size: 12px;
+      letter-spacing: .12em; text-transform: uppercase;
+    }
+    .express-divider::before, .express-divider::after {
+      content: ""; flex: 1; height: 1px; background: #2a2a2a;
+    }
     #checkout-error {
       display: none;
       color: var(--pink);
@@ -233,6 +244,17 @@
 
     <!-- LEFT: Form -->
     <div>
+      <!-- Wallet checkout. Apple Pay in the Payment Element below only
+           authorises the payment — it never fills the address form, which is
+           what people expect when they tap it. The Express Checkout Element
+           asks the wallet for the shipping address as well, so one tap covers
+           the whole order. Hidden until Stripe confirms a wallet is actually
+           available on this device; everyone else just sees the form. -->
+      <div id="express-checkout-wrap" style="display:none;">
+        <div id="express-checkout"></div>
+        <div class="express-divider"><span>or pay by card</span></div>
+      </div>
+
       <form id="checkout-form" autocomplete="on">
 
         <p class="checkout-section-title">Shipping info</p>
