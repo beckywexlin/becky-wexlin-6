@@ -537,6 +537,7 @@ export default {
       const orderPromo = applyPromo(promoCode, priced.cents);
       const dueCents = priced.cents - orderPromo.discount;
       let recordedTaxCalcId = '';
+      let chargedTaxCents = 0;
 
       if (dueCents > 0) {
         if (!paymentIntentId || !/^pi_[A-Za-z0-9_]+$/.test(String(paymentIntentId))) {
@@ -562,6 +563,8 @@ export default {
         // calculation the customer was actually charged against, and the
         // browser cannot substitute a cheaper one.
         recordedTaxCalcId = (piRes.metadata && piRes.metadata.tax_calculation_id) || '';
+        chargedTaxCents = parseInt(
+          (piRes.metadata && piRes.metadata.tax_amount_cents) || '0', 10) || 0;
       } else {
         // A genuinely free order. Stripe cannot charge zero, so this used to be
         // floored at 50 cents: a "100% off" code quietly took real money and
@@ -624,7 +627,11 @@ export default {
       try {
         await Promise.all([
           klaviyoIdentify(shipping.email, shipping.firstName, shipping.lastName, 'Checkout — Order Placed'),
-          klaviyoPlacedOrder(shipping.email, shipping.firstName, shipping.lastName, items, paymentIntentId, shipping, 0, promoCode || '', promo.discount / 100),
+          // Was hardcoded to 0, so every order confirmation email and every
+          // Klaviyo revenue figure reported no tax regardless of what the
+          // customer actually paid. Read from the intent, which is what was
+          // charged.
+          klaviyoPlacedOrder(shipping.email, shipping.firstName, shipping.lastName, items, paymentIntentId, shipping, chargedTaxCents / 100, promoCode || '', promo.discount / 100),
         ]);
       } catch (e) {
         console.error('Klaviyo error:', e.message);
