@@ -323,6 +323,49 @@ export default {
       return json({ error: 'method not allowed' }, 405);
     }
 
+    // ── Tax collected report ─────────────────────────────────────────────
+    // Stripe's own Tax dashboard reports nothing here, because the worker only
+    // ever creates tax CALCULATIONS — a quote — and never the TRANSACTION that
+    // records one against a payment. The amount charged is stamped into the
+    // payment intent metadata, so that is the reliable source until transactions
+    // are recorded properly.
+    if (pathname === '/admin/tax-report') {
+      if (!env.ADMIN_KEY) return json({ error: 'ADMIN_KEY not configured' }, 503);
+      const given = req.headers.get('X-Admin-Key') || url.searchParams.get('key') || '';
+      if (given !== env.ADMIN_KEY) return json({ error: 'unauthorized' }, 401);
+
+      const r = await stripeAPI(env, 'GET', '/payment_intents?limit=100');
+      if (r.error) return json({ error: r.error.message }, 400);
+
+      let taxCents = 0, paidCents = 0, withTax = 0, succeeded = 0;
+      const rows = [];
+      for (const pi of r.data || []) {
+        if (pi.status !== 'succeeded') continue;
+        succeeded++;
+        paidCents += pi.amount_received || 0;
+        const t = parseInt((pi.metadata && pi.metadata.tax_amount_cents) || '0', 10) || 0;
+        if (t > 0) {
+          withTax++;
+          taxCents += t;
+          rows.push({
+            id: pi.id,
+            date: new Date(pi.created * 1000).toISOString().slice(0, 10),
+            charged: (pi.amount_received / 100).toFixed(2),
+            tax: (t / 100).toFixed(2),
+          });
+        }
+      }
+      return json({
+        succeeded_payments: succeeded,
+        payments_with_tax: withTax,
+        total_charged: '$' + (paidCents / 100).toFixed(2),
+        total_tax_collected: '$' + (taxCents / 100).toFixed(2),
+        note: 'Tax transactions are NOT being recorded in Stripe Tax — this is '
+            + 'summed from payment intent metadata.',
+        detail: rows,
+      });
+    }
+
     if (pathname === '/validate-promo' && req.method === 'POST') {
       const { code, items } = await req.json();
       const subtotal = subtotalCents(items);
