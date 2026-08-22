@@ -369,18 +369,26 @@ export default {
       }
 
       try {
-        // Build line_items for Stripe Tax Calculation
-        const lineItems = items.map((item, i) => {
-          const price = typeof item.price === 'string'
-            ? parseFloat(item.price.replace('$', ''))
-            : item.price;
-          const amount = Math.round(price * 100) * (item.quantity || 1);
-          return {
-            amount,
+        // Priced from the catalog like every other money endpoint. Reading
+        // item.price here meant a tampered or absent price produced a smaller
+        // tax figure — under-collecting tax is a filing problem, not just a
+        // revenue one, and an omitted price silently yielded NaN.
+        const taxPrices = await catalogPrices();
+        if (!taxPrices) return json({ tax_amount: 0, error: 'Pricing unavailable' });
+
+        const lineItems = [];
+        for (let i = 0; i < (items || []).length; i++) {
+          const item = items[i];
+          const unit = taxPrices.get(String(item.id));
+          if (unit === undefined) continue;
+          const qty = Number(item.quantity) || 1;
+          lineItems.push({
+            amount: unit * qty,
             reference: item.id || item.variantId || `item-${i}`,
             tax_code: 'txcd_99999999',
-          };
-        });
+          });
+        }
+        if (!lineItems.length) return json({ tax_amount: 0 });
 
         const params = {
           currency: 'usd',

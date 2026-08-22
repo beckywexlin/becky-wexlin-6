@@ -118,8 +118,11 @@ async function mountExpressCheckout() {
       });
       if (res.ok) {
         const t = await res.json();
-        currentTaxAmount = t.tax || 0;
-        taxCalculationId = t.taxCalculationId || null;
+        // The worker returns snake_case; reading t.tax silently yielded
+        // undefined -> 0, so a wallet order would have been charged no tax at
+        // all even where it was owed.
+        currentTaxAmount = t.tax_amount || 0;
+        taxCalculationId = t.tax_calculation_id || null;
         updateTotal();
         // The sheet shows this total, so it has to move with the tax.
         expressElements.update({ amount: Math.max(orderTotalCents(), 50) });
