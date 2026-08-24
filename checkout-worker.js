@@ -509,7 +509,7 @@ export default {
 
     // ── POST /create-order ──
     if (pathname === '/create-order' && req.method === 'POST') {
-      const { items, shipping, paymentIntentId, promoCode, gaClientId } = await req.json();
+      const { items, shipping, paymentIntentId, promoCode, gaClientId, gaSessionId } = await req.json();
 
       // Backstop. Reaching here with a blocked country means the earlier gates
       // were bypassed, so the payment may already have succeeded — refuse to
@@ -687,10 +687,12 @@ export default {
                 tax: chargedTaxCents / 100,
                 currency: 'USD',
                 shipping: 0,
-                // Measurement Protocol events without this are recorded but
-                // dropped from most session-scoped reports, which reads as the
-                // event never arriving.
+                // Measurement Protocol events without these are recorded but
+                // cannot be joined to a session, so GA4 reports the purchase
+                // against zero purchasing sessions and the funnel looks broken
+                // at the exact step the money is.
                 engagement_time_msec: 1,
+                ...(gaSessionId ? { session_id: gaSessionId } : {}),
                 items: ga4Items,
               },
             }],

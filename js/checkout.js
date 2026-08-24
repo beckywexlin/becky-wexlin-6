@@ -217,6 +217,7 @@ async function mountExpressCheckout() {
         paymentIntentId: paymentIntent.id,
         promoCode: currentPromoCode || '',
         gaClientId: readGaClientId(),
+        gaSessionId: readGaSessionId(),
       }),
     });
 
@@ -413,7 +414,8 @@ async function submitFreeOrder(shipping) {
       shipping,
       paymentIntentId: null,
       promoCode: currentPromoCode || '',
-      gaClientId: readGaClientId()
+      gaClientId: readGaClientId(),
+      gaSessionId: readGaSessionId()
     })
   });
 
@@ -465,6 +467,20 @@ function readGaClientId() {
   try {
     const c = document.cookie.split('; ').find(x => x.startsWith('_ga='));
     return c ? c.split('.').slice(2).join('.') : '';
+  } catch (e) { return ''; }
+}
+
+// _ga_WYJNL0114K=GS1.1.<session_id>.<n>.<engaged>.<ts>... -> the session id.
+// Without this the server-side purchase event cannot be joined to a session, so
+// GA4 reports the purchase but zero purchasing sessions — the funnel then looks
+// broken at the exact step the money is, which is indistinguishable from a real
+// checkout failure.
+function readGaSessionId() {
+  try {
+    const c = document.cookie.split('; ').find(x => x.startsWith('_ga_WYJNL0114K='));
+    if (!c) return '';
+    const parts = c.split('=')[1].split('.');
+    return parts[2] || '';
   } catch (e) { return ''; }
 }
 
@@ -527,7 +543,8 @@ async function submitOrder(shipping) {
       shipping,
       paymentIntentId: paymentIntent.id,
       promoCode: currentPromoCode || '',
-      gaClientId
+      gaClientId,
+      gaSessionId: readGaSessionId()
     })
   });
 
