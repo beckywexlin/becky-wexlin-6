@@ -680,7 +680,11 @@ export default {
               name: 'purchase',
               params: {
                 transaction_id: paymentIntentId,
-                value: subtotal - promo.discount / 100,
+                // Tax was omitted here, so GA4 revenue understated every
+                // taxed order by the tax — the same class of bug as the
+                // hardcoded 0 sent to Klaviyo.
+                value: subtotal - promo.discount / 100 + chargedTaxCents / 100,
+                tax: chargedTaxCents / 100,
                 currency: 'USD',
                 shipping: 0,
                 // Measurement Protocol events without this are recorded but
