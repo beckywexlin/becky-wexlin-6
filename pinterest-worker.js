@@ -63,11 +63,18 @@ const json = (data, status = 200) =>
 
 const KV_REFRESH = 'oauth:refresh_token';
 const KV_ACCESS = 'oauth:access_token';
-// Exactly what the worker uses and nothing more: it lists boards (boards:read)
-// and creates pins (pins:write). It never reads existing pins, so pins:read is
-// not requested — surplus scopes slow app review and widen the blast radius if
-// a token ever leaks.
-const OAUTH_SCOPES = 'boards:read,pins:write';
+// Pinterest's create-pin endpoint demands more than the operation implies. A
+// token holding exactly boards:read + pins:write is rejected with
+//   401 Missing: ['boards:write', 'pins:read']
+// which is not what the API reference describes, but is what it returns. The
+// minimal set was the right instinct — surplus scopes slow app review and widen
+// the blast radius if a token leaks — but it does not work, so the four scopes
+// the endpoint actually checks are requested instead.
+//
+// Changing this string alone changes nothing: scopes are baked into the token
+// at authorisation, so an existing token has to be re-authorised through
+// /oauth/start before the new set takes effect.
+const OAUTH_SCOPES = 'boards:read,boards:write,pins:read,pins:write';
 
 // Access tokens last 30 days; refresh tokens are "continuous" — 60 days, and
 // Pinterest may hand back a new one on each exchange, so the new value has to
