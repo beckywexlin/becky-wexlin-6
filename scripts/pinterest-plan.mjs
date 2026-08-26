@@ -84,13 +84,46 @@ const collectionSlugs = name => {
 };
 
 // Pinterest indexes the description, so it leads with what someone would type
-// and only then gets to the joke. Kept under ~500 characters, which is where
-// Pinterest truncates in most surfaces.
-const pinDesc = (title, board) =>
-  `${title} — original ${board.toLowerCase().includes('gift') ? 'graphic tee gift' : 'graphic tee'} `
-  + `from Becky Wexlin Creative, an independent studio in Santa Barbara, California. `
-  + `Weird, funny, deadpan designs printed on premium heavyweight cotton — Comfort Colors, `
-  + `Bella + Canvas and Gildan. Unisex sizing, made to order, free shipping on every order.`;
+// and only then gets to the product's own voice. Kept under ~500 characters,
+// which is where Pinterest truncates in most surfaces.
+//
+// Every pin used to carry the SAME paragraph with only the title swapped — 258
+// pins, one description. Pinterest treats near-identical copy as duplicate and
+// suppresses it, and it reads like a bot even when a human is looking. Each pin
+// now leads with the product's own description, which is already written in the
+// brand's voice and is different for all 62 products.
+
+// The Printify copy carries a supplier-facing tail: a disclaimer naming other
+// print providers, and ".:" spec markers that render as line noise.
+const cleanCopy = (raw) => {
+  let t = String(raw || '').replace(/<[^>]+>/g, ' ');
+  t = t.split(/Disclaimer\s*:/i)[0];
+  t = t.split(/Product features/i)[0];
+  t = t.replace(/\s*\.:\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  return t;
+};
+
+// Cut on a sentence end so a pin never trails off mid-clause. Applied even when
+// the text is already under the limit: the catalog endpoint hard-slices
+// descriptions at 200 characters, so what arrives here is frequently already
+// broken mid-word.
+const trimToSentence = (t, max) => {
+  const cut = t.length > max ? t.slice(0, max) : t;
+  if (/[.!?]$/.test(cut.trim())) return cut.trim();
+  const stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
+  if (stop > 80) return cut.slice(0, stop + 1).trim();
+  const sp = cut.lastIndexOf(' ');
+  return (sp > 40 ? cut.slice(0, sp) : cut).trim() + '…';
+};
+
+const pinDesc = (title, board, product) => {
+  const own = trimToSentence(cleanCopy(product && product.description), 300);
+  const kind = board.toLowerCase().includes('gift') ? 'graphic tee gift' : 'graphic tee';
+  const lead = `${title} — original ${kind}, designed and printed in small runs.`;
+  // Fall back to the generic line only when a product genuinely has no copy.
+  const body = own || 'Weird, funny, deadpan designs on premium heavyweight cotton.';
+  return `${lead} ${body} Unisex sizing, made to order, free US shipping.`;
+};
 
 // The catalog feed pins each product's FRONT image. A second pin must look
 // genuinely different or Pinterest sees a duplicate — so this picks a
@@ -209,7 +242,7 @@ for (const board of BOARDS) {
       pins.push({
         board: board.name,
         title: p.title.slice(0, 100),
-        description: pinDesc(p.title, board.name),
+        description: pinDesc(p.title, board.name, p),
         image: `${SITE}/img/${encodeURIComponent(imgs[r])}`,
         link: `${SITE}/${p.slug}`,
         kind: 'product',
@@ -233,7 +266,7 @@ for (const slug of GIFT_PICKS) {
     pins.push({
       board: GIFT_BOARD.name,
       title: p.title.slice(0, 100),
-      description: pinDesc(p.title, GIFT_BOARD.name),
+      description: pinDesc(p.title, GIFT_BOARD.name, p),
       image: `${SITE}/img/${encodeURIComponent(imgs[r])}`,
       link: `${SITE}/${p.slug}`,
       kind: 'product',
