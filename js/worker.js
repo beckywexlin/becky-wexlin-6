@@ -491,12 +491,30 @@ function slugify(title) {
     .replace(/^-|-$/g, '');
 }
 
+
+// Printify returns two kinds of image for a product: rendered mockup JPEGs on
+// images-api.printify.com (~80KB) and the raw uploaded design files on
+// CloudFront, which are full-resolution PNGs — several megabytes each, one of
+// them 16.65MB. images[0] is whichever Printify happened to list first, so 20
+// of 63 products were serving a multi-megabyte print file as their card
+// thumbnail. /shop pulled 89.6MB across 64 images because of it.
+//
+// Every one of those products already had mockups available; nothing is lost by
+// preferring them. Falls back to whatever exists so a product can never end up
+// with no image at all.
+function pickCardImage(images) {
+  const list = images || [];
+  const mockup = list.find(i => i && typeof i.src === 'string'
+    && i.src.includes('images-api.printify.com'));
+  return (mockup || list[0])?.src ?? null;
+}
+
 function normalizeProduct(p) {
   const enabledVariants = (p.variants || []).filter(v => v.is_enabled);
   const minCents = enabledVariants.length
     ? Math.min(...enabledVariants.map(v => v.price))
     : 0;
-  const image = p.images?.[0]?.src ?? null;
+  const image = pickCardImage(p.images);
 
   const titleLower = (p.title || '').toLowerCase();
   const tagStr = (p.tags || []).join(' ').toLowerCase();
