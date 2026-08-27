@@ -1646,10 +1646,20 @@ async function renderProductPage(request, env, url) {
 <script type="application/ld+json" id="breadcrumb-jsonld">${ld(breadcrumbLd)}</script>
 <script type="application/ld+json" id="faq-jsonld">${ld(faqLd)}</script>`;
 
+  // The client rebuilds this page from the product object anyway. Making it
+  // fetch that object again cost a round trip, and the rebuild then landed
+  // after the hero image had already painted -- which restarted the LCP clock
+  // (~2s of render delay). Embedding the same object we just fetched lets the
+  // rebuild happen before first paint instead. `<` is escaped so nothing in a
+  // product description can close this script tag early.
+  const productJson = JSON.stringify(product).replace(/</g, '\\u003c');
+  const dataBlock = `<script type="application/json" id="product-data">${productJson}</script>`;
+
   const rewriter = new HTMLRewriter()
     .on('title', {
       element(el) { el.replace(metaBlock, { html: true }); }
     })
+    .on('head', { element(el) { el.append(dataBlock, { html: true }); } })
     // The template ships placeholder Product + BreadcrumbList schemas so the
     // page is still valid if the catalog fetch fails. Now that we've emitted
     // the real ones, drop the placeholders — two competing Product blocks on

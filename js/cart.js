@@ -6,9 +6,13 @@
    the client rebuilds those grids from the API and bypassed the server's sizing.
 
    Lives here because cart.js is deferred on every page that renders a grid, so
-   it has always run by the time those render functions are called. Callers use
+   it has run by the time those render functions are called. Callers use
    `window.bwSized ? window.bwSized(u, n) : u` so a load-order surprise degrades
-   to the old behaviour rather than throwing. */
+   to the old behaviour rather than throwing.
+
+   product.html is the exception: it renders synchronously from embedded JSON,
+   which happens before deferred scripts run, so it carries its own copy of this
+   logic. Keep the two in step. */
 window.bwSized = function (url, px) {
   var u = String(url || '');
   if (!u || u.indexOf('images-api.printify.com') === -1) return u;

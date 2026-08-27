@@ -351,7 +351,19 @@
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    (async () => {
+    // Sidebar and strip are decorative and sit below the fold, but this pulled
+    // the whole catalog while the hero image was still painting. Held until the
+    // page is idle.
+    function afterLoad(fn) {
+      var go = function () {
+        if (window.requestIdleCallback) window.requestIdleCallback(fn);
+        else setTimeout(fn, 1);
+      };
+      if (document.readyState === 'complete') go();
+      else window.addEventListener('load', go, { once: true });
+    }
+
+    afterLoad(async () => {
       try {
         let products;
         const cached = sessionStorage.getItem('bw_products');
@@ -386,7 +398,7 @@
           track.innerHTML = html + html;
         }
       } catch { /* silent */ }
-    })();
+    });
   </script>
 
 </body>

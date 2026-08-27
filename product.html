@@ -701,14 +701,25 @@
       } catch { /* silent */ }
     })();
 
-    function proxyImg(url) { return url ? '/img/' + encodeURIComponent(window.bwSized ? window.bwSized(url, 400) : url) : ''; }
+    // Mirrors window.bwSized from cart.js. Needed locally because this page now
+    // renders synchronously from the embedded product JSON, which happens before
+    // the deferred cart.js runs -- relying on window.bwSized there silently
+    // produced an unsized URL that did not match the server-rendered hero, so
+    // the browser fetched the image twice.
+    function sized(url, px) {
+      if (window.bwSized) return window.bwSized(url, px);
+      var u = String(url || '');
+      if (!u || u.indexOf('images-api.printify.com') === -1) return u;
+      return u + (u.indexOf('?') === -1 ? '?' : '&') + 's=' + px;
+    }
+    function proxyImg(url) { return url ? '/img/' + encodeURIComponent(sized(url, 400)) : ''; }
     // The hero is the LCP element and the worker server-renders it at s=800.
     // The client has to request that exact size -- asking for s=400 here made
     // the browser throw away the already-loaded image and fetch a second copy,
     // which restarted the LCP clock (2s of render delay).
-    function proxyMain(url) { return url ? '/img/' + encodeURIComponent(window.bwSized ? window.bwSized(url, 800) : url) : ''; }
+    function proxyMain(url) { return url ? '/img/' + encodeURIComponent(sized(url, 800)) : ''; }
     // Thumbnails render about 60px wide; 200 is plenty at 2x.
-    function proxyThumb(url) { return url ? '/img/' + encodeURIComponent(window.bwSized ? window.bwSized(url, 200) : url) : ''; }
+    function proxyThumb(url) { return url ? '/img/' + encodeURIComponent(sized(url, 200)) : ''; }
     function setMainSrc(el, url) { var u = proxyMain(url); if (el && el.getAttribute('src') !== u) el.src = u; }
 
     const WORKER_URL = 'https://becky-wexlin-api.beckywexlin.workers.dev';
@@ -1204,10 +1215,25 @@
     }
 
     /* ── MAIN LOAD ──────────────────────────────────── */
+    // The worker embeds the product it already fetched. Using it avoids a round
+    // trip and lets this render run before the hero image paints, so the LCP
+    // element is not swapped out from under the browser.
+    function embeddedProduct() {
+      const el = document.getElementById('product-data');
+      if (!el) return null;
+      try {
+        const p = JSON.parse(el.textContent);
+        return p && p.title ? p : null;
+      } catch { return null; }
+    }
+
     async function loadProduct() {
       try {
-        const res = await fetch(WORKER_URL + '/api/products/' + productId);
-        const p = await res.json();
+        let p = embeddedProduct();
+        if (!p) {
+          const res = await fetch(WORKER_URL + '/api/products/' + productId);
+          p = await res.json();
+        }
         currentProduct = p;
         currentImageIndex = 0;
         document.title = p.title + ' — Becky Wexlin Creative';
