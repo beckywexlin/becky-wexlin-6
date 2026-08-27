@@ -345,8 +345,43 @@ const RETIRED_SLUGS = new Map([
   ['retro-palm-trees-sunset-hoodie-vintage-vaporwave-beach-graphic', 'santa-barbara-retro-palm-trees-hoodie'],
 ]);
 
+// Pages that are identical for every visitor. The cart, checkout and order
+// pages are excluded because they are per-visitor, and anything with a query
+// string is skipped so one visitor's parameters can never be served to another.
+const UNCACHEABLE = /^\/(api|img|admin|webhooks|checkout|order-success|cart)(\/|$)/;
+
+function isCacheablePage(url) {
+  if (url.search) return false;
+  return !UNCACHEABLE.test(url.pathname);
+}
+
 export default {
-  async fetch(request, env) {
+  // Every HTML response is assembled on the fly (catalog fetch + HTMLRewriter),
+  // which put ~800ms of TTFB in front of every paint. A short edge cache means
+  // only the first visitor in each datacenter pays that. 60s is deliberately
+  // brief: a deploy goes fully live within a minute without a purge.
+  async fetch(request, env, ctx) {
+    if (request.method !== 'GET' || !isCacheablePage(new URL(request.url))) {
+      return this.handle(request, env);
+    }
+    const cache = caches.default;
+    const hit = await cache.match(request);
+    if (hit) return hit;
+
+    const res = await this.handle(request, env);
+    const type = res.headers.get('content-type') || '';
+    if (res.status !== 200 || !type.includes('text/html')) return res;
+
+    const out = new Response(res.body, res);
+    // must-revalidate matters: without it the zone's browser-cache TTL rewrote
+    // this to max-age=14400, which would have hidden a deploy from returning
+    // visitors for four hours. The browser revalidates; the edge serves the copy.
+    out.headers.set('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=60');
+    if (ctx && ctx.waitUntil) ctx.waitUntil(cache.put(request, out.clone()));
+    return out;
+  },
+
+  async handle(request, env) {
     const url = new URL(request.url);
 
     if (REDIRECT_HOSTS.has(url.hostname)) {
@@ -424,6 +459,9 @@ export default {
 
     // Server-render product grids so crawlers & AI bots see real products
     // (these pages otherwise load their grids client-side from the API).
+    if (url.pathname === '/' || url.pathname === '/index.html') {
+      return await renderHome(request, env);
+    }
     if (url.pathname === '/shop') {
       return await renderShop(request, env);
     }
@@ -990,15 +1028,59 @@ function pinDescription(title) {
 // Product card markup mirroring the client-rendered cards, but linking to the
 // canonical root slug. Client JS re-renders identically after load; crawlers
 // (which often don't run JS) get real product links/names/images server-side.
-function buildCardHTML(p) {
+// Printify's mockup host resizes on request: ?s=400 returns a 400x400 at 12KB
+// against 73KB for the untouched 1200x1200. A grid card is never rendered wider
+// than ~400px, so the full-size file was ~60KB of waste per card, 62 times over.
+// Only that host understands the parameter; anything else is passed through.
+function sizedImage(src, px) {
+  const u = String(src || '');
+  if (!u.includes('images-api.printify.com')) return u;
+  return u + (u.includes('?') ? '&' : '?') + 's=' + px;
+}
+
+// `index` comes free from Array.map. The first row of cards is what Lighthouse
+// measures as LCP, and marking those lazy is what produced a 2,225ms load delay
+// — the browser will not even discover the image until layout says it is near
+// the viewport. Above-the-fold cards load eagerly; the very first also gets
+// fetchpriority so it starts ahead of the rest.
+// Only the first couple of cards are above the fold on mobile. Eager-loading
+// more (or any in the Santa Barbara / hoodie sections, which sit far below)
+// just steals bandwidth from the LCP image on a throttled connection.
+const EAGER_CARDS = 2;
+
+// Mirrors TAG_CATEGORIES in shop.html. The server has to stamp the same
+// data-* attributes the client filter reads, otherwise shop.html has to throw
+// the server-rendered grid away and rebuild it just to make search work -- which
+// destroyed the preloaded LCP image and cost 4.3s of render delay.
+const TAG_CATEGORIES = [
+  ['shirts',        p => p.category === 'shirts'],
+  ['hoodies',       p => p.category === 'hoodies'],
+  ['streetwear',    p => (p.tags || []).some(t => String(t).toLowerCase().includes('streetwear'))],
+  ['santa-barbara', p => (p.tags || []).some(t => String(t).toLowerCase().includes('santa barbara'))],
+  ['sale',          p => (p.tags || []).some(t => ['sale', 'on sale'].includes(String(t).toLowerCase()))],
+];
+
+function cardDataAttrs(p, rawDesc) {
+  const cats = TAG_CATEGORIES.filter(([, m]) => m(p)).map(([f]) => f).join(' ');
+  return ` data-category="${esc(cats)}"`
+    + ` data-title="${esc(String(p.title || '').toLowerCase())}"`
+    + ` data-tags="${esc((p.tags || []).join(' ').toLowerCase())}"`
+    + ` data-desc="${esc(rawDesc.toLowerCase().slice(0, 200))}"`;
+}
+
+function buildCardHTML(p, index = 0, allowEager = true) {
   const rawDesc = String(p.description || '').replace(/<[^>]+>/g, '').trim();
   const desc = rawDesc.length > 90 ? rawDesc.slice(0, 87) + '...' : rawDesc;
-  return '<article class="shop-product-card">'
+  const eager = allowEager && index < EAGER_CARDS;
+  const loadAttrs = eager
+    ? `loading="eager" ${index === 0 ? 'fetchpriority="high" ' : ''}`
+    : 'loading="lazy" ';
+  return `<article class="shop-product-card"${cardDataAttrs(p, rawDesc)}>`
     + `<a href="/${esc(p.slug)}" aria-label="Shop ${esc(p.title)}">`
     + '<div class="shop-card-img">'
     // Intrinsic dimensions are required or the grid reflows as each mockup
     // loads — 66 of 68 images on /shop had none, which is pure CLS.
-    + `<img src="/img/${encodeURIComponent(p.image || '')}" alt="${esc(p.title)} — graphic tee by ${esc(BRAND)}" data-pin-description="${esc(pinDescription(p.title))}" width="600" height="600" loading="lazy" decoding="async" onerror="this.src='/images/404.png'" />`
+    + `<img src="/img/${encodeURIComponent(sizedImage(p.image, 400))}" alt="${esc(p.title)} — graphic tee by ${esc(BRAND)}" data-pin-description="${esc(pinDescription(p.title))}" width="600" height="600" ${loadAttrs}decoding="${index === 0 && allowEager ? 'sync' : 'async'}" onerror="this.src='/images/404.png'" />`
     + '<div class="shop-card-overlay"><span>Shop now &rarr;</span></div>'
     + '</div>'
     + '<div class="shop-card-body">'
@@ -1063,7 +1145,7 @@ function collectionPreviewHTML(slugs, bySlug) {
   const picks = slugs.map(s => bySlug.get(s)).filter(Boolean).slice(0, 4);
   if (picks.length < 4) return '';
   return picks.map(p =>
-    `<span><img src="/img/${encodeURIComponent(p.image || '')}" `
+    `<span><img src="/img/${encodeURIComponent(sizedImage(p.image, 400))}" `
     + `alt="${esc(p.title)}" width="300" height="300" loading="lazy" decoding="async" `
     + `onerror="this.parentNode.style.visibility='hidden'" /></span>`
   ).join('');
@@ -1083,7 +1165,7 @@ function blogStripHTML(slugs, bySlug) {
   if (!picks.length) return '';
   const item = p =>
     `<a class="product-strip-item" href="/${esc(p.slug)}">`
-    + `<span class="product-strip-thumb"><img src="/img/${encodeURIComponent(p.image || '')}" `
+    + `<span class="product-strip-thumb"><img src="/img/${encodeURIComponent(sizedImage(p.image, 200))}" `
     + `alt="${esc(p.title)}" width="36" height="36" loading="lazy" decoding="async" /></span>`
     + `<span class="product-strip-name">${esc(p.title)}</span>`
     + `<span class="product-strip-price">$${esc(p.price)}</span>`
@@ -1104,7 +1186,7 @@ function blogInlineCardsHTML(slugs, bySlug) {
   if (picks.length < 3) return '';
   const cards = picks.map(p =>
     `<a class="post-shop-card" href="/${esc(p.slug)}">`
-    + `<span class="post-shop-img"><img src="/img/${encodeURIComponent(p.image || '')}" `
+    + `<span class="post-shop-img"><img src="/img/${encodeURIComponent(sizedImage(p.image, 400))}" `
     + `alt="${esc(p.title)}" width="240" height="240" loading="lazy" decoding="async" /></span>`
     + `<span class="post-shop-name">${esc(p.title)}</span>`
     + `<span class="post-shop-price">$${esc(p.price)}</span>`
@@ -1193,6 +1275,65 @@ async function renderCollection(request, env) {
   return rewriter.transform(htmlResponse(html, assetRes));
 }
 
+// The homepage built its whole grid client-side, so the LCP image was not even
+// discoverable until an API round trip had finished (1.1s of load delay) and
+// crawlers saw an empty grid. Same treatment as /shop.
+const HOME_FEATURED_SLUG = 'punky-memento-mori-tee';
+const HOME_BADGE = '<span style="position:absolute;top:8px;left:8px;z-index:3;'
+  + 'background:var(--lime);color:#111;font-size:10px;font-weight:800;'
+  + 'letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;'
+  + 'border-radius:999px;">&#9733; Fan favourite</span>';
+
+function buildHomeCardHTML(p, index) {
+  const eager = index < EAGER_CARDS;
+  const loadAttrs = eager
+    ? `loading="eager" ${index === 0 ? 'fetchpriority="high" ' : ''}`
+    : 'loading="lazy" ';
+  const img = p.image
+    ? `<img src="/img/${encodeURIComponent(sizedImage(p.image, 400))}" alt="${esc(p.title)}"`
+      + ` width="600" height="600" ${loadAttrs}decoding="${index === 0 ? 'sync' : 'async'}"`
+      + ` onerror="this.src='/images/404.png'" />`
+    : '<div style="width:100%;height:100%;background:#2A2A2A;"></div>';
+  return '<article class="shop-product-card">'
+    + `<a href="/${esc(p.slug)}" aria-label="Shop ${esc(p.title)}">`
+    + '<div class="shop-card-img">'
+    + img
+    + (p.slug === HOME_FEATURED_SLUG ? HOME_BADGE : '')
+    + '<div class="shop-card-overlay"><span>Shop now &rarr;</span></div>'
+    + '</div>'
+    + '<div class="shop-card-body">'
+    + `<h3 class="shop-card-name">${esc(p.title)}</h3>`
+    + '<div class="shop-card-footer">'
+    + `<span class="shop-card-price">$${esc(p.price)}</span>`
+    + '</div></div></a></article>';
+}
+
+async function renderHome(request, env) {
+  const assetRes = await env.ASSETS.fetch(request);
+  if (!(assetRes.headers.get('content-type') || '').includes('text/html')) return assetRes;
+  const html = await assetRes.text();
+
+  const products = await fetchCatalog();
+  if (!products.length) return htmlResponse(html, assetRes);
+
+  // The proven front-runner keeps the first slot, as it did client-side.
+  const ordered = products.slice().sort((a, b) =>
+    a.slug === HOME_FEATURED_SLUG ? -1 : (b.slug === HOME_FEATURED_SLUG ? 1 : 0));
+
+  const cards = ordered.map(buildHomeCardHTML).join('');
+  const first = ordered[0];
+  const preload = first && first.image
+    ? `<link rel="preload" as="image" fetchpriority="high" `
+      + `href="/img/${encodeURIComponent(sizedImage(first.image, 400))}">`
+    : '';
+
+  return new HTMLRewriter()
+    .on('head', { element(el) { el.append(preload, { html: true }); } })
+    .on('[id="product-grid"]', { element(el) { el.setInnerContent(cards, { html: true }); } })
+    .on('[id="product-loading"]', { element(el) { el.setAttribute('style', 'display:none'); } })
+    .transform(htmlResponse(html, assetRes));
+}
+
 async function renderShop(request, env) {
   const assetRes = await env.ASSETS.fetch(request);
   if (!(assetRes.headers.get('content-type') || '').includes('text/html')) return assetRes;
@@ -1209,13 +1350,25 @@ async function renderShop(request, env) {
   const sb = products.filter(isSB);
   const shirts = products.filter(p => !isSB(p) && !String(p.category || '').includes('hoodie'));
   const hoodies = products.filter(p => String(p.category || '').includes('hoodie'));
-  const cardSet = arr => arr.map(buildCardHTML).join('');
+  const cardSet = (arr, allowEager = false) =>
+    arr.map((p, i) => buildCardHTML(p, i, allowEager)).join('');
   const listLd = itemListScript(
     [...shirts, ...sb, ...hoodies], `${SITE}/shop`, pageTitleOf(html, 'Shop'));
 
+  // The first card is the LCP element. Even marked eager it is only discovered
+  // once the parser reaches the grid, which sits well below the head — that was
+  // a 2.2s load delay. A preload in the head starts the fetch during head
+  // parsing instead. Built from the same sizedImage() call as the card so the
+  // two URLs match exactly; a mismatch would fetch the image twice.
+  const first = shirts[0] || sb[0] || hoodies[0];
+  const preload = first
+    ? `<link rel="preload" as="image" fetchpriority="high" `
+      + `href="/img/${encodeURIComponent(sizedImage(first.image, 400))}">`
+    : '';
+
   return new HTMLRewriter()
-    .on('head', { element(el) { el.append(listLd, { html: true }); } })
-    .on('[id="shirts-grid"]', { element(el) { el.setInnerContent(cardSet(shirts), { html: true }); } })
+    .on('head', { element(el) { el.append(preload + listLd, { html: true }); } })
+    .on('[id="shirts-grid"]', { element(el) { el.setInnerContent(cardSet(shirts, true), { html: true }); } })
     .on('[id="shirts"]', { element(el) { if (shirts.length) el.setAttribute('style', ''); } })
     .on('[id="sb-grid"]', { element(el) { el.setInnerContent(cardSet(sb), { html: true }); } })
     .on('[id="santa-barbara"]', { element(el) { if (sb.length) el.setAttribute('style', ''); } })
@@ -1304,7 +1457,7 @@ function buildProductSSR(product, canonical) {
     + `<span>${esc(product.title)}</span></nav>
 <div class="product-layout">
   <div class="product-images">
-    ${img ? `<div class="product-main-img"><img src="/img/${encodeURIComponent(img)}" alt="${esc(product.title)} — graphic tee by Becky Wexlin Creative" data-pin-description="${esc(pinDescription(product.title))}" data-pin-url="${esc(canonical)}" width="800" height="800" fetchpriority="high" /></div>` : ''}
+    ${img ? `<div class="product-main-img"><img src="/img/${encodeURIComponent(sizedImage(img, 800))}" alt="${esc(product.title)} — graphic tee by Becky Wexlin Creative" data-pin-description="${esc(pinDescription(product.title))}" data-pin-url="${esc(canonical)}" width="800" height="800" fetchpriority="high" /></div>` : ''}
   </div>
   <div class="product-info">
     <a href="/shop" class="product-back">Back to shop</a>
