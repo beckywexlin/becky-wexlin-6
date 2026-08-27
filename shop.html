@@ -4,14 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="p:domain_verify" content="c1c861c2cdc399b1b0220dca6a40af45"/>
   <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
+  <script>
+    // gtag + klaviyo are ~256KB of third-party JS that competed with the product
+    // images for bandwidth right through LCP. Both are queue-based, so they are
+    // loaded after the page finishes instead. dataLayer buffers gtag calls and
+    // _learnq buffers Klaviyo calls -- pre-created here because callers do
+    // `window._learnq || []`, which would otherwise drop events into a local
+    // array that klaviyo.js never sees.
+    window.dataLayer = window.dataLayer || [];
+    window._learnq = window._learnq || [];
+    (function () {
+      function load() {
+        ['https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K',
+       'https://static.klaviyo.com/onsite/js/klaviyo.js?company_id=SSfm5P'].forEach(function (src) {
+          var s = document.createElement('script');
+          s.async = true; s.src = src;
+          document.head.appendChild(s);
+        });
+      }
+      // `load` fires before the product images finish painting, so waiting on it
+      // still dropped ~240KB of third-party JS straight into the LCP window.
+      // Start on the first real interaction, or 3.5s in -- whichever comes first.
+      var started = false;
+      function start() {
+        if (started) return;
+        started = true;
+        EVENTS.forEach(function (e) { window.removeEventListener(e, start, OPTS); });
+        load();
+      }
+      var EVENTS = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'mousemove'];
+      var OPTS = { passive: true };
+      EVENTS.forEach(function (e) { window.addEventListener(e, start, OPTS); });
+      setTimeout(start, 3500);
+    })();
+  </script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-WYJNL0114K');
   </script>
-  <script async type="text/javascript" src="https://static.klaviyo.com/onsite/js/klaviyo.js?company_id=SSfm5P"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shop All — Funny Graphic Tees &amp; Weird Hoodies | Wexlin</title>
   <meta name="description" content="Shop all Becky Wexlin Creative apparel — funky graphic tees, weird hoodies, meme shirts and esoteric gear. Printed on demand. Ships worldwide." />
@@ -61,7 +93,7 @@
     ]
   }
   </script>
-  <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="icon" type="image/png" href="images/favicon-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css?v=6" />
   <link rel="stylesheet" href="css/blog.css?v=4" />
@@ -69,10 +101,12 @@
   <link rel="preconnect" href="https://images-api.printify.com" />
   <link rel="stylesheet" href="css/shop.css?v=2" />
   <link rel="dns-prefetch" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" media="print" onload="this.media='all'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" /></noscript>
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/dm-sans-var.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/playfair-900.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/playfair-900-italic.woff2" crossorigin />
+  <style>@font-face{font-family:'DM Sans';font-style:normal;font-weight:300 500;font-display:swap;src:url('/fonts/dm-sans-var.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:900;font-display:swap;src:url('/fonts/playfair-900-italic.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:900;font-display:swap;src:url('/fonts/playfair-900.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}</style>
 </head>
 
 <body>
@@ -116,7 +150,7 @@
 
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
     <a href="/" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
-      <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" width="200" height="60" />
+      <img src="images/bw_logo_400.webp" alt="Becky Wexlin Creative" width="200" height="60" />
     </a>
     <ul class="nav-links" id="nav-links">
       <li><a href="/shop" class="active">Shop</a></li><li><a href="/collections/">Collections</a></li>
@@ -206,7 +240,7 @@
   <footer class="site-footer" role="contentinfo">
     <div class="footer-grid">
       <div class="footer-logo">
-        <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" width="200" height="60" />
+        <img src="images/bw_logo_400.webp" alt="Becky Wexlin Creative" width="200" height="60" />
         <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
               <div class="footer-social">
                 <a href="https://instagram.com/beckywexlin" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
@@ -271,12 +305,23 @@
   <script src="js/search.js" defer></script>
   <script src="js/lightbox.js" defer></script>
   <script src="js/popup.js" defer></script>
-  <script src="js/cardgallery.js?v=3" defer></script>
+  <script src="js/cardgallery.js?v=4" defer></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Product strip
-    (async () => {
+    // Product strip -- purely decorative, and it pulls the whole catalog. Held
+    // until after load so it stops competing with the card images for bandwidth.
+    function afterLoad(fn) {
+      var go = function () {
+        // requestIdleCallback takes an options object as its 2nd arg, not a
+        // delay -- passing 1 there throws.
+        if (window.requestIdleCallback) window.requestIdleCallback(fn);
+        else setTimeout(fn, 1);
+      };
+      if (document.readyState === 'complete') go();
+      else window.addEventListener('load', go, { once: true });
+    }
+    afterLoad(async () => {
       try {
         const track = document.getElementById('product-strip-track');
         if (!track) return;
@@ -291,10 +336,10 @@
         }
         if (!products.length) return;
         const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
-        const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+        const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(window.bwSized ? window.bwSized(p.img, 200) : p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
         track.innerHTML = html + html;
       } catch { /* silent */ }
-    })();
+    });
 
     var PROXY_BASE = 'https://becky-wexlin-api.beckywexlin.workers.dev';
     var loading    = document.getElementById('shop-loading');
@@ -331,7 +376,7 @@
       return '<article class="shop-product-card" data-category="' + tagCats + '" data-title="' + esc((product.title || '').toLowerCase()) + '" data-tags="' + esc((product.tags || []).join(' ').toLowerCase()) + '" data-desc="' + esc((rawDesc || '').toLowerCase().substring(0, 200)) + '">'
         + '<a href="/' + product.slug + '" aria-label="Shop ' + product.title + '">'
         + '<div class="shop-card-img">'
-        + '<img src="/img/' + encodeURIComponent(product.image) + '" alt="' + product.title + '" loading="lazy" onerror="this.src=\'images/404.png\'" />'
+        + '<img src="/img/' + encodeURIComponent(window.bwSized ? window.bwSized(product.image, 400) : product.image) + '" alt="' + product.title + '" loading="lazy" onerror="this.src=\'images/404.png\'" />'
         + '<div class="shop-card-overlay"><span>Shop now &rarr;</span></div>'
         + '</div>'
         + '<div class="shop-card-body">'
@@ -392,6 +437,38 @@
       });
     }
 
+    // Counts the server-rendered cards instead of a product array, so tabs work
+    // without fetching the catalog.
+    function buildTabsFromDom() {
+      var cards = document.querySelectorAll('.shop-product-card');
+      TAG_CATEGORIES.forEach(function(cat) {
+        var count = 0;
+        for (var i = 0; i < cards.length; i++) {
+          var c = ' ' + (cards[i].getAttribute('data-category') || '') + ' ';
+          if (c.indexOf(' ' + cat.filter + ' ') > -1) count++;
+        }
+        if (count > 0) {
+          var btn = document.createElement('button');
+          btn.className = 'filter-tab';
+          btn.setAttribute('data-filter', cat.filter);
+          btn.textContent = cat.label;
+          tabsWrap.appendChild(btn);
+        }
+      });
+      wireTabClicks();
+    }
+
+    function wireTabClicks() {
+      tabsWrap.querySelectorAll('.filter-tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          tabsWrap.querySelectorAll('.filter-tab').forEach(function(t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+          activeFilter = tab.getAttribute('data-filter');
+          applyFilters();
+        });
+      });
+    }
+
     // Search — debounced
     var searchTimer;
     searchInput.addEventListener('input', function() {
@@ -399,7 +476,18 @@
       searchTimer = setTimeout(applyFilters, 150);
     });
 
-    // Use cached product data if available, otherwise fetch
+    // The worker server-renders all three grids and stamps the same data-*
+    // attributes the filter reads, so there is nothing left to build. Fetching
+    // the catalog here only to re-innerHTML the grid threw away the preloaded
+    // LCP image and restarted its paint -- 4.3s of render delay -- while the
+    // request itself competed with the card images for bandwidth.
+    if (document.querySelector('.shop-product-card')) {
+      loading.style.display = 'none';
+      buildTabsFromDom();
+      allCards = Array.from(document.querySelectorAll('.shop-product-card'));
+      applyFilters();
+    } else {
+    // No server render (static asset served directly) -- build it client-side.
     (function() {
       var cachedFull = sessionStorage.getItem('bw_products_full');
       if (cachedFull) {
@@ -451,6 +539,7 @@
         errorBox.style.display = 'block';
         errorMsg.textContent = 'Couldn\'t load products: ' + err.message;
       });
+    }
   </script>
 
 </body>

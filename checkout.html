@@ -4,28 +4,62 @@
   <meta charset="UTF-8" />
   <meta name="p:domain_verify" content="c1c861c2cdc399b1b0220dca6a40af45"/>
   <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
+  <script>
+    // gtag + klaviyo are ~256KB of third-party JS that competed with the product
+    // images for bandwidth right through LCP. Both are queue-based, so they are
+    // loaded after the page finishes instead. dataLayer buffers gtag calls and
+    // _learnq buffers Klaviyo calls -- pre-created here because callers do
+    // `window._learnq || []`, which would otherwise drop events into a local
+    // array that klaviyo.js never sees.
+    window.dataLayer = window.dataLayer || [];
+    window._learnq = window._learnq || [];
+    (function () {
+      function load() {
+        ['https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K',
+       'https://static.klaviyo.com/onsite/js/klaviyo.js?company_id=SSfm5P'].forEach(function (src) {
+          var s = document.createElement('script');
+          s.async = true; s.src = src;
+          document.head.appendChild(s);
+        });
+      }
+      // `load` fires before the product images finish painting, so waiting on it
+      // still dropped ~240KB of third-party JS straight into the LCP window.
+      // Start on the first real interaction, or 3.5s in -- whichever comes first.
+      var started = false;
+      function start() {
+        if (started) return;
+        started = true;
+        EVENTS.forEach(function (e) { window.removeEventListener(e, start, OPTS); });
+        load();
+      }
+      var EVENTS = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'mousemove'];
+      var OPTS = { passive: true };
+      EVENTS.forEach(function (e) { window.addEventListener(e, start, OPTS); });
+      setTimeout(start, 3500);
+    })();
+  </script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-WYJNL0114K');
   </script>
-  <script async type="text/javascript" src="https://static.klaviyo.com/onsite/js/klaviyo.js?company_id=SSfm5P"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <!-- Transactional page: nothing here is useful in search. Empty cart /
        no order renders as an error page, which Google files as Soft 404. -->
   <title>Checkout — Becky Wexlin Creative</title>
   <link rel="canonical" href="https://www.beckywexlin.com/checkout" />
-  <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="icon" type="image/png" href="images/favicon-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css?v=6" />
   <link rel="dns-prefetch" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" media="print" onload="this.media='all'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" /></noscript>
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/dm-sans-var.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/playfair-900.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/playfair-900-italic.woff2" crossorigin />
+  <style>@font-face{font-family:'DM Sans';font-style:normal;font-weight:300 500;font-display:swap;src:url('/fonts/dm-sans-var.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:900;font-display:swap;src:url('/fonts/playfair-900-italic.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:900;font-display:swap;src:url('/fonts/playfair-900.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}</style>
   <script src="https://js.stripe.com/v3/" defer></script>
   <style>
     .checkout-page {
@@ -227,7 +261,7 @@
 <body>
 
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
-    <a href="/" class="nav-logo"><img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" width="200" height="60" /></a>
+    <a href="/" class="nav-logo"><img src="images/bw_logo_400.webp" alt="Becky Wexlin Creative" width="200" height="60" /></a>
     <ul class="nav-links" id="nav-links">
       <li><a href="/shop">Shop</a></li><li><a href="/collections/">Collections</a></li>
       <li><a href="/blog/">Blog</a></li>

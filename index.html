@@ -4,14 +4,46 @@
   <meta charset="UTF-8" />
   <meta name="p:domain_verify" content="c1c861c2cdc399b1b0220dca6a40af45"/>
   <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K"></script>
+  <script>
+    // gtag + klaviyo are ~256KB of third-party JS that competed with the product
+    // images for bandwidth right through LCP. Both are queue-based, so they are
+    // loaded after the page finishes instead. dataLayer buffers gtag calls and
+    // _learnq buffers Klaviyo calls -- pre-created here because callers do
+    // `window._learnq || []`, which would otherwise drop events into a local
+    // array that klaviyo.js never sees.
+    window.dataLayer = window.dataLayer || [];
+    window._learnq = window._learnq || [];
+    (function () {
+      function load() {
+        ['https://www.googletagmanager.com/gtag/js?id=G-WYJNL0114K',
+       'https://static.klaviyo.com/onsite/js/klaviyo.js?company_id=SSfm5P'].forEach(function (src) {
+          var s = document.createElement('script');
+          s.async = true; s.src = src;
+          document.head.appendChild(s);
+        });
+      }
+      // `load` fires before the product images finish painting, so waiting on it
+      // still dropped ~240KB of third-party JS straight into the LCP window.
+      // Start on the first real interaction, or 3.5s in -- whichever comes first.
+      var started = false;
+      function start() {
+        if (started) return;
+        started = true;
+        EVENTS.forEach(function (e) { window.removeEventListener(e, start, OPTS); });
+        load();
+      }
+      var EVENTS = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'mousemove'];
+      var OPTS = { passive: true };
+      EVENTS.forEach(function (e) { window.addEventListener(e, start, OPTS); });
+      setTimeout(start, 3500);
+    })();
+  </script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-WYJNL0114K');
   </script>
-  <script async type="text/javascript" src="https://static.klaviyo.com/onsite/js/klaviyo.js?company_id=SSfm5P"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Becky Wexlin Creative — Funky, Weird & Wonderful Apparel</title>
   <meta name="description" content="Funny graphic tees, meme t-shirts and weird shirts for people who refuse to be boring. Original designs, premium blanks, free shipping on every order." />
@@ -59,7 +91,7 @@
     }
   }
   </script>
-  <link rel="icon" type="image/png" href="images/logo-lime.png" />
+  <link rel="icon" type="image/png" href="images/favicon-lime.png" />
   <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt">
   <link rel="stylesheet" href="css/style.css?v=6" />
   <link rel="stylesheet" href="css/blog.css?v=4" />
@@ -67,10 +99,12 @@
   <link rel="preconnect" href="https://images-api.printify.com" />
   <link rel="stylesheet" href="css/shop.css?v=2" />
   <link rel="dns-prefetch" href="https://becky-wexlin-api.beckywexlin.workers.dev" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" media="print" onload="this.media='all'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=DM+Sans:wght@300;400;500&display=swap" /></noscript>
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/dm-sans-var.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/playfair-900.woff2" crossorigin />
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/playfair-900-italic.woff2" crossorigin />
+  <style>@font-face{font-family:'DM Sans';font-style:normal;font-weight:300 500;font-display:swap;src:url('/fonts/dm-sans-var.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:900;font-display:swap;src:url('/fonts/playfair-900-italic.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:900;font-display:swap;src:url('/fonts/playfair-900.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}</style>
 </head>
 
 <body>
@@ -115,7 +149,7 @@
   <!-- NAVIGATION -->
   <nav class="site-nav" role="navigation" aria-label="Main navigation">
     <a href="/" class="nav-logo" aria-label="Becky Wexlin Creative — Home">
-      <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" width="200" height="60" />
+      <img src="images/bw_logo_400.webp" alt="Becky Wexlin Creative" width="200" height="60" />
     </a>
     <ul class="nav-links" id="nav-links">
       <li><a href="/shop">Shop</a></li><li><a href="/collections/">Collections</a></li>
@@ -264,7 +298,7 @@
           </div>
           <div style="display:flex; align-items:center; justify-content:center;">
             <div style="width:100%; aspect-ratio:1; background:#222; border-radius:4px; border:1px solid #333; display:flex; align-items:center; justify-content:center;">
-              <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" style="width: 60%; height: auto;" width="200" height="60" />
+              <img src="images/bw_logo_400.webp" alt="Becky Wexlin Creative" style="width: 60%; height: auto;" width="200" height="60" />
             </div>
           </div>
         </div>
@@ -328,7 +362,7 @@
   <footer class="site-footer" role="contentinfo">
     <div class="footer-grid">
       <div class="footer-logo">
-        <img src="images/bw_retro_transparent.png" alt="Becky Wexlin Creative" width="200" height="60" />
+        <img src="images/bw_logo_400.webp" alt="Becky Wexlin Creative" width="200" height="60" />
         <p class="footer-tagline">Funky, weird &amp; wonderful apparel for people who refuse to be boring.</p>
               <div class="footer-social">
                 <a href="https://instagram.com/beckywexlin" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
@@ -392,16 +426,28 @@
   <script src="js/search.js" defer></script>
   <script src="js/lightbox.js" defer></script>
   <script src="js/popup.js" defer></script>
-  <script src="js/cardgallery.js?v=3" defer></script>
+  <script src="js/cardgallery.js?v=4" defer></script>
   <script src="js/cart.js" defer></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Single fetch for both product strip + product grid
-    (async function() {
+    // The worker server-renders the grid, so this fetch is only needed for the
+    // decorative strip (and as a fallback if the server render is missing).
+    // Held until after load so it stops competing with the product images.
+    function afterLoad(fn) {
+      var go = function () {
+        if (window.requestIdleCallback) window.requestIdleCallback(fn);
+        else setTimeout(fn, 1);
+      };
+      if (document.readyState === 'complete') go();
+      else window.addEventListener('load', go, { once: true });
+    }
+
+    afterLoad(async function() {
       const grid = document.getElementById('product-grid');
       const loading = document.getElementById('product-loading');
       const track = document.getElementById('product-strip-track');
+      const serverRendered = !!(grid && grid.querySelector('.shop-product-card'));
 
       try {
         let products;
@@ -418,12 +464,13 @@
         // Product strip
         if (track && products.length) {
           const subset = products.slice().sort(() => Math.random() - 0.5).slice(0, 12);
-          const stripHtml = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
+          const stripHtml = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(window.bwSized ? window.bwSized(p.img, 200) : p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
           track.innerHTML = stripHtml + stripHtml;
         }
 
-        // Product grid
+        // Product grid -- already server-rendered in the normal case.
         if (loading) loading.remove();
+        if (serverRendered) return;
 
         if (!products.length) {
           grid.innerHTML = '<p style="color:#888;">No products found.</p>';
@@ -441,7 +488,7 @@
             <a href="/${p.slug}" aria-label="Shop ${p.title}">
               <div class="shop-card-img">
                 ${p.img
-                  ? `<img src="/img/${encodeURIComponent(p.img)}" alt="${p.title}" loading="lazy" />`
+                  ? `<img src="/img/${encodeURIComponent(window.bwSized ? window.bwSized(p.img, 400) : p.img)}" alt="${p.title}" loading="lazy" />`
                   : '<div style="width:100%;height:100%;background:#2A2A2A;"></div>'
                 }
                 ${p.slug === FEATURED_SLUG ? '<span style="position:absolute;top:8px;left:8px;z-index:3;background:var(--lime);color:#111;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:999px;">&#9733; Fan favourite</span>' : ''}
@@ -460,9 +507,12 @@
 
       } catch (err) {
         if (loading) loading.remove();
-        grid.innerHTML = '<p style="color:#888;">Could not load products right now. <a href="/shop" style="color:var(--lime)">Browse the shop</a></p>';
+        // Never wipe a working server-rendered grid because the strip fetch failed.
+        if (!serverRendered) {
+          grid.innerHTML = '<p style="color:#888;">Could not load products right now. <a href="/shop" style="color:var(--lime)">Browse the shop</a></p>';
+        }
       }
-    })();
+    });
   </script>
 
 </body>
