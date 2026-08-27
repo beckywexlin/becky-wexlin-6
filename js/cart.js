@@ -1,3 +1,21 @@
+/* ── IMAGE SIZING ──
+   Printify's mockup host resizes on request: ?s=400 returns 12KB against 73KB
+   for the untouched 1200x1200. Grid cards render at ~400px and strip thumbs at
+   36px, so the full-size file was pure waste — 22 requests on /shop were still
+   pulling 40KB-270KB each after the server-rendered cards were fixed, because
+   the client rebuilds those grids from the API and bypassed the server's sizing.
+
+   Lives here because cart.js is deferred on every page that renders a grid, so
+   it has always run by the time those render functions are called. Callers use
+   `window.bwSized ? window.bwSized(u, n) : u` so a load-order surprise degrades
+   to the old behaviour rather than throwing. */
+window.bwSized = function (url, px) {
+  var u = String(url || '');
+  if (!u || u.indexOf('images-api.printify.com') === -1) return u;
+  if (/[?&]s=\d+/.test(u)) return u;          // already sized
+  return u + (u.indexOf('?') === -1 ? '?' : '&') + 's=' + px;
+};
+
 /* ============================================
    BECKY WEXLIN CREATIVE — Cart
    ============================================ */

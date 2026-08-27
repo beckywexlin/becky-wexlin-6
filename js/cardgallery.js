@@ -6,7 +6,7 @@
    ============================================ */
 (function () {
   var API = 'https://becky-wexlin-api.beckywexlin.workers.dev';
-  function proxy(u) { return u ? '/img/' + encodeURIComponent(u) : ''; }
+  function proxy(u) { return u ? '/img/' + encodeURIComponent(window.bwSized ? window.bwSized(u, 400) : u) : ''; }
 
   /* ── styles ── */
   var css = ''
@@ -31,11 +31,23 @@
       var c = sessionStorage.getItem('bw_gallery');
       if (c) { var arr = JSON.parse(c); arr.forEach(function (p) { bySlug[p.slug] = (p.images || []).map(imgSrc); }); return Promise.resolve(); }
     } catch (e) {}
+    // Held until after load. The gallery only matters once a card is hovered or
+    // tapped, but this pulls every image URL in the catalog -- on /shop that
+    // request was competing with the card images all the way through LCP.
+    return new Promise(function (resolve) {
+      var go = function () {
+        if (window.requestIdleCallback) window.requestIdleCallback(resolve);
+        else setTimeout(resolve, 1);
+      };
+      if (document.readyState === 'complete') go();
+      else window.addEventListener('load', go, { once: true });
+    }).then(function () {
     return fetch(API + '/api/products?view=full').then(function (r) { return r.json(); }).then(function (d) {
       var list = (d.products || d).map(function (p) { return { slug: p.slug, images: (p.images || []).map(imgSrc) }; });
       list.forEach(function (p) { bySlug[p.slug] = p.images; });
       try { sessionStorage.setItem('bw_gallery', JSON.stringify(list)); } catch (e) {}
     }).catch(function () {});
+    });
   })();
 
   function enhance(card) {

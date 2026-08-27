@@ -103,7 +103,7 @@
     }
 
     results.innerHTML = matches.slice(0, 12).map(function (p) {
-      var imgSrc = p.img ? '/img/' + encodeURIComponent(p.img) : '';
+      var imgSrc = p.img ? '/img/' + encodeURIComponent(window.bwSized ? window.bwSized(p.img, 400) : p.img) : '';
       return '<a class="search-result" href="/' + p.slug + '">' +
         '<div class="search-result-img">' +
           (imgSrc ? '<img src="' + imgSrc + '" alt="' + p.title + '" />' : '') +
