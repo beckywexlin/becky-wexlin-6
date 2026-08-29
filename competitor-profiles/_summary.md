@@ -111,7 +111,7 @@ Wicked Clothes has 7,386 reviews. Sourpuss claims 20,000+. You have zero visible
 Your products are named for creativity ("T-Rexcellent," "Harambe Warhol," "Rule #62"). Your competitors name products for what people search: "Funny Dinosaur T-Shirt," "Dark Humor Cat Tee," "Retro Skull Graphic T-Shirt."
 
 **Action**: Keep your creative names as display names, but restructure your `<title>` tags and meta descriptions to lead with searchable phrases:
-- Current: `T-Rexcellent T-Shirt — Becky Wexlin Creative`
+- Current: `T-Rexcellent T-Shirt — Becky Wexlin`
 - Better: `Funny Dinosaur Graphic T-Shirt — T-Rexcellent | Becky Wexlin`
 
 ### 3. Collection/Category Pages
@@ -146,14 +146,14 @@ Rewrite every product page `<title>` tag to lead with search-intent keywords:
 
 | Current Title | Recommended Title |
 |---|---|
-| Bad Ass T-Shirt — Becky Wexlin Creative | Funny Donkey Graphic T-Shirt — Bad Ass Tee \| Becky Wexlin |
-| Harambe Warhol T-Shirt — Becky Wexlin Creative | Harambe Pop Art T-Shirt — Warhol Style Graphic Tee \| Becky Wexlin |
-| Cracked Out Eye T-Shirt — Becky Wexlin Creative | Psychedelic Eye Graphic T-Shirt — Trippy Art Tee \| Becky Wexlin |
-| Santa Freakin Barbara T-Shirt — Becky Wexlin Creative | Santa Barbara California T-Shirt — Funny Local Tee \| Becky Wexlin |
-| T-Rexcellent T-Shirt — Becky Wexlin Creative | Funny Dinosaur Graphic T-Shirt — T-Rexcellent \| Becky Wexlin |
-| Rick Roll T-Shirt — Becky Wexlin Creative | Rick Roll Meme T-Shirt — Funny Internet Graphic Tee \| Becky Wexlin |
-| Skating Skelly IDGAF T-Shirt — Becky Wexlin Creative | Skeleton Skateboard T-Shirt — Skating Skull Graphic Tee \| Becky Wexlin |
-| Cowboy Skull sketch T-Shirt — Becky Wexlin Creative | Western Skull Graphic T-Shirt — Cowboy Skeleton Tee \| Becky Wexlin |
+| Bad Ass T-Shirt — Becky Wexlin | Funny Donkey Graphic T-Shirt — Bad Ass Tee \| Becky Wexlin |
+| Harambe Warhol T-Shirt — Becky Wexlin | Harambe Pop Art T-Shirt — Warhol Style Graphic Tee \| Becky Wexlin |
+| Cracked Out Eye T-Shirt — Becky Wexlin | Psychedelic Eye Graphic T-Shirt — Trippy Art Tee \| Becky Wexlin |
+| Santa Freakin Barbara T-Shirt — Becky Wexlin | Santa Barbara California T-Shirt — Funny Local Tee \| Becky Wexlin |
+| T-Rexcellent T-Shirt — Becky Wexlin | Funny Dinosaur Graphic T-Shirt — T-Rexcellent \| Becky Wexlin |
+| Rick Roll T-Shirt — Becky Wexlin | Rick Roll Meme T-Shirt — Funny Internet Graphic Tee \| Becky Wexlin |
+| Skating Skelly IDGAF T-Shirt — Becky Wexlin | Skeleton Skateboard T-Shirt — Skating Skull Graphic Tee \| Becky Wexlin |
+| Cowboy Skull sketch T-Shirt — Becky Wexlin | Western Skull Graphic T-Shirt — Cowboy Skeleton Tee \| Becky Wexlin |
 
 Do this for all 45 products. Each title should: lead with 2–3 words people actually Google, include your creative name, end with "Becky Wexlin."
 

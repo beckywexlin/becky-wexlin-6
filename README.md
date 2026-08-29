@@ -1,4 +1,4 @@
-# Becky Wexlin Creative
+# Becky Wexlin
 
 Funky, weird & wonderful apparel. Built with plain HTML/CSS/JS, hosted on GitHub Pages, domain via Cloudflare.
 

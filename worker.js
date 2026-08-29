@@ -1,6 +1,6 @@
 const API_BASE = 'https://becky-wexlin-api.beckywexlin.workers.dev';
 const SITE = 'https://www.beckywexlin.com';
-const BRAND = 'Becky Wexlin Creative';
+const BRAND = 'Becky Wexlin';
 
 // Per-slug SEO title/description overrides. Injects the keywords people actually
 // search into the <title>/meta Google reads, WITHOUT changing the Printify title
@@ -1457,7 +1457,7 @@ function buildProductSSR(product, canonical) {
     + `<span>${esc(product.title)}</span></nav>
 <div class="product-layout">
   <div class="product-images">
-    ${img ? `<div class="product-main-img"><img src="/img/${encodeURIComponent(sizedImage(img, 800))}" alt="${esc(product.title)} — graphic tee by Becky Wexlin Creative" data-pin-description="${esc(pinDescription(product.title))}" data-pin-url="${esc(canonical)}" width="800" height="800" fetchpriority="high" /></div>` : ''}
+    ${img ? `<div class="product-main-img"><img src="/img/${encodeURIComponent(sizedImage(img, 800))}" alt="${esc(product.title)} — graphic tee by Becky Wexlin" data-pin-description="${esc(pinDescription(product.title))}" data-pin-url="${esc(canonical)}" width="800" height="800" fetchpriority="high" /></div>` : ''}
   </div>
   <div class="product-info">
     <a href="/shop" class="product-back">Back to shop</a>
@@ -1694,5 +1694,5 @@ const PRODUCT_FAQ = [
   ["Can I return it if it doesn't fit?",
    "Because each shirt is made to order we can't restock returns, but anything that arrives damaged, misprinted or not what you ordered is replaced or refunded within 14 days — just email hello@beckywexlin.com with a photo. Checking the size guide before ordering is the single best way to avoid the problem."],
   ['Is this a real independent brand?',
-   'Yes. Becky Wexlin Creative is a one-studio independent apparel label based in Santa Barbara, California. Every graphic is drawn in-house, and orders fund a person with strange ideas rather than a warehouse algorithm. More on that in the story.'],
+   'Yes. Becky Wexlin is a one-studio independent apparel label based in Santa Barbara, California. Every graphic is drawn in-house, and orders fund a person with strange ideas rather than a warehouse algorithm. More on that in the story.'],
 ];
