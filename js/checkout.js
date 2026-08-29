@@ -470,17 +470,24 @@ function readGaClientId() {
   } catch (e) { return ''; }
 }
 
-// _ga_WYJNL0114K=GS1.1.<session_id>.<n>.<engaged>.<ts>... -> the session id.
 // Without this the server-side purchase event cannot be joined to a session, so
 // GA4 reports the purchase but zero purchasing sessions — the funnel then looks
 // broken at the exact step the money is, which is indistinguishable from a real
 // checkout failure.
+//
+// Two cookie layouts are in the wild and the third dot-segment differs:
+//   GS1.1.1787971595.1.1.1787971600...        -> the id is the segment itself
+//   GS2.1.s1787971595$o1$g0$t1787971595$j60   -> the id is the digits after "s"
+// Reading the GS2 segment raw sent GA4 "s1787971595$o1$g0$..." as the
+// session_id, which it cannot match to any session. Take the leading digits and
+// both layouts work.
 function readGaSessionId() {
   try {
     const c = document.cookie.split('; ').find(x => x.startsWith('_ga_WYJNL0114K='));
     if (!c) return '';
-    const parts = c.split('=')[1].split('.');
-    return parts[2] || '';
+    const seg = c.split('=')[1].split('.')[2] || '';
+    const m = seg.match(/^s?(\d+)/);
+    return m ? m[1] : '';
   } catch (e) { return ''; }
 }
 
