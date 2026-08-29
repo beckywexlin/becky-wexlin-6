@@ -681,6 +681,20 @@
   <script src="js/cart.js" defer></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // The inline size guide is only reachable by clicking a link, so it does not
+    // belong on the critical path — loading it with the page cost 1-2 Lighthouse
+    // points for a script nobody needs until they interact.
+    (function () {
+      function loadSizeGuide() {
+        var s = document.createElement('script');
+        s.src = 'js/sizeguide.js';
+        s.defer = true;
+        document.head.appendChild(s);
+      }
+      if (document.readyState === 'complete') loadSizeGuide();
+      else window.addEventListener('load', loadSizeGuide, { once: true });
+    })();
     (async () => {
       try {
         const track = document.getElementById('product-strip-track');
