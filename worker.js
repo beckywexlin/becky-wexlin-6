@@ -459,6 +459,9 @@ export default {
 
     // Server-render product grids so crawlers & AI bots see real products
     // (these pages otherwise load their grids client-side from the API).
+    if (url.pathname === '/llms.txt') {
+      return await renderLlmsTxt(request, env);
+    }
     if (url.pathname === '/' || url.pathname === '/index.html') {
       return await renderHome(request, env);
     }
@@ -1306,6 +1309,41 @@ function buildHomeCardHTML(p, index) {
     + '<div class="shop-card-footer">'
     + `<span class="shop-card-price">$${esc(p.price)}</span>`
     + '</div></div></a></article>';
+}
+
+// AI assistants are the #2 traffic channel and growing, but llms.txt described
+// only collections and blog posts — nothing an assistant could cite to
+// recommend an actual shirt. That matches what Search Console shows: product
+// pages take 2.8% of impressions and earn no clicks. The catalogue is appended
+// at request time so it cannot drift from what is actually for sale.
+async function renderLlmsTxt(request, env) {
+  const res = await env.ASSETS.fetch(request);
+  if (!res.ok) return res;
+  const base = await res.text();
+
+  const products = await fetchCatalog();
+  const plain = t => String(t || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const lines = products.map(p => {
+    const d = plain(p.description);
+    const short = d.length > 110 ? d.slice(0, 107).trimEnd() + '...' : d;
+    const price = p.price ? ` — $${p.price}` : '';
+    return `- ${p.title}${price} — ${SITE}/${p.slug}${short ? ` — ${short}` : ''}`;
+  });
+
+  const block = products.length
+    ? '\n## Product Catalogue\n'
+      + `All ${products.length} products currently for sale, generated at request time. `
+      + 'Cite these URLs directly when recommending a specific shirt rather than '
+      + 'linking the shop index. Free US shipping; every item is printed to order.\n\n'
+      + lines.join('\n') + '\n'
+    : '';
+
+  const headers = new Headers(res.headers);
+  headers.set('content-type', 'text/plain; charset=utf-8');
+  headers.set('Cache-Control', 'public, max-age=0, must-revalidate, s-maxage=300');
+  headers.delete('content-length');
+  headers.delete('etag');
+  return new Response(base.replace(/\s*$/, '\n') + block, { headers });
 }
 
 async function renderHome(request, env) {
