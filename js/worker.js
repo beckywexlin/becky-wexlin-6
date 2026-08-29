@@ -117,6 +117,23 @@ async function buildProductsResponse(url, env) {
     }
   }
 
+  // Guard against Printify returning the same product on two pages, which can
+  // happen if a product shifts position between page fetches.
+  //
+  // Note this does NOT collapse `free-the-aliens-glitchy-kitty`, which appears
+  // twice in the catalogue: those are two separate Printify products with the
+  // same title (ids 6a72c057... and 6a5311fc..., 9 and 13 images). They derive
+  // the same slug, so only one is ever reachable at that URL — the other is
+  // dead stock in the feed. That needs fixing in Printify, not here; deleting
+  // one at this layer would silently pick a winner.
+  const seenIds = new Set();
+  raw = raw.filter(p => {
+    const key = p && (p.id ?? p.handle ?? p.title);
+    if (key == null || seenIds.has(key)) return false;
+    seenIds.add(key);
+    return true;
+  });
+
   const all = raw.filter(p => {
     const hasImage = !!(p.images && p.images.length > 0);
     const hasVariants = (p.variants || []).some(v => v.is_enabled);

@@ -1,3 +1,70 @@
+/* ── RELATED PRODUCTS ──
+   Blog posts used to show three products picked at random, so a meme post
+   advertised whatever happened to shuffle to the front. The blog is where
+   almost all search traffic lands (2,116 of 2,163 impressions last month) and
+   product pages take 61 with no clicks, so that sidebar is the main bridge
+   between the two and it was pointing nowhere in particular.
+
+   Printify's own tags are near-useless for this ("dtg", "men's clothing", on
+   nearly every item), so the haystack is title + description + tags and the
+   needles are the post's own meta keywords. Whole-phrase hits score highest;
+   single words are worth less and short ones are ignored so "the" and "tee"
+   cannot carry a match. Returns the original order when nothing scores, which
+   keeps a post with no usable keywords exactly as it was. */
+window.bwRelated = function (products, terms, n) {
+  var list = products || [];
+  var want = (terms || [])
+    .map(function (t) { return String(t || '').toLowerCase().trim(); })
+    .filter(Boolean);
+  if (!want.length) return list.slice(0, n);
+
+  var STOP = { the: 1, and: 1, for: 1, with: 1, that: 1, this: 1, best: 1,
+               shirt: 1, shirts: 1, tee: 1, tees: 1, 't-shirt': 1, 't-shirts': 1 };
+
+  var scored = list.map(function (p, i) {
+    var hay = [p.title, p.description, (p.tags || []).join(' ')]
+      .join(' ').toLowerCase().replace(/<[^>]+>/g, ' ');
+    // Single words are matched against whole tokens, not the raw string:
+    // indexOf('meme') is true of "Memento", which put a memento-mori tee at the
+    // top of the meme post. Multi-word phrases are specific enough to match raw.
+    var tokens = {};
+    var parts = hay.split(/[^a-z0-9]+/);
+    for (var t = 0; t < parts.length; t++) tokens[parts[t]] = 1;
+
+    var score = 0;
+    for (var w = 0; w < want.length; w++) {
+      var phrase = want[w];
+      var words = phrase.split(/[^a-z0-9]+/).filter(Boolean);
+      if (words.length > 1) {
+        if (hay.indexOf(phrase) !== -1) { score += 3; continue; }
+      } else if (words.length === 1) {
+        if (words[0].length > 3 && !STOP[words[0]] && tokens[words[0]]) score += 3;
+        continue;
+      }
+      for (var j = 0; j < words.length; j++) {
+        var word = words[j];
+        if (word.length > 3 && !STOP[word] && tokens[word]) score += 1;
+      }
+    }
+    return { p: p, score: score, i: i };
+  });
+
+  if (!scored.some(function (x) { return x.score > 0; })) return list.slice(0, n);
+  scored.sort(function (a, b) { return b.score - a.score || a.i - b.i; });
+
+  // Two Printify products share the title and slug "free the aliens glitchy
+  // kitty", so an unfiltered top-3 could spend two of its slots on one shirt.
+  var out = [], used = {};
+  for (var k = 0; k < scored.length && out.length < n; k++) {
+    var item = scored[k].p;
+    var key = item.slug || item.title;
+    if (used[key]) continue;
+    used[key] = 1;
+    out.push(item);
+  }
+  return out;
+};
+
 /* ── IMAGE SIZING ──
    Printify's mockup host resizes on request: ?s=400 returns 12KB against 73KB
    for the untouched 1200x1200. Grid cards render at ~400px and strip thumbs at

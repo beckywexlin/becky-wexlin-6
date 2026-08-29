@@ -379,7 +379,10 @@
         else {
           const res = await fetch('https://becky-wexlin-api.beckywexlin.workers.dev/api/products');
           const data = await res.json();
-          products = (data.products || data).map(p => ({ slug: p.slug, title: p.title, img: p.images?.[0] || '', price: p.variants?.[0]?.price || '' }));
+          products = (data.products || data).map(p => ({ slug: p.slug, title: p.title, img: p.images?.[0] || '', price: p.variants?.[0]?.price || '',
+            // description and tags are what bwRelated actually matches on —
+            // dropping them here left it ranking on titles alone.
+            description: p.description || '', tags: p.tags || [] }));
           try { sessionStorage.setItem('bw_products', JSON.stringify(products)); } catch {}
         }
         if (!products.length) return;
@@ -387,7 +390,13 @@
         // Sidebar
         const sb = document.getElementById('sidebar-products');
         if (sb) {
-          const picks = products.sort(() => Math.random() - 0.5).slice(0, 3);
+          // Topical picks beat random ones: this post is where the search
+          // traffic lands, and the sidebar is its only route to something buyable.
+          const kwMeta = document.querySelector('meta[name="keywords"]');
+          const kwTerms = kwMeta ? kwMeta.content.split(',').map(s => s.trim()) : [];
+          const picks = window.bwRelated
+            ? window.bwRelated(products, kwTerms, 3)
+            : products.slice(0, 3);
           sb.innerHTML = picks.map(p => `
             <a class="sidebar-product-card" href="/${p.slug}">
               <div class="sidebar-product-thumb">${p.img ? `<img src="/img/${encodeURIComponent(window.bwSized ? window.bwSized(p.img, 200) : p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div>
@@ -401,7 +410,9 @@
         // Strip
         const track = document.getElementById('product-strip-track');
         if (track) {
-          const subset = products.sort(() => Math.random() - 0.5).slice(0, 12);
+          const subset = window.bwRelated
+            ? window.bwRelated(products, kwTerms, 12)
+            : products.slice(0, 12);
           const html = subset.map(p => `<a class="product-strip-item" href="/${p.slug}"><div class="product-strip-thumb">${p.img ? `<img src="/img/${encodeURIComponent(window.bwSized ? window.bwSized(p.img, 200) : p.img)}" alt="${p.title}" loading="lazy" />` : ''}</div><span class="product-strip-name">${p.title}</span><span class="product-strip-price">$${p.price}</span></a><span class="product-strip-divider">·</span>`).join('');
           track.innerHTML = html + html;
         }
