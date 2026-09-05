@@ -16,7 +16,7 @@
 (function () {
   var SELECTORS = '.product-main-img img, .post-content img';
 
-  var overlay, imgEl, capEl, prevBtn, nextBtn, counter, rail, spinner;
+  var overlay, imgEl, capEl, prevBtn, nextBtn, counter, rail, spinner, hintEl;
   var group = [];
   var index = 0;
   var lastFocus = null;
@@ -28,9 +28,13 @@
       'background:rgba(8,8,8,.95);padding:24px;}',
     '.bw-lightbox.bw-open{display:flex;}',
     '.bw-lb-stage{position:relative;display:flex;align-items:center;justify-content:center;',
-      'max-width:100%;flex:1 1 auto;min-height:0;width:100%;}',
+      'max-width:100%;flex:1 1 auto;min-height:0;width:100%;overflow:hidden;}',
     '.bw-lb-img{max-width:min(1100px,90vw);max-height:74vh;width:auto;height:auto;',
-      'object-fit:contain;border-radius:4px;cursor:zoom-out;display:block;}',
+      'object-fit:contain;border-radius:4px;cursor:zoom-in;display:block;',
+      'transition:transform .18s ease;will-change:transform;touch-action:none;}',
+    '.bw-lb-img.bw-zoomed{cursor:zoom-out;transition:none;}',
+    '.bw-lb-hint{font-size:11px;letter-spacing:.12em;text-transform:uppercase;',
+      'color:#666;margin-top:8px;}',
     '.bw-lb-cap{font-size:13px;line-height:1.5;color:#9a9a9a;text-align:center;',
       'max-width:60ch;margin:14px auto 0;}',
     '.bw-lb-close{position:absolute;top:14px;right:18px;width:44px;height:44px;',
@@ -90,6 +94,7 @@
         '<button class="bw-lb-nav bw-lb-next" aria-label="Next image">&#8594;</button>' +
       '</div>' +
       '<p class="bw-lb-cap"></p>' +
+      '<div class="bw-lb-hint">Click the photo to zoom</div>' +
       '<div class="bw-lb-rail"></div>' +
       '<div class="bw-lb-count"></div>';
     document.body.appendChild(overlay);
@@ -101,15 +106,34 @@
     counter = overlay.querySelector('.bw-lb-count');
     rail    = overlay.querySelector('.bw-lb-rail');
     spinner = overlay.querySelector('.bw-lb-spin');
+    hintEl  = overlay.querySelector('.bw-lb-hint');
 
     imgEl.addEventListener('load', function () { spinner.style.display = 'none'; });
     overlay.querySelector('.bw-lb-close').addEventListener('click', close);
     prevBtn.addEventListener('click', function (e) { e.stopPropagation(); step(-1); });
     nextBtn.addEventListener('click', function (e) { e.stopPropagation(); step(1); });
+    imgEl.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (zoomed) resetZoom();
+      else zoomIn(e.clientX, e.clientY);
+    });
+    // Desktop: the magnified area follows the pointer. Touch: drag to pan.
+    imgEl.addEventListener('pointermove', function (e) {
+      if (!zoomed) return;
+      if (e.pointerType === 'touch' && !e.buttons && e.pressure === 0) return;
+      panTo(e.clientX, e.clientY);
+    });
+    imgEl.addEventListener('touchmove', function (e) {
+      if (!zoomed || !e.touches.length) return;
+      e.preventDefault();                       // pan instead of scrolling
+      panTo(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
+
     overlay.addEventListener('click', function (e) {
-      // Backdrop or the picture itself (it carries a zoom-out cursor).
-      if (e.target === overlay || e.target === imgEl
-          || e.target.classList.contains('bw-lb-stage')) close();
+      // Backdrop only. While zoomed the picture overflows the stage, so a
+      // stage click is almost certainly a mis-aimed pan, not "close".
+      if (e.target === overlay) close();
+      else if (!zoomed && e.target.classList.contains('bw-lb-stage')) close();
     });
   }
 
@@ -128,12 +152,82 @@
   // <picture> serves a webp/jpeg pair; currentSrc is what the browser chose.
   function bestSrc(el) { return el.currentSrc || el.src; }
 
+  /* The gallery is built from the thumbnail strip, and those thumbnails are
+     requested at s=200. Feeding that straight to the lightbox meant clicking a
+     product photo opened something SMALLER than the one already on screen —
+     the whole point of the lightbox, inverted. Printify's mockup host sizes on
+     the `s` parameter, so dropping it returns the native 1200x1200. Anything
+     that is not a proxied mockup (blog photography, local webp) is already
+     full size and is passed through untouched. */
+  function fullSrc(src) {
+    var u = String(src || '');
+    // img.src resolves to an absolute URL, so this has to match the /img/ proxy
+    // path anywhere in the string, not just at the start.
+    var m = u.match(/^(.*?\/img\/)(.+)$/);
+    if (!m) return u;
+    var inner;
+    try { inner = decodeURIComponent(m[2]); } catch (e) { return u; }
+    if (inner.indexOf('images-api.printify.com') === -1) return u;
+    inner = inner.replace(/([?&])s=\d+&?/, function (all, sep) {
+      return all.charAt(all.length - 1) === '&' ? sep : '';
+    }).replace(/[?&]$/, '');
+    return m[1] + encodeURIComponent(inner);
+  }
+
+  /* Zoom. A shopper who cannot see the print will not buy the shirt, and a
+     lightbox that only fits the image to the screen still hides the detail —
+     the weave, the crack in the ink, how big the graphic actually sits on the
+     chest. Click (or tap) to magnify around that exact point, then move the
+     pointer or drag to pan, the way Amazon and Nordstrom behave.
+
+     transform-origin is a percentage of the element's border box, which
+     transform does NOT change — so the rect captured while unzoomed stays the
+     correct reference for the whole zoomed session. */
+  var ZOOM = 2.6;
+  var zoomed = false;
+  var baseRect = null;
+
+  function resetZoom() {
+    zoomed = false;
+    baseRect = null;
+    if (imgEl) {
+      imgEl.classList.remove('bw-zoomed');
+      imgEl.style.transform = '';
+      imgEl.style.transformOrigin = '';
+    }
+    if (hintEl) hintEl.textContent = 'Click the photo to zoom';
+  }
+
+  function originFrom(clientX, clientY) {
+    if (!baseRect || !baseRect.width || !baseRect.height) return '50% 50%';
+    var x = (clientX - baseRect.left) / baseRect.width * 100;
+    var y = (clientY - baseRect.top) / baseRect.height * 100;
+    x = Math.max(0, Math.min(100, x));
+    y = Math.max(0, Math.min(100, y));
+    return x.toFixed(2) + '% ' + y.toFixed(2) + '%';
+  }
+
+  function zoomIn(clientX, clientY) {
+    baseRect = imgEl.getBoundingClientRect();   // captured before scaling
+    zoomed = true;
+    imgEl.classList.add('bw-zoomed');
+    imgEl.style.transformOrigin = originFrom(clientX, clientY);
+    imgEl.style.transform = 'scale(' + ZOOM + ')';
+    if (hintEl) hintEl.textContent = 'Move to pan · click to zoom out';
+  }
+
+  function panTo(clientX, clientY) {
+    if (!zoomed) return;
+    imgEl.style.transformOrigin = originFrom(clientX, clientY);
+  }
+
   function show(i) {
     if (!group.length) return;
     index = (i + group.length) % group.length;
     var it = group[index];
     spinner.style.display = '';
-    imgEl.src = it.src;
+    resetZoom();
+    imgEl.src = it.full || it.src;
     imgEl.alt = it.alt || '';
     capEl.textContent = it.alt || '';
     capEl.style.display = it.alt ? '' : 'none';
@@ -156,7 +250,8 @@
     injectCSS();
     build();
     group = galleryFor(el).map(function (n) {
-      return { src: bestSrc(n), alt: n.alt || '' };
+      var t = bestSrc(n);
+      return { src: t, full: fullSrc(t), alt: n.alt || '' };
     });
 
     rail.innerHTML = '';
@@ -186,6 +281,7 @@
   function close() {
     if (!overlay) return;
     overlay.classList.remove('bw-open');
+    resetZoom();
     document.body.style.overflow = '';
     // '' resolves against the page URL and refetches the document in some
     // browsers; removing the attribute does not.
