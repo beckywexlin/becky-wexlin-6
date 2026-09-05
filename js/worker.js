@@ -526,6 +526,13 @@ function pickCardImage(images) {
   return (mockup || list[0])?.src ?? null;
 }
 
+function mockupImages(images) {
+  const list = (images || []).map(i => ({ src: i.src, variant_ids: i.variant_ids || [] }));
+  const mockups = list.filter(i => typeof i.src === 'string'
+    && i.src.includes('images-api.printify.com'));
+  return mockups.length ? mockups : list;
+}
+
 function normalizeProduct(p) {
   const enabledVariants = (p.variants || []).filter(v => v.is_enabled);
   const minCents = enabledVariants.length
@@ -552,7 +559,18 @@ function normalizeProduct(p) {
     title:       p.title,
     description: stripHtml(p.description),
     image,
-    images:      (p.images || []).map(i => ({ src: i.src, variant_ids: i.variant_ids || [] })),
+    // Printify returns two kinds of image: rendered mockup JPEGs from
+    // images-api.printify.com, and the raw design PNGs on CloudFront. The raw
+    // files are the flat artwork, not a photo of the garment, and they are
+    // enormous — one product page was pulling 32MB on a phone because its
+    // gallery and thumbnails included them, and the `s=` resize parameter has
+    // no effect on the CloudFront host. pickCardImage already avoided them for
+    // the grid; the gallery never did.
+    //
+    // 73 raw files across 32 products, and no product has only raw files, so
+    // filtering is safe. The fallback keeps a product visible rather than
+    // blank if that ever stops being true.
+    images:      mockupImages(p.images),
     price:       (minCents / 100).toFixed(2),
     category,
     variants:    enabledVariants.map(v => ({
