@@ -627,12 +627,58 @@ async function submitOrder(shipping) {
 }
 
 // ── INIT CHECKOUT PAGE ──
+// A cart lives in localStorage indefinitely, so it keeps whatever price was
+// current the day it was filled. After the 2026-09-05 repricing an abandoned
+// cart displayed $19.99 and Stripe charged $32.00 — the server prices from the
+// catalogue, correctly, but the shopper was shown a figure nobody was going to
+// honour. Overcharging against a displayed total is a chargeback waiting to
+// happen, so the cart is re-priced from the catalogue before anything is
+// rendered. Prices only ever come from the API here; the stored ones are
+// display state, never money.
+async function refreshCartPrices(cart) {
+  if (!cart.length) return { cart, changed: false };
+  let changed = false;
+  try {
+    const r = await fetch(CHECKOUT_WORKER + '/price-cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: cart }),
+    });
+    if (!r.ok) throw new Error('price lookup ' + r.status);
+    const data = await r.json();
+    const priced = (data && data.items) || [];
+    for (let i = 0; i < cart.length; i++) {
+      const unit = priced[i] && priced[i].unit;
+      if (unit && unit !== String(cart[i].price)) { cart[i].price = unit; changed = true; }
+    }
+    if (changed) {
+      try { localStorage.setItem('bw-cart', JSON.stringify(cart)); } catch (e) {}
+    }
+  } catch (e) {
+    // Leave the cart alone on a lookup failure. The server still prices the
+    // charge, so this degrades to the old behaviour rather than blocking a sale.
+    return { cart, changed: false };
+  }
+  return { cart, changed };
+}
+
 async function initCheckout() {
   const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
 
   if (cart.length === 0 && !window.location.search.includes('payment_intent')) {
     window.location.href = '/';
     return;
+  }
+
+  // Must happen before the summary renders or the begin_checkout value is sent.
+  const refreshed = await refreshCartPrices(cart);
+  if (refreshed.changed) {
+    const note = document.getElementById('checkout-price-note');
+    if (note) {
+      note.textContent = 'Some prices have changed since you added these items. '
+        + 'Your total below is current.';
+      note.style.display = 'block';
+    }
   }
 
   // GA4 begin_checkout event

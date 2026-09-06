@@ -408,6 +408,27 @@ export default {
       });
     }
 
+    // ── POST /price-cart ──
+    // The prices the shopper is shown must be the prices this worker will
+    // charge. Returning them from the same catalogPrices()/unitCents() pair
+    // that decides the charge makes divergence impossible by construction —
+    // a cart saved before a repricing displayed $19.99 while Stripe took
+    // $32.00, which is a chargeback waiting to happen.
+    if (pathname === '/price-cart' && req.method === 'POST') {
+      const { items } = await req.json();
+      const map = await catalogPrices(items);
+      if (!map) return json({ error: 'Pricing unavailable' }, 503);
+      const priced = (items || []).map(it => {
+        const unit = unitCents(it, map);
+        return {
+          id: it && it.id,
+          variantId: it && it.variantId != null ? it.variantId : null,
+          unit: unit === undefined ? null : (unit / 100).toFixed(2),
+        };
+      });
+      return json({ items: priced });
+    }
+
     // ── POST /create-payment-intent ──
     if (pathname === '/create-payment-intent' && req.method === 'POST') {
       const { items, tax, promoCode } = await req.json();
