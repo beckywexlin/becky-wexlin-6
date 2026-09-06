@@ -66,36 +66,67 @@ function blockedResponse(code) {
 // by editing one number before submitting.
 const CATALOG_URL = 'https://becky-wexlin-api.beckywexlin.workers.dev/api/products';
 
-async function catalogPrices() {
-  // Cached at the edge by the API worker already; this second cache just keeps
-  // a checkout from paying that latency on every one of its three calls.
+// The listing endpoint only carries a product's BASE price — the cheapest
+// enabled variant. Pricing a cart from it charged the base price for every
+// size, so a 5XL hoodie displayed at $60.00 was billed at $55.00 and the tax
+// was computed on $55.00 too. That was true for every upsized item; Becky's
+// 2026-09-05 repricing widened the spread from a few dollars to as much as $28,
+// which is what made it worth finding. Variant prices only exist on the detail
+// endpoint, so fetch that for the handful of products actually in the cart.
+async function catalogPrices(items) {
+  const ids = [...new Set((items || []).map(i => String(i && i.id || '')).filter(Boolean))];
+  if (!ids.length) return null;
+
   const cache = caches.default;
-  const key = new Request(CATALOG_URL, { method: 'GET' });
-  let res = await cache.match(key);
-  if (!res) {
-    res = await fetch(CATALOG_URL);
-    if (!res.ok) return null;
-    const store = new Response(res.clone().body, res);
-    store.headers.set('Cache-Control', 'public, max-age=300');
-    await cache.put(key, store);
-  }
-  const data = await res.json().catch(() => null);
-  if (!data || !Array.isArray(data.products)) return null;
   const map = new Map();
-  for (const prod of data.products) {
-    const cents = Math.round(parseFloat(String(prod.price).replace('$', '')) * 100);
-    if (prod.id && Number.isFinite(cents)) map.set(String(prod.id), cents);
+
+  for (const id of ids) {
+    const url = `${CATALOG_URL}/${encodeURIComponent(id)}`;
+    const key = new Request(url, { method: 'GET' });
+    let res = await cache.match(key);
+    if (!res) {
+      res = await fetch(url);
+      if (!res.ok) return null;
+      const store = new Response(res.clone().body, res);
+      store.headers.set('Cache-Control', 'public, max-age=300');
+      await cache.put(key, store);
+    }
+    const prod = await res.json().catch(() => null);
+    if (!prod || !prod.id) return null;
+
+    const toCents = v => Math.round(parseFloat(String(v).replace('$', '')) * 100);
+    const base = toCents(prod.price);
+    if (Number.isFinite(base)) map.set(String(prod.id), base);
+    for (const v of prod.variants || []) {
+      const cents = v && v.price != null ? toCents(v.price) : NaN;
+      if (v && v.id != null && Number.isFinite(cents)) {
+        map.set(String(prod.id) + ':' + String(v.id), cents);
+      }
+    }
   }
   return map.size ? map : null;
 }
 
-// Returns { cents } or { error }. A missing product is refused rather than
-// priced at zero — silently dropping a line item is how you ship for free.
+// Variant price when we know it, base price otherwise. The fallback matters:
+// a cart saved before a product was re-variantised carries a variantId that no
+// longer exists, and rejecting it would block a legitimate checkout. Base is
+// the cheapest enabled variant, so falling back can only ever undercharge —
+// never overcharge someone for a size they did not pick.
+function unitCents(item, priceMap) {
+  if (!item || !priceMap) return undefined;
+  const id = String(item.id);
+  if (item.variantId != null) {
+    const exact = priceMap.get(id + ':' + String(item.variantId));
+    if (exact !== undefined) return exact;
+  }
+  return priceMap.get(id);
+}
+
 function pricedSubtotal(items, priceMap) {
   if (!Array.isArray(items) || !items.length) return { error: 'Cart is empty' };
   let cents = 0;
   for (const item of items) {
-    const unit = priceMap.get(String(item.id));
+    const unit = unitCents(item, priceMap);
     if (unit === undefined) return { error: `Unknown product: ${item.id}` };
     const qty = Number(item.quantity) || 1;
     if (!Number.isInteger(qty) || qty < 1 || qty > 25) {
@@ -380,7 +411,7 @@ export default {
     // ── POST /create-payment-intent ──
     if (pathname === '/create-payment-intent' && req.method === 'POST') {
       const { items, tax, promoCode } = await req.json();
-      const priceMap1 = await catalogPrices();
+      const priceMap1 = await catalogPrices(items);
       if (!priceMap1) return json({ error: 'Pricing unavailable, please retry' }, 503);
       const priced1 = pricedSubtotal(items, priceMap1);
       if (priced1.error) return json({ error: priced1.error }, 400);
@@ -416,13 +447,13 @@ export default {
         // item.price here meant a tampered or absent price produced a smaller
         // tax figure — under-collecting tax is a filing problem, not just a
         // revenue one, and an omitted price silently yielded NaN.
-        const taxPrices = await catalogPrices();
+        const taxPrices = await catalogPrices(items);
         if (!taxPrices) return json({ tax_amount: 0, error: 'Pricing unavailable' });
 
         const lineItems = [];
         for (let i = 0; i < (items || []).length; i++) {
           const item = items[i];
-          const unit = taxPrices.get(String(item.id));
+          const unit = unitCents(item, taxPrices);
           if (unit === undefined) continue;
           const qty = Number(item.quantity) || 1;
           lineItems.push({
@@ -475,7 +506,7 @@ export default {
         return blockedResponse(country);
       }
 
-      const priceMap2 = await catalogPrices();
+      const priceMap2 = await catalogPrices(items);
       if (!priceMap2) return json({ error: 'Pricing unavailable, please retry' }, 503);
       const priced2 = pricedSubtotal(items, priceMap2);
       if (priced2.error) return json({ error: priced2.error }, 400);
@@ -530,7 +561,7 @@ export default {
       // so a POST with any string and any cart printed and shipped real goods
       // at our expense. Every order is now checked against Stripe before
       // anything reaches Printify.
-      const priceMap = await catalogPrices();
+      const priceMap = await catalogPrices(items);
       if (!priceMap) return json({ error: 'Pricing unavailable, please retry' }, 503);
       const priced = pricedSubtotal(items, priceMap);
       if (priced.error) return json({ error: priced.error }, 400);
