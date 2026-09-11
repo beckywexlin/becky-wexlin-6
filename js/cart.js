@@ -49,7 +49,20 @@ window.bwStore = (function () {
    single words are worth less and short ones are ignored so "the" and "tee"
    cannot carry a match. Returns the original order when nothing scores, which
    keeps a post with no usable keywords exactly as it was. */
-window.bwRelated = function (products, terms, n) {
+function shuffled(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+// opts.fill = 'random' tops up unfilled slots with random candidates instead of
+// the head of the list. Without it every product whose title matches nothing
+// showed the same four shirts — and two of those were the German Auto Repair
+// mechanic tees, which is a poor default for a graphic-tee shopper.
+window.bwRelated = function (products, terms, n, opts) {
   var list = products || [];
   var want = (terms || [])
     .map(function (t) { return String(t || '').toLowerCase().trim(); })
@@ -87,8 +100,19 @@ window.bwRelated = function (products, terms, n) {
     return { p: p, score: score, i: i };
   });
 
-  if (!scored.some(function (x) { return x.score > 0; })) return list.slice(0, n);
+  var fillRandom = !!(opts && opts.fill === 'random');
+  if (!scored.some(function (x) { return x.score > 0; })) {
+    if (!fillRandom) return list.slice(0, n);
+    return shuffled(list).slice(0, n);
+  }
   scored.sort(function (a, b) { return b.score - a.score || a.i - b.i; });
+  if (fillRandom) {
+    // Keep the genuine matches in rank order, then randomise the filler so an
+    // unmatched slot is not the same product on every page.
+    var hit = scored.filter(function (x) { return x.score > 0; });
+    var rest = shuffled(scored.filter(function (x) { return x.score === 0; }));
+    scored = hit.concat(rest);
+  }
 
   // Two Printify products share the title and slug "free the aliens glitchy
   // kitty", so an unfiltered top-3 could spend two of its slots on one shirt.

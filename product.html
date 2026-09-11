@@ -1009,20 +1009,54 @@
     async function loadRelated() {
       try {
         let all;
-        const cached = sessionStorage.getItem('bw_products');
-        if (cached) {
-          all = JSON.parse(cached);
-        } else {
+        // bw_products is shared with the shop and blog strips, and those used to
+        // store a leaner shape. Only reuse the cache if it carries the text the
+        // matcher needs, otherwise the picks silently fall back to title-only
+        // matching — which is how the blog sidebar quietly went wrong.
+        try {
+          const cached = sessionStorage.getItem('bw_products');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length && parsed[0] && 'tags' in parsed[0]) all = parsed;
+          }
+        } catch (e) {}
+        if (!all) {
           const res = await fetch(WORKER_URL + '/api/products');
           const data = await res.json();
-          all = (data.products || data).map(p => ({ slug: p.slug, title: p.title, img: p.images?.[0] || '', price: p.variants?.[0]?.price || '', id: p.id }));
+          all = (data.products || data).map(p => ({
+            slug: p.slug, title: p.title, img: p.images?.[0] || '',
+            price: p.variants?.[0]?.price || '', id: p.id,
+            description: p.description || '', tags: p.tags || [],
+          }));
           try { sessionStorage.setItem('bw_products', JSON.stringify(all)); } catch {}
         }
         // Skip the paired garment — it's already offered as a Style switch above.
         const pairEntry = (await getPairs())[productId] || {};
         const sibIds = new Set(((pairEntry.alternates) || []).map(a => String(a.id)));
         const others = all.filter(p => String(p.id) !== String(productId) && !sibIds.has(String(p.id)));
-        const shuffled = others.sort(() => Math.random() - 0.5).slice(0, 4);
+
+        /* Four random shirts used to sit under every product. Someone looking at
+           an alien tee was shown whatever shuffled to the front, which is a
+           wasted slot on the page where the funnel actually leaks — 53 product
+           views produced 4 checkouts last month, and pages/session fell from
+           2.29 to 1.69. Rank by the current product's own words instead.
+           Printify's tags are nearly useless for this ("dtg", "men's clothing"
+           on almost everything), so the title carries most of the signal. */
+        /* Title only. Feeding the product's own Printify tags in as terms
+           poisoned the ranking: "Men's Clothing", "dtg", "cotton", "unisex" and
+           friends sit on nearly every listing, so every candidate scored highly
+           on them and the four products sharing the most boilerplate won every
+           time — the same quartet appeared under the hoodie and the Rick Roll
+           tee. The title is what actually carries a design's identity. */
+        const terms = [];
+        if (currentProduct) {
+          const title = String(currentProduct.title || '');
+          terms.push(title);
+          title.split(/[^A-Za-z0-9]+/).forEach(w => { if (w.length > 3) terms.push(w); });
+        }
+        const shuffled = (window.bwRelated && terms.length)
+          ? window.bwRelated(others, terms, 4, { fill: 'random' })
+          : others.sort(() => Math.random() - 0.5).slice(0, 4);
         if (!shuffled.length) return;
 
         const grid = document.getElementById('related-grid');
@@ -1353,7 +1387,16 @@
 
         fillProductDetails(p, firstSorted);
         loadStyleSwitch(p);
-        loadRelated();
+        // cart.js is deferred, so window.bwRelated does not exist yet while this
+        // inline script runs — calling loadRelated() here took the random fallback
+        // every time and the picks were never actually related. The strip sits
+        // below the fold, so waiting costs nothing and keeps this off the main
+        // thread during LCP.
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function () { loadRelated(); }, { once: true });
+        } else {
+          loadRelated();
+        }
 
       } catch (err) {
         page.innerHTML = '<p style="color:#888;text-align:center;padding:80px;">Could not load product. <a href="/shop" style="color:var(--lime)">Back to shop</a></p>';
