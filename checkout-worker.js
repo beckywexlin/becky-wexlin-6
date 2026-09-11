@@ -111,9 +111,11 @@ async function catalogPrices(items) {
   if (!data || !Array.isArray(data.products)) return null;
 
   const map = new Map();
+  const titles = new Map();
   for (const prod of data.products) {
     const cents = toCents(prod.price);
     if (prod.id && Number.isFinite(cents)) map.set(String(prod.id), cents);
+    if (prod.id && prod.title) titles.set(String(prod.id), String(prod.title));
   }
   if (!map.size) return null;
 
@@ -128,13 +130,17 @@ async function catalogPrices(items) {
       const prod = await d.res.json().catch(() => null);
       for (const v of (prod && prod.variants) || []) {
         const cents = v && v.price != null ? toCents(v.price) : NaN;
-        if (v && v.id != null && Number.isFinite(cents)) map.set(id + ':' + String(v.id), cents);
+        if (v && v.id != null && Number.isFinite(cents)) {
+          map.set(id + ':' + String(v.id), cents);
+          if (v.title) titles.set(id + ':' + String(v.id), String(v.title));
+        }
       }
     } catch (e) {
       misses.push({ id, status: 'error' });
     }
   }));
   map.misses = misses;
+  map.titles = titles;
   return map;
 }
 
@@ -456,6 +462,12 @@ export default {
           id: it && it.id,
           variantId: it && it.variantId != null ? it.variantId : null,
           unit: unit === undefined ? null : (unit / 100).toFixed(2),
+          // A cart carried in the URL arrives with ids only (see
+          // syncCheckoutLink in cart.js), so the summary needs these to read
+          // as anything a shopper recognises.
+          title: (map.titles && map.titles.get(String(it && it.id))) || null,
+          variantTitle: (map.titles && it && it.variantId != null
+            && map.titles.get(String(it.id) + ':' + String(it.variantId))) || null,
           // Not in the catalogue any more — deleted or unpublished since this
           // cart was filled. The client removes it rather than letting one dead
           // line block payment for everything else.

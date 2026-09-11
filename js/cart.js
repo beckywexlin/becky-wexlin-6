@@ -1,3 +1,41 @@
+/* ── STORAGE ──
+   Every cart read used to touch localStorage directly. In a browser set to
+   block cookies and site data — "Block All Cookies" in Safari, Lockdown Mode,
+   some embedded webviews — those calls throw SecurityError rather than
+   returning null. The module-level `let cart = JSON.parse(localStorage...)`
+   below then threw while cart.js was still evaluating, so the cart silently
+   held nothing, and on /checkout the same throw left `cart` in its temporal
+   dead zone ("Cannot access 'cart' before initialization") and the payment
+   form never rendered. A shopper on the site's single biggest platform — iOS
+   Safari, 107 sessions last month — could not buy anything and saw no reason
+   why.
+
+   Memory is the source of truth for the page session; localStorage is
+   best-effort persistence on top. Nothing here can throw. */
+window.bwStore = (function () {
+  var mem = {};
+  return {
+    get: function (k) {
+      try { var v = localStorage.getItem(k); if (v !== null) return v; } catch (e) {}
+      return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null;
+    },
+    set: function (k, v) {
+      mem[k] = String(v);
+      try { localStorage.setItem(k, String(v)); } catch (e) {}
+    },
+    remove: function (k) {
+      delete mem[k];
+      try { localStorage.removeItem(k); } catch (e) {}
+    },
+    // True when writes actually survive a reload. Used for nothing critical —
+    // it just lets callers avoid promising persistence they cannot deliver.
+    persists: (function () {
+      try { localStorage.setItem('__bw_t', '1'); localStorage.removeItem('__bw_t'); return true; }
+      catch (e) { return false; }
+    })()
+  };
+})();
+
 /* ── RELATED PRODUCTS ──
    Blog posts used to show three products picked at random, so a meme post
    advertised whatever happened to shuffle to the front. The blog is where
@@ -93,10 +131,10 @@ window.bwSized = function (url, px) {
 
 
 // ── CART STATE ──
-let cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+let cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
 
 function saveCart() {
-  localStorage.setItem('bw-cart', JSON.stringify(cart));
+  window.bwStore.set('bw-cart', JSON.stringify(cart));
   updateCartCount();
 }
 
@@ -182,6 +220,28 @@ function cartTotal() {
 }
 
 // ── RENDER CART ITEMS ──
+// When storage does not persist (cookies blocked, Lockdown Mode, some
+// webviews) the cart only exists in this page's memory, so navigating to
+// /checkout arrived with an empty cart and bounced the shopper to the homepage.
+// Carrying the lines in the link is the only route left: no storage, no
+// cookies, nothing else survives a navigation. Only ids, variants and
+// quantities travel — every price is still decided server-side, so this adds
+// no trust in the URL that did not already exist.
+function syncCheckoutLink() {
+  var links = document.querySelectorAll('#cart-footer a[href^="/checkout"]');
+  if (!links.length) return;
+  var carry = '';
+  if (!window.bwStore.persists && cart.length) {
+    try {
+      var lean = cart.map(function (i) {
+        return [String(i.id), i.variantId == null ? '' : String(i.variantId), Number(i.quantity) || 1];
+      });
+      carry = '?c=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(lean)))));
+    } catch (e) { carry = ''; }
+  }
+  links.forEach(function (a) { a.setAttribute('href', '/checkout' + carry); });
+}
+
 function renderCartItems() {
   const container = document.getElementById('cart-items');
   const footer = document.getElementById('cart-footer');
@@ -214,6 +274,7 @@ function renderCartItems() {
   `).join('');
 
   document.getElementById('cart-total').textContent = '$' + cartTotal();
+  syncCheckoutLink();
 }
 
 // ── OPEN / CLOSE CART ──

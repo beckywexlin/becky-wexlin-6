@@ -132,7 +132,7 @@ async function mountExpressCheckout() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: JSON.parse(localStorage.getItem('bw-cart') || '[]'),
+          items: JSON.parse(window.bwStore.get('bw-cart') || '[]'),
           address: {
             line1: addr.line1 || '',
             city: addr.city || '',
@@ -161,7 +161,7 @@ async function mountExpressCheckout() {
   });
 
   express.on('confirm', async (e) => {
-    const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+    const cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
     const a = (e.shippingAddress && e.shippingAddress.address) || {};
     const fullName = (e.shippingAddress && e.shippingAddress.name) || '';
     const country = (a.country || 'US').toUpperCase();
@@ -259,8 +259,8 @@ async function mountExpressCheckout() {
     }
 
     recordOrder(cart, paymentIntent.id);
-    localStorage.removeItem('bw-cart');
-    localStorage.removeItem('bw-shipping');
+    window.bwStore.remove('bw-cart');
+    window.bwStore.remove('bw-shipping');
     window.location.href = '/order-success';
   });
 
@@ -291,10 +291,10 @@ function cartSignature(cart) {
 
 function recordOrder(cart, paymentIntentId) {
   try {
-    const list = JSON.parse(localStorage.getItem(ORDER_MEMORY_KEY) || '[]');
+    const list = JSON.parse(window.bwStore.get(ORDER_MEMORY_KEY) || '[]');
     list.unshift({ sig: cartSignature(cart), at: Date.now(), pi: paymentIntentId || '' });
     const cutoff = Date.now() - DUPLICATE_WINDOW_MS;
-    localStorage.setItem(ORDER_MEMORY_KEY,
+    window.bwStore.set(ORDER_MEMORY_KEY,
       JSON.stringify(list.filter(r => r.at > cutoff).slice(0, 5)));
   } catch (e) { /* private mode: the guard is a courtesy, not a control */ }
 }
@@ -303,7 +303,7 @@ function recentOrderFor(cart) {
   try {
     const sig = cartSignature(cart);
     const cutoff = Date.now() - DUPLICATE_WINDOW_MS;
-    return JSON.parse(localStorage.getItem(ORDER_MEMORY_KEY) || '[]')
+    return JSON.parse(window.bwStore.get(ORDER_MEMORY_KEY) || '[]')
       .find(r => r.sig === sig && r.at > cutoff) || null;
   } catch (e) { return null; }
 }
@@ -431,7 +431,7 @@ async function calculateTax() {
   // Need at least state + zip to calculate tax for US
   if (!state || !zip || zip.length < 5) return;
 
-  const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+  const cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
   if (!cart.length) return;
 
   const taxEl = document.getElementById('checkout-tax');
@@ -482,7 +482,7 @@ async function calculateTax() {
 }
 
 function updateTotal() {
-  const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+  const cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
   const subtotal = cart.reduce((sum, item) => {
     return sum + parseFloat(item.price.replace('$', '')) * item.quantity;
   }, 0);
@@ -500,7 +500,7 @@ function debounceTax() {
 // reference is only an idempotency key for Printify — there is no charge to
 // reconcile it against.
 async function submitFreeOrder(shipping) {
-  const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+  const cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
   const orderRes = await fetch(CHECKOUT_WORKER + '/create-order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -523,8 +523,8 @@ async function submitFreeOrder(shipping) {
   }
 
   recordOrder(cart, '');   // free order: no payment reference to quote
-  localStorage.removeItem('bw-cart');
-  localStorage.removeItem('bw-shipping');
+  window.bwStore.remove('bw-cart');
+  window.bwStore.remove('bw-shipping');
   window.location.href = '/order-success';
   return true;
 }
@@ -588,7 +588,7 @@ function readGaSessionId() {
 }
 
 function orderTotalCents() {
-  const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+  const cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
   const subtotal = cart.reduce(
     (sum, item) => sum + parseFloat(String(item.price).replace('$', '')) * (item.quantity || 1), 0);
   return Math.round((subtotal - currentDiscount + currentTaxAmount) * 100);
@@ -634,7 +634,7 @@ async function submitOrder(shipping) {
   }
 
   // Send order to Printify via worker
-  const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+  const cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
 
   const gaClientId = readGaClientId();
 
@@ -713,12 +713,12 @@ async function submitOrder(shipping) {
       if (utm.utm_medium) purchaseParams.campaign_medium = utm.utm_medium;
       if (utm.utm_campaign) purchaseParams.campaign_name = utm.utm_campaign;
     } catch (e) {}
-    localStorage.setItem('bw-purchase', JSON.stringify(purchaseParams));
+    window.bwStore.set('bw-purchase', JSON.stringify(purchaseParams));
   } catch (e) {}
 
   recordOrder(cart, paymentIntent && paymentIntent.id);
-  localStorage.removeItem('bw-cart');
-  localStorage.removeItem('bw-shipping');
+  window.bwStore.remove('bw-cart');
+  window.bwStore.remove('bw-shipping');
   window.location.href = '/order-success';
   return true;
 }
@@ -761,14 +761,19 @@ async function refreshCartPrices(cart) {
         removed.unshift(cart[i].title || 'An item');
         cart.splice(i, 1);
         changed = true;
-      } else if (p.unit && p.unit !== String(cart[i].price)) {
-        cart[i].price = p.unit;
-        changed = true;
-        repriced = true;
+      } else {
+        if (p.unit && p.unit !== String(cart[i].price)) {
+          cart[i].price = p.unit;
+          changed = true;
+          repriced = true;
+        }
+        // Fill in anything a URL-carried cart could not bring with it.
+        if (!cart[i].title && p.title) { cart[i].title = p.title; changed = true; }
+        if (!cart[i].size && p.variantTitle) { cart[i].size = p.variantTitle; changed = true; }
       }
     }
     if (changed) {
-      try { localStorage.setItem('bw-cart', JSON.stringify(cart)); } catch (e) {}
+      try { window.bwStore.set('bw-cart', JSON.stringify(cart)); } catch (e) {}
     }
   } catch (e) {
     // Leave the cart alone on a lookup failure or timeout. The server still
@@ -780,8 +785,31 @@ async function refreshCartPrices(cart) {
   return { cart, changed, removed, repriced };
 }
 
+// Recovers a cart handed over in the URL by syncCheckoutLink() — the only way
+// a cart survives a navigation in a browser that blocks storage.
+function cartFromUrl() {
+  try {
+    const raw = new URLSearchParams(window.location.search).get('c');
+    if (!raw) return null;
+    const lean = JSON.parse(decodeURIComponent(escape(atob(raw))));
+    if (!Array.isArray(lean) || !lean.length) return null;
+    return lean.map(r => ({
+      id: String(r[0]),
+      variantId: r[1] === '' ? null : r[1],
+      quantity: Number(r[2]) || 1,
+      title: '', size: '', price: '0.00', image: '',
+    }));
+  } catch (e) { return null; }
+}
+
 async function initCheckout() {
-  const cart = JSON.parse(localStorage.getItem('bw-cart') || '[]');
+  let cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
+  if (!cart.length) {
+    const carried = cartFromUrl();
+    // Titles and prices are filled in by refreshCartPrices() below, which asks
+    // the worker — the URL is trusted for nothing but which lines exist.
+    if (carried) { cart = carried; window.bwStore.set('bw-cart', JSON.stringify(cart)); }
+  }
 
   if (cart.length === 0 && !window.location.search.includes('payment_intent')) {
     window.location.href = '/';
@@ -894,7 +922,7 @@ async function initCheckout() {
   }
 
   // Auto-fill promo code from landing page (stored via ?code= param)
-  const savedPromo = localStorage.getItem('bw-promo');
+  const savedPromo = window.bwStore.get('bw-promo');
 
   // Promo code handler
   const promoBtn = document.getElementById('promo-apply');
@@ -925,14 +953,14 @@ async function initCheckout() {
         document.getElementById('discount-amount').textContent = '-$' + data.discount.toFixed(2);
         updateTotal();
         // Clear stored promo after successful apply
-        localStorage.removeItem('bw-promo');
+        window.bwStore.remove('bw-promo');
       } else {
         promoMsg.textContent = 'Invalid code';
         promoMsg.className = 'promo-error';
         promoMsg.style.display = '';
         currentPromoCode = '';
         currentDiscount = 0;
-        localStorage.removeItem('bw-promo');
+        window.bwStore.remove('bw-promo');
       }
     } catch {
       promoMsg.textContent = 'Could not validate';
@@ -1085,7 +1113,7 @@ if (country === 'US') {
 
       if (!valid) return;
 
-      localStorage.setItem('bw-shipping', JSON.stringify(shipping));
+      window.bwStore.set('bw-shipping', JSON.stringify(shipping));
 
       const btn = document.getElementById('checkout-submit');
       clearCheckoutError();
