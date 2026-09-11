@@ -258,6 +258,7 @@ async function mountExpressCheckout() {
       return;
     }
 
+    recordOrder(cart, paymentIntent.id);
     localStorage.removeItem('bw-cart');
     localStorage.removeItem('bw-shipping');
     window.location.href = '/order-success';
@@ -267,6 +268,74 @@ async function mountExpressCheckout() {
     express.mount(mountPoint);
   } catch (err) {
     console.error('express checkout mount failed:', err && err.message);
+  }
+}
+
+// ── DUPLICATE ORDER GUARD ─────────────────────────────────────────
+// On 2026-09-02 the first outside customer in 113 days paid twice, 73 minutes
+// apart, $83.77 each, with 3 of 4 items the same. Printify already refuses a
+// second order for the same payment intent, so those were two genuinely
+// separate payments — nothing on the page suggested they had already bought
+// these items. A shopper who is unsure whether an order went through has no way
+// to check, and paying again is the obvious move. So remember what this browser
+// has ordered and say something before it happens twice.
+const ORDER_MEMORY_KEY = 'bw-recent-orders';
+const DUPLICATE_WINDOW_MS = 6 * 60 * 60 * 1000;   // 6 hours
+
+function cartSignature(cart) {
+  return (cart || [])
+    .map(i => [String(i.id), String(i.variantId == null ? '' : i.variantId), Number(i.quantity) || 1].join(':'))
+    .sort()
+    .join('|');
+}
+
+function recordOrder(cart, paymentIntentId) {
+  try {
+    const list = JSON.parse(localStorage.getItem(ORDER_MEMORY_KEY) || '[]');
+    list.unshift({ sig: cartSignature(cart), at: Date.now(), pi: paymentIntentId || '' });
+    const cutoff = Date.now() - DUPLICATE_WINDOW_MS;
+    localStorage.setItem(ORDER_MEMORY_KEY,
+      JSON.stringify(list.filter(r => r.at > cutoff).slice(0, 5)));
+  } catch (e) { /* private mode: the guard is a courtesy, not a control */ }
+}
+
+function recentOrderFor(cart) {
+  try {
+    const sig = cartSignature(cart);
+    const cutoff = Date.now() - DUPLICATE_WINDOW_MS;
+    return JSON.parse(localStorage.getItem(ORDER_MEMORY_KEY) || '[]')
+      .find(r => r.sig === sig && r.at > cutoff) || null;
+  } catch (e) { return null; }
+}
+
+// Blocks the button behind an explicit tick rather than just warning, because a
+// warning above the fold is not read by someone who has already decided to pay.
+function warnDuplicateOrder(record) {
+  const box = document.getElementById('checkout-price-note');
+  const btn = document.getElementById('checkout-submit');
+  if (!box) return;
+  const mins = Math.max(1, Math.round((Date.now() - record.at) / 60000));
+  const ago = mins < 60 ? mins + (mins === 1 ? ' minute' : ' minutes') + ' ago'
+    : Math.round(mins / 60) + (Math.round(mins / 60) === 1 ? ' hour' : ' hours') + ' ago';
+  box.innerHTML = '';
+  const p = document.createElement('p');
+  p.style.margin = '0 0 8px';
+  p.innerHTML = '<b>You already ordered these exact items ' + ago + '.</b> '
+    + 'If you are not sure the first one went through, please email '
+    + 'hello@beckywexlin.com' + (record.pi ? ' quoting ' + record.pi : '')
+    + ' rather than paying twice — we will check and sort it out.';
+  const label = document.createElement('label');
+  label.style.cssText = 'display:flex;gap:8px;align-items:flex-start;cursor:pointer';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox'; cb.id = 'confirm-duplicate';
+  const span = document.createElement('span');
+  span.textContent = 'I know, and I want to place a second order.';
+  label.appendChild(cb); label.appendChild(span);
+  box.appendChild(p); box.appendChild(label);
+  box.style.display = 'block';
+  if (btn) {
+    btn.disabled = true;
+    cb.addEventListener('change', function () { btn.disabled = !cb.checked; });
   }
 }
 
@@ -453,6 +522,7 @@ async function submitFreeOrder(shipping) {
     return false;
   }
 
+  recordOrder(cart, '');   // free order: no payment reference to quote
   localStorage.removeItem('bw-cart');
   localStorage.removeItem('bw-shipping');
   window.location.href = '/order-success';
@@ -646,6 +716,7 @@ async function submitOrder(shipping) {
     localStorage.setItem('bw-purchase', JSON.stringify(purchaseParams));
   } catch (e) {}
 
+  recordOrder(cart, paymentIntent && paymentIntent.id);
   localStorage.removeItem('bw-cart');
   localStorage.removeItem('bw-shipping');
   window.location.href = '/order-success';
@@ -748,6 +819,12 @@ async function initCheckout() {
     }
     return;
   }
+
+  // Before anything else money-related: has this browser already bought this
+  // exact cart recently? Shown after the re-pricing note so it cannot be
+  // overwritten by it.
+  const dupe = recentOrderFor(cart);
+  if (dupe) warnDuplicateOrder(dupe);
 
   // GA4 begin_checkout event
   if (typeof gtag === 'function' && cart.length > 0) {
