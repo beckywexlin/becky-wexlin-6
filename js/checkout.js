@@ -29,10 +29,36 @@ async function createPaymentIntent(items, tax) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ items, tax: tax || 0, taxCalculationId, promoCode: currentPromoCode })
   });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
+  // A failed call used to return undefined, which was handed straight to
+  // stripe.elements() — the payment section then rendered as an empty box with
+  // no message at all. Throw instead so the caller can say something.
+  if (!res.ok || !data.clientSecret) {
+    throw new Error(data.error || ('payment setup failed (' + res.status + ')'));
+  }
   currentPaymentIntentId = data.paymentIntentId;
   currentClientSecret = data.clientSecret;
   return data.clientSecret;
+}
+
+// If payment cannot be set up, say so where the card form would have been.
+// An empty space there reads as "this site is broken" and there is nothing a
+// shopper can do about it; a message and a retry at least give them a move.
+function showPaymentUnavailable(detail) {
+  const box = document.getElementById('payment-element');
+  if (box) {
+    box.innerHTML = '<div style="padding:16px;border:1px solid #5a2a2a;background:#1e1212;'
+      + 'border-radius:6px;color:#e8c4c4;font-size:14px;line-height:1.55;">'
+      + 'We could not load the payment form. Please try again in a moment.'
+      + '<br><button type="button" id="payment-retry" style="margin-top:10px;'
+      + 'padding:8px 14px;background:#AAEE00;color:#111;border:0;border-radius:4px;'
+      + 'font-weight:600;cursor:pointer;">Try again</button></div>';
+    const btn = document.getElementById('payment-retry');
+    if (btn) btn.addEventListener('click', function () { window.location.reload(); });
+  }
+  if (typeof gtag === 'function') {
+    gtag('event', 'checkout_error', { description: 'payment setup: ' + String(detail || '').slice(0, 100) });
+  }
 }
 
 // ── MOUNT PAYMENT ELEMENT ──
@@ -636,30 +662,51 @@ async function submitOrder(shipping) {
 // rendered. Prices only ever come from the API here; the stored ones are
 // display state, never money.
 async function refreshCartPrices(cart) {
-  if (!cart.length) return { cart, changed: false };
+  const removed = [];
+  if (!cart.length) return { cart, changed: false, removed, repriced: false };
   let changed = false;
+  let repriced = false;
+  // A slow price check must never be the reason the payment form is late.
+  const ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 5000) : null;
   try {
     const r = await fetch(CHECKOUT_WORKER + '/price-cart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: cart }),
+      signal: ctrl ? ctrl.signal : undefined,
     });
     if (!r.ok) throw new Error('price lookup ' + r.status);
     const data = await r.json();
     const priced = (data && data.items) || [];
-    for (let i = 0; i < cart.length; i++) {
-      const unit = priced[i] && priced[i].unit;
-      if (unit && unit !== String(cart[i].price)) { cart[i].price = unit; changed = true; }
+    // Walk backwards so removing a line does not shift the ones still to check.
+    for (let i = cart.length - 1; i >= 0; i--) {
+      const p = priced[i];
+      if (!p) continue;
+      if (p.unknown) {
+        // Deleted or unpublished since this cart was filled. Left in, it made
+        // the server refuse to price the whole order and the payment form
+        // never appeared. Take it out and say so.
+        removed.unshift(cart[i].title || 'An item');
+        cart.splice(i, 1);
+        changed = true;
+      } else if (p.unit && p.unit !== String(cart[i].price)) {
+        cart[i].price = p.unit;
+        changed = true;
+        repriced = true;
+      }
     }
     if (changed) {
       try { localStorage.setItem('bw-cart', JSON.stringify(cart)); } catch (e) {}
     }
   } catch (e) {
-    // Leave the cart alone on a lookup failure. The server still prices the
-    // charge, so this degrades to the old behaviour rather than blocking a sale.
-    return { cart, changed: false };
+    // Leave the cart alone on a lookup failure or timeout. The server still
+    // prices the charge, so this degrades gracefully rather than blocking a sale.
+    return { cart, changed: false, removed: [], repriced: false };
+  } finally {
+    if (timer) clearTimeout(timer);
   }
-  return { cart, changed };
+  return { cart, changed, removed, repriced };
 }
 
 async function initCheckout() {
@@ -672,13 +719,34 @@ async function initCheckout() {
 
   // Must happen before the summary renders or the begin_checkout value is sent.
   const refreshed = await refreshCartPrices(cart);
-  if (refreshed.changed) {
-    const note = document.getElementById('checkout-price-note');
+  const note = document.getElementById('checkout-price-note');
+  if (refreshed.changed && note) {
+    const parts = [];
+    if (refreshed.removed.length) {
+      parts.push(refreshed.removed.join(', ')
+        + (refreshed.removed.length === 1 ? ' is' : ' are')
+        + ' no longer available and was removed from your cart.');
+    }
+    if (refreshed.repriced) parts.push('Some prices have changed since you added these items.');
+    if (cart.length) parts.push('Your total below is current.');
+    note.textContent = parts.join(' ');
+    note.style.display = 'block';
+  }
+  if (!cart.length) {
+    // Everything in the cart has gone. Say so here rather than bouncing them
+    // to the homepage with no explanation.
     if (note) {
-      note.textContent = 'Some prices have changed since you added these items. '
-        + 'Your total below is current.';
+      note.innerHTML = '';
+      note.appendChild(document.createTextNode(
+        (refreshed.removed.length ? refreshed.removed.join(', ') + (refreshed.removed.length === 1 ? ' is' : ' are') + ' no longer available. ' : '')
+        + 'Your cart is now empty. '));
+      const a = document.createElement('a');
+      a.href = '/shop'; a.textContent = 'Back to the shop';
+      a.style.color = '#AAEE00';
+      note.appendChild(a);
       note.style.display = 'block';
     }
+    return;
   }
 
   // GA4 begin_checkout event
@@ -852,8 +920,13 @@ async function initCheckout() {
   }
 
   await initStripe();
-  const clientSecret = await createPaymentIntent(cart, 0);
-  await mountPaymentElement(clientSecret);
+  try {
+    const clientSecret = await createPaymentIntent(cart, 0);
+    await mountPaymentElement(clientSecret);
+  } catch (e) {
+    showPaymentUnavailable(e && e.message);
+    return;
+  }
   // After the Payment Element, so `elements` exists. Wrapped because a wallet
   // failure must never take the card form down with it.
   try {

@@ -2,5 +2,13 @@
   "name": "checkout",
   "main": "checkout-worker.js",
   "compatibility_date": "2025-09-27",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  // A direct internal link to the catalogue worker. Fetching it over its public
+  // becky-wexlin-api.beckywexlin.workers.dev address from this worker was
+  // unreliable: Cloudflare answered most of those subrequests with a 404 without
+  // ever routing them to the API (wrangler tail on the API saw nothing). Same-
+  // account worker-to-worker calls are what service bindings are for.
+  "services": [
+    { "binding": "API", "service": "becky-wexlin-api" }
+  ]
 }

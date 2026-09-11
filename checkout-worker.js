@@ -66,45 +66,76 @@ function blockedResponse(code) {
 // by editing one number before submitting.
 const CATALOG_URL = 'https://becky-wexlin-api.beckywexlin.workers.dev/api/products';
 
-// The listing endpoint only carries a product's BASE price — the cheapest
-// enabled variant. Pricing a cart from it charged the base price for every
-// size, so a 5XL hoodie displayed at $60.00 was billed at $55.00 and the tax
-// was computed on $55.00 too. That was true for every upsized item; Becky's
-// 2026-09-05 repricing widened the spread from a few dollars to as much as $28,
-// which is what made it worth finding. Variant prices only exist on the detail
-// endpoint, so fetch that for the handful of products actually in the cart.
-async function catalogPrices(items) {
-  const ids = [...new Set((items || []).map(i => String(i && i.id || '')).filter(Boolean))];
-  if (!ids.length) return null;
+// Two sources, deliberately layered.
+//
+// The LISTING endpoint carries every product's BASE price (its cheapest enabled
+// variant) in one cached call. It is the foundation because it has been reliable
+// for months and because it is also the authority on whether a product exists.
+//
+// Size upcharges only exist on the per-product DETAIL endpoint. Pricing from the
+// listing alone billed a 5XL hoodie shown at $60.00 as $55.00 (tax too), so the
+// detail prices are layered on top for the products actually in the cart.
+//
+// The first version of that fix fetched ONLY the detail endpoint, sequentially,
+// and returned null if any single lookup failed. From this worker those lookups
+// failed about 11 times in 12, and null meant 503 on create-payment-intent — so
+// Stripe never mounted and the shopper saw a checkout with no payment section
+// and no error. A detail miss now just leaves that product on its base price.
+// Set at the top of every request from env.API (see wrangler.checkout.jsonc).
+// Falls back to a public fetch only if the binding is missing, e.g. in a local
+// dev run without it.
+let API_BINDING = null;
 
+async function fetchCached(url, ttl) {
   const cache = caches.default;
+  const key = new Request(url, { method: 'GET' });
+  let res = await cache.match(key);
+  if (res) return { res, status: 200 };
+  const req = new Request(url, { headers: { 'Referer': 'https://www.beckywexlin.com/' } });
+  res = API_BINDING ? await API_BINDING.fetch(req) : await fetch(req);
+  if (!res.ok) return { res: null, status: res.status };
+  try {
+    const store = new Response(res.clone().body, res);
+    store.headers.set('Cache-Control', `public, max-age=${ttl}`);
+    await cache.put(key, store);
+  } catch (e) { /* caching is an optimisation, never a reason to fail */ }
+  return { res, status: 200 };
+}
+
+async function catalogPrices(items) {
+  const toCents = v => Math.round(parseFloat(String(v).replace('$', '')) * 100);
+
+  const listing = await fetchCached(CATALOG_URL, 300);
+  if (!listing.res) return null;
+  const data = await listing.res.json().catch(() => null);
+  if (!data || !Array.isArray(data.products)) return null;
+
   const map = new Map();
-
-  for (const id of ids) {
-    const url = `${CATALOG_URL}/${encodeURIComponent(id)}`;
-    const key = new Request(url, { method: 'GET' });
-    let res = await cache.match(key);
-    if (!res) {
-      res = await fetch(url);
-      if (!res.ok) return null;
-      const store = new Response(res.clone().body, res);
-      store.headers.set('Cache-Control', 'public, max-age=300');
-      await cache.put(key, store);
-    }
-    const prod = await res.json().catch(() => null);
-    if (!prod || !prod.id) return null;
-
-    const toCents = v => Math.round(parseFloat(String(v).replace('$', '')) * 100);
-    const base = toCents(prod.price);
-    if (Number.isFinite(base)) map.set(String(prod.id), base);
-    for (const v of prod.variants || []) {
-      const cents = v && v.price != null ? toCents(v.price) : NaN;
-      if (v && v.id != null && Number.isFinite(cents)) {
-        map.set(String(prod.id) + ':' + String(v.id), cents);
-      }
-    }
+  for (const prod of data.products) {
+    const cents = toCents(prod.price);
+    if (prod.id && Number.isFinite(cents)) map.set(String(prod.id), cents);
   }
-  return map.size ? map : null;
+  if (!map.size) return null;
+
+  // Variant prices, best effort, in parallel — only for products that exist.
+  const ids = [...new Set((items || []).map(i => String(i && i.id || '')))]
+    .filter(id => id && map.has(id));
+  const misses = [];
+  await Promise.all(ids.map(async id => {
+    try {
+      const d = await fetchCached(`${CATALOG_URL}/${encodeURIComponent(id)}`, 300);
+      if (!d.res) { misses.push({ id, status: d.status }); return; }
+      const prod = await d.res.json().catch(() => null);
+      for (const v of (prod && prod.variants) || []) {
+        const cents = v && v.price != null ? toCents(v.price) : NaN;
+        if (v && v.id != null && Number.isFinite(cents)) map.set(id + ':' + String(v.id), cents);
+      }
+    } catch (e) {
+      misses.push({ id, status: 'error' });
+    }
+  }));
+  map.misses = misses;
+  return map;
 }
 
 // Variant price when we know it, base price otherwise. The fallback matters:
@@ -295,6 +326,7 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     const { pathname } = url;
+    API_BINDING = env.API || null;
 
     if (req.method === 'OPTIONS') {
       return new Response(null, { headers: CORS });
@@ -424,9 +456,15 @@ export default {
           id: it && it.id,
           variantId: it && it.variantId != null ? it.variantId : null,
           unit: unit === undefined ? null : (unit / 100).toFixed(2),
+          // Not in the catalogue any more — deleted or unpublished since this
+          // cart was filled. The client removes it rather than letting one dead
+          // line block payment for everything else.
+          unknown: unit === undefined,
         };
       });
-      return json({ items: priced });
+      // IDs and HTTP statuses only: enough to see a detail lookup failing
+      // without exposing anything about the shopper.
+      return json({ items: priced, misses: map.misses || [] });
     }
 
     // ── POST /create-payment-intent ──
