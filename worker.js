@@ -19,7 +19,7 @@ const SEO_OVERRIDES = {
     description: 'Nothing says trust me like a dead guy with a cigarette. Established 2025, either deeply meaningful or arbitrary. Skull graphic tee, soft cotton.'
   },
   'blah-blah-blah-retro-tee': {
-    title: 'Blah Blah Blah Tee — Retro Sarcastic Graphic Shirt',
+    title: 'Blah Blah Blah Shirt — Retro Sarcastic Graphic Tee',
     description: 'Said three times, because once did not land. A retro sarcastic graphic tee for the chronically unbothered and emotionally checked-out.'
   },
   'bless-your-skull': {
@@ -95,8 +95,8 @@ const SEO_OVERRIDES = {
     description: 'Merch for a bowling alley that absolutely reeks of nacho cheese and cigarettes. Retro mascot bowling graphic tee. Please return your shoes.'
   },
   'harambe-warhol': {
-    title: 'Harambe Warhol Tee — Pop Art Meme Graphic T-Shirt',
-    description: 'Four neon Warhol-style portraits of the internet’s favourite silverback. A pop art meme graphic tee. Never forget. Free US shipping.'
+    title: 'RIP Harambe Shirt — Warhol Pop Art Memorial Tee',
+    description: 'Four neon Warhol-style portraits of the internet’s favourite silverback, staring down from somewhere above. A pop art memorial tee. Never forget.'
   },
   'haters-gon-hate-tee-disco-ball-galaxy-graphic-tee': {
     title: 'Haters Gon\' Hate Tee — Disco Ball Graphic T-Shirt',
@@ -123,7 +123,7 @@ const SEO_OVERRIDES = {
     description: 'Oversized block letters delivering advice nobody has ever successfully taken. Funny text graphic tee on a soft heather ash base.'
   },
   'kilroy-was-here-tee': {
-    title: 'Kilroy Was Here Tee — Vintage WWII Meme Shirt',
+    title: 'Kilroy Was Here T-Shirt — Vintage WWII Meme Tee',
     description: 'The first meme, decades before the internet. A big nose over a wall, scratched into history. Vintage Kilroy graphic tee on soft cotton.'
   },
   'majestic-jimothy-tee': {
@@ -215,7 +215,7 @@ const SEO_OVERRIDES = {
     description: 'A grid of faded skull motifs that reads as texture from across the room and as a warning up close. Lightweight skull graphic tee in soft cotton.'
   },
   'smiley-face-sunshine-tee-retro-happy-face-shirt': {
-    title: 'Smiley Face Sunshine Tee — Retro Happy Face Shirt',
+    title: 'Happy Face Shirt — Retro Smiley Face Sunshine Tee',
     description: 'A retro smiley for people who still rewind the tape. Vintage happy face graphic tee on soft cotton, printed to order with free US shipping.'
   },
   'stack-of-sorrow-skulls': {
@@ -243,7 +243,7 @@ const SEO_OVERRIDES = {
     description: 'For everyone who clocks in and privately fantasises about a much louder existence. Metal meets your morning ritual. Funny coffee graphic tee.'
   },
   'total-geebags-only': {
-    title: 'Total Geebags Only Tee — Funny Irish Slang Shirt',
+    title: 'Geebags Shirt — Total Geebags Only Funny Irish Tee',
     description: 'A members-only club with one entry requirement. Funny Irish slang graphic tee on 100% cotton, no side seams, printed to order in the US.'
   },
   'we-blame-society-but-we-are-society-t-shirt': {
@@ -254,6 +254,131 @@ const SEO_OVERRIDES = {
     title: 'Yeehaw Outlaw Cowboy Skeleton Tee — Western Shirt',
     description: 'A skeleton in a cowboy hat who decided the rules were a suggestion. Outlaw western graphic tee on soft heavyweight cotton, printed to order.'
   },
+};
+
+// ---------------------------------------------------------------------------
+// DESIGN NOTES
+// People search the phrase printed on the shirt ("kilroy was here t shirt",
+// "geebags", "rip harambe shirt"), land on the product page, and find only the
+// Printify description — which is written to sell a blank, not to explain a
+// reference. These blocks explain the design itself.
+//
+// They live here rather than in Printify because the product slug is derived
+// from the Printify title: editing a listing to add copy risks renaming it,
+// which silently moves the URL (see RETIRED_SLUGS). Keyed by canonical slug.
+//
+// Rendered in TWO places that must stay in sync — buildProductSSR() for
+// crawlers, and product.html's client-side rebuild, which reads the same text
+// from the #design-note JSON block. Editing only one of them means half the
+// visitors see it.
+const DESIGN_NOTES = {
+  'no-comment':
+    'Two words, white on black, and the conversation is over. The phrase belongs to '
+    + 'press conferences and courthouse steps — the thing you say when saying anything '
+    + 'else would be worse. It has since escaped into general use by people who are '
+    + 'simply done being asked. There is no illustration and no joke hiding underneath '
+    + 'it. That restraint is the design: anything more would undercut a statement whose '
+    + 'entire power is that it refuses to elaborate. Lawyers buy it as a professional '
+    + 'in-joke. Introverts buy it as a warning label. Both readings are correct.',
+
+  'just-stay-calm-shirt':
+    'Advice that has never once worked, delivered in block letters large enough to read '
+    + 'across a parking lot. "Stay calm" is famously the least calming sentence in '
+    + 'English — it arrives only after something has already gone wrong, usually from '
+    + 'someone unaffected by it. Printed oversized on heather ash so it reads as a public '
+    + 'service announcement rather than a wellness slogan. No script font, no pastel, no '
+    + 'breathing exercise. Just the words, at volume, doing the precise opposite of what '
+    + 'they instruct. Wear it to family gatherings and let it work on your behalf.',
+
+  'jimothy-is-my-religion':
+    'If you do not know who Jimothy is, that is a problem you can solve in about nine '
+    + 'seconds and will not fully recover from. He is a small, deeply strange animal with '
+    + 'a spine that has made choices, and the internet adopted him with a fervour normally '
+    + 'reserved for actual faith. This shirt does not explain him — explaining him defeats '
+    + 'the purpose. It states a position and waits to see who in the room reacts. Roughly '
+    + 'one person will, and you will have found your people. Everyone else will assume '
+    + 'Jimothy is a man you know.',
+
+  'total-geebags-only':
+    'Geebag is Irish, it is not affectionate, and it is deployed with a precision English '
+    + 'lacks entirely. The shirt declares an admissions policy: this is a members-only '
+    + 'arrangement and the sole entry requirement is being one. Anyone who knows the word '
+    + 'knows instantly. Anyone who does not will assume it is a band. Both outcomes are '
+    + 'acceptable and neither requires explanation from you. Printed on midweight cotton '
+    + 'with no side seams, which matters rather less than the fact that you will be asked '
+    + 'about it by someone with an Irish grandmother and firm opinions on who qualifies.',
+
+  'dicks-out-for-harambe':
+    'A western lowland gorilla died in Cincinnati in May 2016 and the internet has not '
+    + 'been entirely normal since. He was seventeen, four hundred and forty pounds, and '
+    + 'completely uninvolved in what followed: a rallying cry so profoundly stupid it '
+    + 'outlived every meme that arrived alongside it. Nearly a decade on, the phrase still '
+    + 'gets shouted across bars by people who could not tell you the year. This shirt is '
+    + 'for them. It is not ironic detachment and it is not quite a tribute. It is a refusal '
+    + 'to let go of a bit, printed on cotton.',
+
+  'harambe-warhol':
+    'Warhol put Marilyn in four panels and turned a face into a product. This does the same '
+    + 'to a gorilla, which is either a desecration or exactly the correct treatment, '
+    + 'depending entirely on how you feel about 2016. Four neon quadrants, saturated to the '
+    + 'point of hum, staring down from somewhere above. The pop art format is the argument: '
+    + 'Harambe stopped being an animal almost immediately and became an image, reproduced '
+    + 'until it meant something else completely. That is what Warhol was about. He simply '
+    + 'never got to work with this particular subject.',
+
+  'deez-mutts-dog-groomers':
+    'A pun this committed deserves a full corporate identity, so Deez Mutts got one: a '
+    + 'grooming business, a location, and a bulldog mascot who is visibly not in the mood. '
+    + 'The joke lands in half a second and then keeps working, because the design plays it '
+    + 'completely straight — this is the shirt an actual groomer would be handed on their '
+    + 'first day. That is the whole trick, pitched somewhere between trade uniform and '
+    + 'warning. Popular with people who groom dogs for a living, and with people who enjoy '
+    + 'watching a stranger read a shirt and then read it again.',
+
+  'kilroy-was-here-tee':
+    'Kilroy was the first meme and he predates the word by roughly fifty years. A bald head, '
+    + 'an enormous nose, ten fingers over a wall — American GIs chalked him onto submarines, '
+    + 'bombed-out buildings and bathroom stalls across two continents, and nobody has ever '
+    + 'established who started it. He turned up in places troops had not reached yet. The '
+    + 'gag was that he was always already there. This is that drawing with the wobble left '
+    + 'intact, because cleaning Kilroy up would miss the point entirely. He was never meant '
+    + 'to look designed. He was meant to look like someone got there first.',
+
+  'smiley-face-sunshine-tee-retro-happy-face-shirt':
+    'There was once a small social contract printed on a sticker: be kind, rewind. You '
+    + 'watched the tape and wound it back for whoever rented it next, and if you did not, '
+    + 'everyone knew. The retro smiley belongs to that era — analogue, slightly sun-bleached, '
+    + 'cheerful in a way that has since gone out of fashion. It is not an ironic smiley and '
+    + 'it is not a cursed one. It is the original, doing its original job, on a shirt for '
+    + 'people who still rewind things out of habit and are quietly annoyed that nobody else '
+    + 'has to any more.',
+
+  'support-your-local-library-shirt':
+    'The sentiment is wholesome; the execution is not, quite. A woodcut-style badge, two '
+    + 'hands holding an open book, and the book is World Domination for Dummies. Reading is '
+    + 'fundamental — particularly to anyone organising a civic-minded coup. It is drawn like '
+    + 'a nineteenth-century engraving rather than a modern library graphic, which lets the '
+    + 'joke sit underneath the design instead of on top of it. Most people read the outer '
+    + 'ring, approve, and move on. A smaller number read the title of the book, pause, and '
+    + 'look up. Those are the ones worth talking to.',
+
+  'gutter-rat-bowling-tee':
+    'Gutter Alley Bowling does not exist, which is a shame, because you already know exactly '
+    + 'what it smells like: cigarette smoke that predates the ban, nacho cheese held at a '
+    + 'temperature no inspector signed off on, and lane wax. The mascot is a bowling ball '
+    + 'strutting down a rainbow lane with considerable confidence for an object with no legs. '
+    + 'Underneath it, the only house rule that ever mattered: please return your shoes. '
+    + 'Fictional-business merch works because the place feels remembered rather than '
+    + 'invented. Everyone has been to this bowling alley. It was called something else.',
+
+  'blah-blah-blah-retro-tee':
+    'Said once, it is dismissive. Said three times, in retro lettering, on a yellow shirt, it '
+    + 'becomes a policy. The design does not argue with anyone — it simply indicates that the '
+    + 'conversation has been received, processed and filed. Yellow was deliberate: a cheerful '
+    + 'colour doing profoundly uncheerful work, which is the entire joke. For the chronically '
+    + 'unbothered, the emotionally checked out, and anyone who has ever sat through a detailed '
+    + 'explanation of something they understood four minutes earlier. It says nothing back. '
+    + 'That is the feature, not an oversight.',
 };
 
 // ---------------------------------------------------------------------------
@@ -1482,7 +1607,7 @@ function splitVariants(variants) {
 // with the interactive build once JS runs, so users get the gallery and
 // variant pickers while crawlers and AI bots — which mostly don't execute JS —
 // get an H1, price, description, sizes and colours instead of "Loading...".
-function buildProductSSR(product, canonical) {
+function buildProductSSR(product, canonical, designNote) {
   const variants = product.variants || [];
   const { colors, sizes, lo, hi } = splitVariants(variants);
   const img = (product.images && product.images[0] && product.images[0].src) || '';
@@ -1502,6 +1627,7 @@ function buildProductSSR(product, canonical) {
     <h1 class="product-title">${esc(product.title)}</h1>
     <p class="product-price-large">${esc(priceLabel)}</p>
     <h2 class="pd-desc-label">What makes this design unique</h2>
+    ${designNote ? `<div class="pd-design-note"><p>${esc(designNote)}</p></div>` : ''}
     <div class="product-description">${formatDescriptionSSR(product.description)}</div>
     ${sizes.length ? `<p class="pd-variant-line"><strong>Sizes:</strong> ${esc(sizes.join(', '))} — <a href="/size-guide">size guide</a></p>` : ''}
     ${colors.length ? `<p class="pd-variant-line"><strong>Colours:</strong> ${esc(colors.join(', '))}</p>` : ''}
@@ -1534,6 +1660,7 @@ async function renderProductPage(request, env, url) {
 
   const slug = slugify(product.title);
   const seo = SEO_OVERRIDES[slug] || {};
+  const designNote = DESIGN_NOTES[slug] || '';
   const canonical = `${SITE}/${slug}`;
   const plainDesc = String(product.description || '')
     .replace(/<[^>]+>/g, ' ')
@@ -1693,11 +1820,18 @@ async function renderProductPage(request, env, url) {
   const productJson = JSON.stringify(product).replace(/</g, '\\u003c');
   const dataBlock = `<script type="application/json" id="product-data">${productJson}</script>`;
 
+  // product.html replaces #product-page wholesale on load, so SSR-only copy
+  // would vanish for every visitor with JS. Ship the note as data too and let
+  // the client template re-render it from here — one source of truth.
+  const noteBlock = designNote
+    ? `<script type="application/json" id="design-note">${JSON.stringify(designNote).replace(/</g, '\\u003c')}</script>`
+    : '';
+
   const rewriter = new HTMLRewriter()
     .on('title', {
       element(el) { el.replace(metaBlock, { html: true }); }
     })
-    .on('head', { element(el) { el.append(dataBlock, { html: true }); } })
+    .on('head', { element(el) { el.append(dataBlock + noteBlock, { html: true }); } })
     // The template ships placeholder Product + BreadcrumbList schemas so the
     // page is still valid if the catalog fetch fails. Now that we've emitted
     // the real ones, drop the placeholders — two competing Product blocks on
@@ -1713,7 +1847,7 @@ async function renderProductPage(request, env, url) {
     // "Loading..." div and every non-JS crawler — which is most AI crawlers —
     // sees a page with no H1, no product name and no description.
     .on('[id="product-page"]', {
-      element(el) { el.setInnerContent(buildProductSSR(product, canonical), { html: true }); }
+      element(el) { el.setInnerContent(buildProductSSR(product, canonical, designNote), { html: true }); }
     });
 
   return rewriter.transform(htmlRes);

@@ -233,6 +233,18 @@
       color: #777;
       margin: 0 0 8px;
     }
+    /* The design note explains the reference on the shirt. It sits above the
+       Printify copy (which sells the blank, not the design) and is deliberately
+       NOT inside .product-description's 240px scroll box — it's the part people
+       arriving from a design-name search actually came to read. */
+    .pd-design-note p {
+      font-size: 15px;
+      color: #ccc;
+      line-height: 1.75;
+      margin: 0 0 18px;
+      padding-left: 14px;
+      border-left: 2px solid var(--lime);
+    }
     .product-description {
       max-height: 240px;
       overflow-y: auto;
@@ -964,6 +976,21 @@
        title, size run, colours and price once the catalog has loaded. The
        worker already stamps `name` server-side — we overwrite with the same
        value, which is harmless and keeps the client path self-sufficient. */
+    // The worker renders the design note into the SSR markup and ALSO ships it
+    // as JSON, because this file rebuilds #product-page from scratch on load and
+    // would otherwise wipe it. Same text, one source (DESIGN_NOTES in worker.js).
+    function designNoteHTML() {
+      var el = document.getElementById('design-note');
+      if (!el) return '';
+      try {
+        var note = JSON.parse(el.textContent);
+        if (!note) return '';
+        var d = document.createElement('div');
+        d.textContent = note;
+        return '<div class="pd-design-note"><p>' + d.innerHTML + '</p></div>';
+      } catch (e) { return ''; }
+    }
+
     function fillProductDetails(p, firstSorted) {
       const host = document.getElementById('product-detail');
       if (!host || !p) return;
@@ -1328,6 +1355,7 @@
               <h1 class="product-title">${p.title}</h1>
               <p class="product-price-large" id="product-price">$${firstSorted ? firstSorted.price : ''}</p>
               <h2 class="pd-desc-label">What makes this design unique</h2>
+              ${designNoteHTML()}
               <div class="product-description">${formatDescription(p.description)}</div>
               <div class="product-variants" id="style-switch" style="display:none;"></div>
               <div class="product-variants" id="variant-selectors">
