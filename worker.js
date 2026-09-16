@@ -396,7 +396,6 @@ const SITEMAP_PAGES = [
   { path: '/collections/',          changefreq: 'weekly',  priority: '0.8' },
   { path: '/blog/',                 changefreq: 'weekly',  priority: '0.8' },
   { path: '/shirts',                changefreq: 'monthly', priority: '0.8' },
-  { path: '/santa-barbara-shirts',  changefreq: 'weekly',  priority: '0.8' },
   { path: '/about',                 changefreq: 'monthly', priority: '0.8' },
   { path: '/faq',                   changefreq: 'monthly', priority: '0.8' },
   { path: '/size-guide',            changefreq: 'monthly', priority: '0.8' },
@@ -455,6 +454,23 @@ const CANONICAL_HOST = 'www.beckywexlin.com';
 // Every production host that isn't the canonical one 301s to it (kills the
 // www/non-www + alt-domain duplicate-content split).
 const REDIRECT_HOSTS = new Set(['beckywexlin.com', 'beckyshirts.com', 'www.beckyshirts.com']);
+
+// Whole pages that have been merged into another page. Distinct from
+// RETIRED_SLUGS below, which is only for products renamed in Printify.
+//
+// /santa-barbara-shirts and /collections/santa-barbara-t-shirts were two pages
+// competing for one set of queries, and Search Console showed Google swapping
+// between them query by query: "santa barbara shirts" ranked the standalone
+// page 9.0 and the collection 16.0; "santa barbara shirt" ranked the collection
+// 15.9 and the standalone page 33.0. Neither ever earned a click. The
+// collection won the merge — roughly twice the internal links, eleven ranking
+// queries against seven, it is the only one of the two that renderCollection()
+// enriches with a live grid and ItemList schema, and its URL carries the phrase
+// with the most impressions. The standalone page's unique copy was ported into
+// it first; this 301 moves the equity.
+const PAGE_REDIRECTS = new Map([
+  ['/santa-barbara-shirts', '/collections/santa-barbara-t-shirts'],
+]);
 
 // Product URLs are slugified from the Printify title, so renaming a listing
 // silently moves its URL and strands the old one on a 404 — losing whatever it
@@ -516,6 +532,14 @@ export default {
 
     if (url.pathname === '/worker.js') {
       return new Response('Not found', { status: 404 });
+    }
+
+    // Consolidated pages. Checked before the .html rule so /santa-barbara-shirts
+    // and /santa-barbara-shirts.html both land in one hop rather than chaining.
+    const merged = PAGE_REDIRECTS.get(url.pathname.replace(/\.html$/, ''));
+    if (merged) {
+      url.pathname = merged;
+      return Response.redirect(url.toString(), 301);
     }
 
     // Legacy /products/<slug>(.html) → canonical root slug (/<slug>). Done before
