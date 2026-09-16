@@ -278,6 +278,14 @@ const SEO_OVERRIDES = {
     title: 'Gothic Skull Shirt — Crown of Skulls Full Moon Tee',
     description: 'The crown sits on a skull at the top of a heap of skulls. Whatever it was worth, it was worth this. Gothic skull graphic tee in bone and charcoal.'
   },
+  'be-kind-rewind-smiley-logo-t-shirt-retro-smiley-face-positive-message': {
+    title: 'Be Kind Rewind Shirt — Retro Smiley Face Tee',
+    description: 'The sticker off a video rental, back when returning a tape unwound was a moral failing. Retro smiley graphic tee on soft heather grey cotton.'
+  },
+  'santa-barbara-retro-beach-graphic-t-shirt-california-surf-vintage-palm': {
+    title: 'Santa Barbara Shirt — Retro Beach Surf Graphic Tee',
+    description: 'Somebody decided Santa Barbara was the American Riviera and nobody has bothered to disagree. Vintage palm and surf graphic tee, free US shipping.'
+  },
 };
 
 // ---------------------------------------------------------------------------
