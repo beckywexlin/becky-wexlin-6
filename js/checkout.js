@@ -219,6 +219,8 @@ async function mountExpressCheckout() {
       return;
     }
 
+    trackAddPaymentInfo('wallet');
+
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements: expressElements,
       clientSecret: currentClientSecret,
@@ -587,6 +589,45 @@ function readGaSessionId() {
   } catch (e) { return ''; }
 }
 
+// GA4 add_payment_info. This was the one step of the funnel with no event at
+// all, so `begin_checkout -> purchase` was a single opaque jump: a shopper who
+// bailed at the address form and one whose card was declined looked identical.
+//
+// Fires once per page load, deliberately. A decline followed by a retry is the
+// same person reaching the payment step once, and counting it twice would
+// overstate the very step we added this to measure.
+//
+// Everything here is wrapped: this runs immediately before stripe.confirmPayment
+// and must never be able to stop a payment. An analytics failure that costs a
+// sale is worse than no analytics.
+var sentAddPaymentInfo = false;
+function trackAddPaymentInfo(paymentType) {
+  try {
+    if (sentAddPaymentInfo) return;
+    if (typeof gtag !== 'function') return;
+    // Read the cart BEFORE latching the guard. bwStore throws when the browser
+    // blocks storage, and latching first would mean one such throw suppressed
+    // the event for the rest of the page even on a successful retry.
+    var cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
+    var total = orderTotalCents() / 100;
+    sentAddPaymentInfo = true;
+    gtag('event', 'add_payment_info', {
+      currency: 'USD',
+      value: total,
+      payment_type: paymentType || 'card',
+      items: cart.map(function (item) {
+        return {
+          item_id: item.id,
+          item_name: item.title,
+          item_variant: item.size || '',
+          price: parseFloat(String(item.price).replace('$', '')),
+          quantity: item.quantity
+        };
+      })
+    });
+  } catch (e) { /* never block checkout for a tracking call */ }
+}
+
 function orderTotalCents() {
   const cart = JSON.parse(window.bwStore.get('bw-cart') || '[]');
   const subtotal = cart.reduce(
@@ -596,6 +637,8 @@ function orderTotalCents() {
 
 async function submitOrder(shipping) {
   if (orderTotalCents() <= 0) return submitFreeOrder(shipping);
+
+  trackAddPaymentInfo('card');
 
   const { error, paymentIntent } = await stripe.confirmPayment({
     elements,
