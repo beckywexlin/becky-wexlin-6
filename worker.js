@@ -130,8 +130,8 @@ const SEO_OVERRIDES = {
     title: 'Majestic Jimothy Tee — Seattle Meme Graphic Shirt',
     description: 'Jimothy under a silver moon, patron saint of the internet. A meme graphic tee for people who were there early. Soft cotton, free US shipping.'
   },
-  'metallica-fan-girl-tee': {
-    title: 'Metallica Fan Girl Tee — Metal Band Graphic Tee',
+  'metal-fan-girl-tee': {
+    title: 'Metal Fan Girl Shirt — Rock Band Graphic Tee',
     description: 'They are not your emergency contacts. If you have to ask, the shirt is not for you. A metal fan graphic tee on soft heavyweight cotton.'
   },
   'minimalist-jimothy-tee': {
@@ -513,6 +513,9 @@ const PAGE_REDIRECTS = new Map([
 // this automatically — the API only ever reports current titles, so a rename
 // that isn't recorded here is unrecoverable once the old slug is forgotten.
 const RETIRED_SLUGS = new Map([
+  // Renamed Sep 2026: "Metallica Fan Girl Tee" -> "Metal Fan Girl Tee".
+  // The band name is a live trademark; it should not sit in a page title.
+  ['metallica-fan-girl-tee', 'metal-fan-girl-tee'],
   // Renamed Aug 2026: "Retro Palm Trees Sunset Hoodie | Vintage Vaporwave
   // Beach Graphic" → "Santa Barbara Retro Palm Trees Hoodie"
   ['retro-palm-trees-sunset-hoodie-vintage-vaporwave-beach-graphic', 'santa-barbara-retro-palm-trees-hoodie'],
